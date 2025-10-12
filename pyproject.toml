@@ -115,3 +115,6 @@ disable_error_code = ["no-untyped-def", "misc", "no-any-unimported"]
 [[tool.mypy.overrides]]
 module = ["psycopg2.*", "testcontainers.postgres.*", "jose.*", "yaml.*"]
 ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+pythonpath = [".", "src", "tests"]

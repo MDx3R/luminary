@@ -1,7 +1,5 @@
 from uuid import UUID
 
-from common.domain.interfaces.uuid_generator import IUUIDGenerator
-
 from luminary.assistant.application.exceptions import AssistantDuplicateNameError
 from luminary.assistant.application.interfaces.repositories.assistant_repository import (
     IAssistantRepository,
@@ -10,14 +8,16 @@ from luminary.assistant.application.interfaces.usecases.command.create_assistant
     CreateAssistantCommand,
     ICreateAssistantUseCase,
 )
-from luminary.assistant.domain.entity.assisnant import Assistant, Instructions
+from luminary.assistant.domain.interfaces.assistant_factory import IAssistantFactory
 
 
 class CreateAssistantUseCase(ICreateAssistantUseCase):
     def __init__(
-        self, uuid_generator: IUUIDGenerator, assistant_repository: IAssistantRepository
+        self,
+        assistant_factory: IAssistantFactory,
+        assistant_repository: IAssistantRepository,
     ) -> None:
-        self.uuid_generator = uuid_generator
+        self.assistant_factory = assistant_factory
         self.assistant_repository = assistant_repository
 
     async def execute(self, command: CreateAssistantCommand) -> UUID:
@@ -27,16 +27,8 @@ class CreateAssistantUseCase(ICreateAssistantUseCase):
         if exists:
             raise AssistantDuplicateNameError(command.user_id, command.name)
 
-        instructions = None
-        if command.prompt:
-            instructions = Instructions(command.prompt)
-
-        assisnant = Assistant.create(
-            self.uuid_generator.create(),
-            command.user_id,
-            command.name,
-            command.description,
-            instructions,
+        assisnant = self.assistant_factory.create(
+            command.user_id, command.name, command.description, command.prompt
         )
 
         await self.assistant_repository.add(assisnant)

@@ -23,11 +23,11 @@ class EnvironmentFactory(IEnvironmentFactory):
         assistant_id: UUID,
     ) -> Environment:
         return Environment.create(
-            self.uuid_generator.create(),
-            name,
-            description,
-            user_id,
-            model_id,
-            assistant_id,
-            self.clock.now(),
+            environment_id=self.uuid_generator.create(),
+            name=name,
+            description=description,
+            user_id=user_id,
+            model_id=model_id,
+            assistant_id=assistant_id,
+            created_at=self.clock.now(),
         )

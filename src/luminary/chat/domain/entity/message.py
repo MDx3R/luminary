@@ -12,6 +12,7 @@ from luminary.chat.domain.enums import ChatMessageAuthor
 class ChatMessage:
     message_id: UUID
     chat_id: UUID
+    model_id: UUID
     role: ChatMessageAuthor
     content: str
     edited_at: DateTime
@@ -22,10 +23,11 @@ class ChatMessage:
             raise InvariantViolationError("Message cannot be empty")
 
     @classmethod
-    def create(
+    def create(  # noqa: PLR0913
         cls,
         message_id: UUID,
         chat_id: UUID,
+        model_id: UUID,
         role: ChatMessageAuthor,
         content: str,
         created_at: DateTime,
@@ -33,6 +35,7 @@ class ChatMessage:
         return cls(
             message_id=message_id,
             chat_id=chat_id,
+            model_id=model_id,
             role=role,
             content=content,
             edited_at=created_at,

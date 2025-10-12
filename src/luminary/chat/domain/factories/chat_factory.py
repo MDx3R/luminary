@@ -13,4 +13,8 @@ class ChatFactory(IChatFactory):
         self.uuid_generator = uuid_generator
 
     def create(self, environment_id: UUID) -> Chat:
-        return Chat(self.uuid_generator.create(), environment_id, self.clock.now())
+        return Chat.create(
+            chat_id=self.uuid_generator.create(),
+            environment_id=environment_id,
+            created_at=self.clock.now(),
+        )

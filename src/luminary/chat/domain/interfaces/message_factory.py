@@ -8,5 +8,5 @@ from luminary.chat.domain.enums import ChatMessageAuthor
 class IMessageFactory(ABC):
     @abstractmethod
     def create(
-        self, chat_id: UUID, role: ChatMessageAuthor, content: str
+        self, chat_id: UUID, model_id: UUID, role: ChatMessageAuthor, content: str
     ) -> ChatMessage: ...

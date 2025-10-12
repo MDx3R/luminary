@@ -11,7 +11,7 @@ class Instructions:
 
     def __post_init__(self) -> None:
         if not self.prompt.strip():
-            raise InvariantViolationError("Prompt cannot be empty")
+            raise InvariantViolationError("Instructions prompt cannot be empty")
 
 
 @dataclass
@@ -29,9 +29,13 @@ class Assistant:
             raise InvariantViolationError("Assistant description cannot be empty")
 
     def change_name(self, new_name: str) -> None:
+        if not new_name.strip():
+            raise InvariantViolationError("New assistant name cannot be empty")
         self.name = new_name
 
     def change_description(self, new_description: str) -> None:
+        if not new_description.strip():
+            raise InvariantViolationError("New assistant description cannot be empty")
         self.description = new_description
 
     def change_instructions(self, new_instructions: Instructions) -> None:

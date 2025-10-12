@@ -6,7 +6,7 @@ from luminary.assistant.application.exceptions import AssistantDuplicateNameErro
 from luminary.assistant.application.interfaces.repositories.assistant_repository import (
     IAssistantRepository,
 )
-from luminary.assistant.application.interfaces.usecases.command.create_assistant import (
+from luminary.assistant.application.interfaces.usecases.command.create_assistant_use_case import (
     CreateAssistantCommand,
     ICreateAssistantUseCase,
 )
@@ -27,12 +27,16 @@ class CreateAssistantUseCase(ICreateAssistantUseCase):
         if exists:
             raise AssistantDuplicateNameError(command.user_id, command.name)
 
+        instructions = None
+        if command.prompt:
+            instructions = Instructions(command.prompt)
+
         assisnant = Assistant.create(
             self.uuid_generator.create(),
             command.user_id,
             command.name,
             command.description,
-            Instructions(command.prompt),
+            instructions,
         )
 
         await self.assistant_repository.add(assisnant)

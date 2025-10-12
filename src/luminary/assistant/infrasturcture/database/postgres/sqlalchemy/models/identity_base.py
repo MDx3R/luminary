@@ -1,0 +1,16 @@
+from uuid import UUID
+
+from common.infrastructure.database.sqlalchemy.models.base import Base
+from sqlalchemy import String
+from sqlalchemy.dialects.postgresql import UUID as PGUUID
+from sqlalchemy.orm import Mapped, mapped_column
+
+
+class AssistantBase(Base):
+    __tablename__ = "assistants"
+
+    assistant_id: Mapped[UUID] = mapped_column(PGUUID, primary_key=True)
+    user_id: Mapped[UUID] = mapped_column(PGUUID, nullable=False)
+    name: Mapped[str] = mapped_column(String, nullable=False)
+    description: Mapped[str] = mapped_column(String, nullable=False)
+    prompt: Mapped[str | None] = mapped_column(String, nullable=True)

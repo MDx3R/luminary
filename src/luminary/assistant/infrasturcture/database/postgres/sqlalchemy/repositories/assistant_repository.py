@@ -8,10 +8,10 @@ from luminary.assistant.application.interfaces.repositories.assistant_repository
     IAssistantRepository,
 )
 from luminary.assistant.domain.entity.assisnant import Assistant
-from luminary.assistant.infrasturcture.database.postgres.sqlalchemy.mappers.identity_mapper import (
+from luminary.assistant.infrasturcture.database.postgres.sqlalchemy.mappers.assistant_mapper import (
     AssistantMapper,
 )
-from luminary.assistant.infrasturcture.database.postgres.sqlalchemy.models.identity_base import (
+from luminary.assistant.infrasturcture.database.postgres.sqlalchemy.models.assistant_base import (
     AssistantBase,
 )
 

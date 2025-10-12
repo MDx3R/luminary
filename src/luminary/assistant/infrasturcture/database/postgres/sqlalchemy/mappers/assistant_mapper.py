@@ -1,5 +1,5 @@
 from luminary.assistant.domain.entity.assisnant import Assistant, Instructions
-from luminary.assistant.infrasturcture.database.postgres.sqlalchemy.models.identity_base import (
+from luminary.assistant.infrasturcture.database.postgres.sqlalchemy.models.assistant_base import (
     AssistantBase,
 )
 

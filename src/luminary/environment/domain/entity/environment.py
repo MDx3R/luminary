@@ -5,7 +5,7 @@ from common.domain.exceptions import InvariantViolationError
 from common.domain.value_objects.datetime import DateTime
 
 
-@dataclass(frozen=True)
+@dataclass
 class File:
     file_id: UUID
     filename: str
@@ -17,16 +17,6 @@ class File:
             raise InvariantViolationError("File name cannot be empty")
 
 
-@dataclass(frozen=True)
-class ChatMessage:
-    role: str
-    content: str
-
-    def __post_init__(self) -> None:
-        if self.role not in ["system", "user", "assistant"]:
-            raise InvariantViolationError("Invalid message role")
-
-
 @dataclass
 class Environment:
     environment_id: UUID
@@ -35,7 +25,6 @@ class Environment:
     user_id: UUID
     model_id: UUID
     assistant_id: UUID
-    chat_id: UUID
     edited_at: DateTime
     created_at: DateTime
     files: list[UUID] = field(default_factory=list[UUID])
@@ -65,7 +54,6 @@ class Environment:
         user_id: UUID,
         model_id: UUID,
         assistant_id: UUID,
-        chat_id: UUID,
         created_at: DateTime,
     ) -> "Environment":
         return cls(
@@ -75,7 +63,6 @@ class Environment:
             user_id=user_id,
             model_id=model_id,
             assistant_id=assistant_id,
-            chat_id=chat_id,
             edited_at=created_at,
             created_at=created_at,
         )

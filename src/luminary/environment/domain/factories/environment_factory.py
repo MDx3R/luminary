@@ -29,6 +29,5 @@ class EnvironmentFactory(IEnvironmentFactory):
             user_id,
             model_id,
             assistant_id,
-            self.uuid_generator.create(),
             self.clock.now(),
         )

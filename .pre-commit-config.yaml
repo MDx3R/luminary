@@ -1,0 +1,20 @@
+repos:
+  - repo: https://github.com/charliermarsh/ruff-pre-commit
+    rev: "v0.13.1"
+    hooks:
+      - id: ruff
+        args: ["--fix"]
+      - id: ruff-format
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.18.2
+    hooks:
+      - id: mypy
+        additional_dependencies: # These dependencies are needed for mypy to work properly (mostly for stubs, I think)
+          - fastapi>=0.116.2,<0.117.0
+          - pydantic>=2.11.0,<3.0.0
+          - pydantic-settings>=2.11.0,<3.0.0
+          - sqlalchemy>=2.0.43,<3.0.0
+          - bcrypt>=4.3.0,<5.0.0
+          - python-jose>=3.5.0,<4.0.0
+          - types-python-jose>=3.5.0,<4.0.0
+          - dependency-injector>=4.48.2,<5.0.0

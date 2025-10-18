@@ -3,8 +3,8 @@ from uuid import UUID
 from common.domain.interfaces.clock import IClock
 from common.domain.interfaces.uuid_generator import IUUIDGenerator
 
-from luminary.folder.domain.entity.environment import Environment
-from luminary.folder.domain.interfaces.environment_factory import (
+from luminary.folder.domain.entity.folder import Environment
+from luminary.folder.domain.interfaces.folder_factory import (
     IEnvironmentFactory,
 )
 

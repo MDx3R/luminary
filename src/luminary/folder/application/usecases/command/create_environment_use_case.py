@@ -13,7 +13,7 @@ from luminary.folder.application.interfaces.usecases.command.create_environment_
     CreateEnvironmentCommand,
     ICreateEnvironmentUseCase,
 )
-from luminary.folder.domain.interfaces.environment_factory import (
+from luminary.folder.domain.interfaces.folder_factory import (
     IEnvironmentFactory,
 )
 

@@ -12,18 +12,10 @@ class SourceFactory(ISourceFactory):
         self.clock = clock
         self.uuid_generator = uuid_generator
 
-    def create(
-        self,
-        user_id: UUID,
-        filename: str,
-        extension: str,
-        mime: str,
-    ) -> Source:
+    def create(self, user_id: UUID, name: str) -> Source:
         return Source.create(
             source_id=self.uuid_generator.create(),
             user_id=user_id,
-            filename=filename,
-            extension=extension,
-            mime=mime,
+            name=name,
             created_at=self.clock.now(),
         )

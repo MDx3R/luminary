@@ -6,6 +6,4 @@ from luminary.source.domain.entity.source import Source
 
 class ISourceFactory(ABC):
     @abstractmethod
-    def create(
-        self, user_id: UUID, filename: str, extension: str, mime: str
-    ) -> Source: ...
+    def create(self, user_id: UUID, name: str) -> Source: ...

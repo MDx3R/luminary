@@ -9,6 +9,7 @@ from common.domain.value_objects.datetime import DateTime
 @dataclass
 class Chat:
     chat_id: UUID
+    user_id: UUID
     folder_id: UUID | None
     name: str
     created_at: DateTime
@@ -28,10 +29,15 @@ class Chat:
     def create(
         cls,
         chat_id: UUID,
+        user_id: UUID,
         folder_id: UUID | None,
         name: str,
         created_at: DateTime,
     ) -> Self:
         return cls(
-            chat_id=chat_id, folder_id=folder_id, name=name, created_at=created_at
+            chat_id=chat_id,
+            user_id=user_id,
+            folder_id=folder_id,
+            name=name,
+            created_at=created_at,
         )

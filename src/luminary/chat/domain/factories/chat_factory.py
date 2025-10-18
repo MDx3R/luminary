@@ -14,13 +14,14 @@ class ChatFactory(IChatFactory):
         self.clock = clock
         self.uuid_generator = uuid_generator
 
-    def create(self, folder_id: UUID, name: str | None) -> Chat:
+    def create(self, folder_id: UUID, user_id: UUID, name: str | None) -> Chat:
         if name is None:
             name = self.DEFAULT_CHAT_NAME
 
         return Chat.create(
             chat_id=self.uuid_generator.create(),
             folder_id=folder_id,
+            user_id=user_id,
             name=name,
             created_at=self.clock.now(),
         )

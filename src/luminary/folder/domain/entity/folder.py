@@ -6,52 +6,81 @@ from common.domain.exceptions import InvariantViolationError
 from common.domain.value_objects.datetime import DateTime
 
 
-@dataclass
-class Folder:
-    folder_id: UUID
+@dataclass(frozen=True)
+class FolderInfo:
     name: str
     description: str | None
-    user_id: UUID
-    model_id: UUID
-    assistant_id: UUID
-    edited_at: DateTime
-    created_at: DateTime
-    files: list[UUID] = field(default_factory=list[UUID])
 
     def __post_init__(self) -> None:
         if not self.name.strip():
             raise InvariantViolationError("Folder name cannot be empty")
 
-    def add_file(self, file_id: UUID) -> None:
-        if self.has_file(file_id):
-            return
 
-        self.files.append(file_id)
+@dataclass
+class Folder:
+    folder_id: UUID
+    user_id: UUID
+    info: FolderInfo
+    model_id: UUID
+    assistant_id: UUID
+    created_at: DateTime
+    _chats: set[UUID] = field(default_factory=set[UUID])
+    _files: set[UUID] = field(default_factory=set[UUID])
+
+    @property
+    def chats(self) -> frozenset[UUID]:
+        return frozenset(self._chats)
+
+    @property
+    def files(self) -> frozenset[UUID]:
+        return frozenset(self._files)
+
+    def change_name(self, name: str) -> None:
+        self.info = FolderInfo(name, self.info.description)
+
+    def change_description(self, description: str) -> None:
+        self.info = FolderInfo(self.info.name, description)
+
+    def change_model(self, model_id: UUID) -> None:
+        self.model_id = model_id
+
+    def change_assistant(self, assistant_id: UUID) -> None:
+        self.assistant_id = assistant_id
+
+    def add_chat(self, chat_id: UUID) -> None:
+        self._chats.add(chat_id)
+
+    def remove_chat(self, chat_id: UUID) -> None:
+        self._chats.remove(chat_id)
+
+    def add_file(self, file_id: UUID) -> None:
+        self._files.add(file_id)
 
     def remove_file(self, file_id: UUID) -> None:
-        self.files = [f for f in self.files if f != file_id]
+        self._files.remove(file_id)
 
     def has_file(self, file_id: UUID) -> bool:
         return file_id in self.files
+
+    def has_chat(self, chat_id: UUID) -> bool:
+        return chat_id in self.chats
 
     @classmethod
     def create(  # noqa: PLR0913
         cls,
         folder_id: UUID,
+        user_id: UUID,
         name: str,
         description: str | None,
-        user_id: UUID,
         model_id: UUID,
         assistant_id: UUID,
         created_at: DateTime,
     ) -> Self:
         return cls(
             folder_id=folder_id,
-            name=name,
-            description=description,
+            info=FolderInfo(name=name, description=description),
             user_id=user_id,
             model_id=model_id,
             assistant_id=assistant_id,
-            edited_at=created_at,
             created_at=created_at,
         )

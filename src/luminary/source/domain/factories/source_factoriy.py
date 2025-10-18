@@ -3,11 +3,11 @@ from uuid import UUID
 from common.domain.interfaces.clock import IClock
 from common.domain.interfaces.uuid_generator import IUUIDGenerator
 
-from luminary.file.domain.entity.file import File
-from luminary.file.domain.interfaces.file_factory import IFileFactory
+from luminary.source.domain.entity.source import Source
+from luminary.source.domain.interfaces.source_factory import ISourceFactory
 
 
-class FileFactory(IFileFactory):
+class SourceFactory(ISourceFactory):
     def __init__(self, clock: IClock, uuid_generator: IUUIDGenerator) -> None:
         self.clock = clock
         self.uuid_generator = uuid_generator
@@ -18,9 +18,9 @@ class FileFactory(IFileFactory):
         filename: str,
         extension: str,
         mime: str,
-    ) -> File:
-        return File.create(
-            file_id=self.uuid_generator.create(),
+    ) -> Source:
+        return Source.create(
+            source_id=self.uuid_generator.create(),
             user_id=user_id,
             filename=filename,
             extension=extension,

@@ -1,11 +1,11 @@
 from abc import ABC, abstractmethod
 from uuid import UUID
 
-from luminary.file.domain.entity.file import File
+from luminary.source.domain.entity.source import Source
 
 
-class IFileFactory(ABC):
+class ISourceFactory(ABC):
     @abstractmethod
     def create(
         self, user_id: UUID, filename: str, extension: str, mime: str
-    ) -> File: ...
+    ) -> Source: ...

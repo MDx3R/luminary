@@ -4,12 +4,12 @@ from uuid import UUID
 
 
 @dataclass(frozen=True)
-class AddFileToFolderCommand:
+class AddSourceToFolderCommand:
     user_id: UUID
     folder_id: UUID
-    file_id: UUID
+    source_id: UUID
 
 
-class IAddFileToFolderUseCase(ABC):
+class IAddSourceToFolderUseCase(ABC):
     @abstractmethod
-    async def execute(self, command: AddFileToFolderCommand) -> None: ...
+    async def execute(self, command: AddSourceToFolderCommand) -> None: ...

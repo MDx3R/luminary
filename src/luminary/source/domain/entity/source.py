@@ -7,8 +7,8 @@ from common.domain.value_objects.datetime import DateTime
 
 
 @dataclass
-class File:
-    file_id: UUID
+class Source:
+    source_id: UUID
     user_id: UUID
     filename: str
     extension: str
@@ -18,16 +18,16 @@ class File:
 
     def __post_init__(self) -> None:
         if not self.filename.strip():
-            raise InvariantViolationError("Filename cannot be empty")
+            raise InvariantViolationError("Sourcename cannot be empty")
         if not self.extension.strip():
-            raise InvariantViolationError("File extension cannot be empty")
+            raise InvariantViolationError("Source extension cannot be empty")
         if not self.mime.strip():
-            raise InvariantViolationError("File MIME cannot be empty")
+            raise InvariantViolationError("Source MIME cannot be empty")
 
     @classmethod
     def create(  # noqa: PLR0913
         cls,
-        file_id: UUID,
+        source_id: UUID,
         user_id: UUID,
         filename: str,
         extension: str,
@@ -35,7 +35,7 @@ class File:
         created_at: DateTime,
     ) -> Self:
         return cls(
-            file_id=file_id,
+            source_id=source_id,
             user_id=user_id,
             filename=filename,
             extension=extension,

@@ -53,14 +53,14 @@ class Folder:
     def remove_chat(self, chat_id: UUID) -> None:
         self._chats.remove(chat_id)
 
-    def add_file(self, file_id: UUID) -> None:
-        self._files.add(file_id)
+    def add_file(self, source_id: UUID) -> None:
+        self._files.add(source_id)
 
-    def remove_file(self, file_id: UUID) -> None:
-        self._files.remove(file_id)
+    def remove_file(self, source_id: UUID) -> None:
+        self._files.remove(source_id)
 
-    def has_file(self, file_id: UUID) -> bool:
-        return file_id in self.files
+    def has_file(self, source_id: UUID) -> bool:
+        return source_id in self.files
 
     def has_chat(self, chat_id: UUID) -> bool:
         return chat_id in self.chats

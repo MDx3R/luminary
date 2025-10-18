@@ -6,14 +6,14 @@ from luminary.chat.application.interfaces.repositories.chat_repository import (
     IChatRepository,
 )
 from luminary.chat.domain.interfaces.chat_factory import IChatFactory
-from luminary.environment.application.interfaces.repositories.environment_repository import (
+from luminary.folder.application.interfaces.repositories.environment_repository import (
     IEnvironmentRepository,
 )
-from luminary.environment.application.interfaces.usecases.command.create_environment_use_case import (
+from luminary.folder.application.interfaces.usecases.command.create_environment_use_case import (
     CreateEnvironmentCommand,
     ICreateEnvironmentUseCase,
 )
-from luminary.environment.domain.interfaces.environment_factory import (
+from luminary.folder.domain.interfaces.environment_factory import (
     IEnvironmentFactory,
 )
 

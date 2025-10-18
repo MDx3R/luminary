@@ -1,7 +1,7 @@
-from luminary.environment.application.interfaces.repositories.environment_repository import (
+from luminary.folder.application.interfaces.repositories.environment_repository import (
     IEnvironmentRepository,
 )
-from luminary.environment.application.interfaces.usecases.command.remove_file_from_environment_use_case import (
+from luminary.folder.application.interfaces.usecases.command.remove_file_from_environment_use_case import (
     IRemoveFileFromEnvironmentUseCase,
     RemoveFileFromEnvironmentCommand,
 )

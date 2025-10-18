@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from uuid import UUID
 
-from luminary.environment.domain.entity.environment import Environment
+from luminary.folder.domain.entity.environment import Environment
 
 
 class IEnvironmentFactory(ABC):

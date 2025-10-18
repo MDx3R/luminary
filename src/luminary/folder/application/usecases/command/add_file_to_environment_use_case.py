@@ -1,12 +1,12 @@
-from luminary.environment.application.interfaces.repositories.environment_repository import (
-    IEnvironmentRepository,
-)
-from luminary.environment.application.interfaces.usecases.command.add_file_to_environment_use_case import (
-    AddFileToEnvironmentCommand,
-    IAddFileToEnvironmentUseCase,
-)
 from luminary.file.application.interfaces.respositories.file_repository import (
     IFileRepository,
+)
+from luminary.folder.application.interfaces.repositories.environment_repository import (
+    IEnvironmentRepository,
+)
+from luminary.folder.application.interfaces.usecases.command.add_file_to_environment_use_case import (
+    AddFileToEnvironmentCommand,
+    IAddFileToEnvironmentUseCase,
 )
 
 

@@ -8,14 +8,14 @@ from common.domain.value_objects.datetime import DateTime
 @dataclass
 class Chat:
     chat_id: UUID
-    environment_id: UUID
+    folder_id: UUID
     created_at: DateTime
 
     @classmethod
     def create(
         cls,
         chat_id: UUID,
-        environment_id: UUID,
+        folder_id: UUID,
         created_at: DateTime,
     ) -> Self:
-        return cls(chat_id, environment_id, created_at)
+        return cls(chat_id, folder_id, created_at)

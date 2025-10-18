@@ -7,8 +7,8 @@ from common.domain.value_objects.datetime import DateTime
 
 
 @dataclass
-class Environment:
-    environment_id: UUID
+class Folder:
+    folder_id: UUID
     name: str
     description: str | None
     user_id: UUID
@@ -20,7 +20,7 @@ class Environment:
 
     def __post_init__(self) -> None:
         if not self.name.strip():
-            raise InvariantViolationError("Environment name cannot be empty")
+            raise InvariantViolationError("Folder name cannot be empty")
 
     def add_file(self, file_id: UUID) -> None:
         if self.has_file(file_id):
@@ -37,7 +37,7 @@ class Environment:
     @classmethod
     def create(  # noqa: PLR0913
         cls,
-        environment_id: UUID,
+        folder_id: UUID,
         name: str,
         description: str | None,
         user_id: UUID,
@@ -46,7 +46,7 @@ class Environment:
         created_at: DateTime,
     ) -> Self:
         return cls(
-            environment_id=environment_id,
+            folder_id=folder_id,
             name=name,
             description=description,
             user_id=user_id,

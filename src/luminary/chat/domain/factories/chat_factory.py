@@ -12,9 +12,9 @@ class ChatFactory(IChatFactory):
         self.clock = clock
         self.uuid_generator = uuid_generator
 
-    def create(self, environment_id: UUID) -> Chat:
+    def create(self, folder_id: UUID) -> Chat:
         return Chat.create(
             chat_id=self.uuid_generator.create(),
-            environment_id=environment_id,
+            folder_id=folder_id,
             created_at=self.clock.now(),
         )

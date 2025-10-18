@@ -9,7 +9,7 @@ from common.domain.value_objects.datetime import DateTime
 @dataclass(frozen=True)
 class SendMessageCommand:
     user_id: UUID
-    environment_id: UUID
+    folder_id: UUID
     message: str
 
 

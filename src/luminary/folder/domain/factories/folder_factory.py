@@ -3,13 +3,13 @@ from uuid import UUID
 from common.domain.interfaces.clock import IClock
 from common.domain.interfaces.uuid_generator import IUUIDGenerator
 
-from luminary.folder.domain.entity.folder import Environment
+from luminary.folder.domain.entity.folder import Folder
 from luminary.folder.domain.interfaces.folder_factory import (
-    IEnvironmentFactory,
+    IFolderFactory,
 )
 
 
-class EnvironmentFactory(IEnvironmentFactory):
+class FolderFactory(IFolderFactory):
     def __init__(self, clock: IClock, uuid_generator: IUUIDGenerator) -> None:
         self.clock = clock
         self.uuid_generator = uuid_generator
@@ -21,9 +21,9 @@ class EnvironmentFactory(IEnvironmentFactory):
         user_id: UUID,
         model_id: UUID,
         assistant_id: UUID,
-    ) -> Environment:
-        return Environment.create(
-            environment_id=self.uuid_generator.create(),
+    ) -> Folder:
+        return Folder.create(
+            folder_id=self.uuid_generator.create(),
             name=name,
             description=description,
             user_id=user_id,

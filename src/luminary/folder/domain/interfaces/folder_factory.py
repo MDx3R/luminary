@@ -1,10 +1,10 @@
 from abc import ABC, abstractmethod
 from uuid import UUID
 
-from luminary.folder.domain.entity.folder import Environment
+from luminary.folder.domain.entity.folder import Folder
 
 
-class IEnvironmentFactory(ABC):
+class IFolderFactory(ABC):
     @abstractmethod
     def create(
         self,
@@ -13,4 +13,4 @@ class IEnvironmentFactory(ABC):
         user_id: UUID,
         model_id: UUID,
         assistant_id: UUID,
-    ) -> Environment: ...
+    ) -> Folder: ...

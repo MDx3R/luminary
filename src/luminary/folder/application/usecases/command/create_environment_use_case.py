@@ -6,45 +6,45 @@ from luminary.chat.application.interfaces.repositories.chat_repository import (
     IChatRepository,
 )
 from luminary.chat.domain.interfaces.chat_factory import IChatFactory
-from luminary.folder.application.interfaces.repositories.environment_repository import (
-    IEnvironmentRepository,
+from luminary.folder.application.interfaces.repositories.folder_repository import (
+    IFolderRepository,
 )
-from luminary.folder.application.interfaces.usecases.command.create_environment_use_case import (
-    CreateEnvironmentCommand,
-    ICreateEnvironmentUseCase,
+from luminary.folder.application.interfaces.usecases.command.create_folder_use_case import (
+    CreateFolderCommand,
+    ICreateFolderUseCase,
 )
 from luminary.folder.domain.interfaces.folder_factory import (
-    IEnvironmentFactory,
+    IFolderFactory,
 )
 
 
-class CreateEnvironmentUseCase(ICreateEnvironmentUseCase):
+class CreateFolderUseCase(ICreateFolderUseCase):
     def __init__(
         self,
         uow: IUnitOfWork,
-        environment_factory: IEnvironmentFactory,
+        folder_factory: IFolderFactory,
         chat_factory: IChatFactory,
-        environment_repository: IEnvironmentRepository,
+        folder_repository: IFolderRepository,
         chat_repository: IChatRepository,
     ) -> None:
         self.uow = uow
-        self.environment_factory = environment_factory
+        self.folder_factory = folder_factory
         self.chat_factory = chat_factory
-        self.environment_repository = environment_repository
+        self.folder_repository = folder_repository
         self.chat_repository = chat_repository
 
-    async def execute(self, command: CreateEnvironmentCommand) -> UUID:
-        environment = self.environment_factory.create(
+    async def execute(self, command: CreateFolderCommand) -> UUID:
+        folder = self.folder_factory.create(
             command.name,
             command.description,
             command.user_id,
             command.model_id,
             command.assistant_id,
         )
-        chat = self.chat_factory.create(environment.environment_id)
+        chat = self.chat_factory.create(folder.folder_id)
 
         async with self.uow:
-            await self.environment_repository.add(environment)
+            await self.folder_repository.add(folder)
             await self.chat_repository.add(chat)
 
-        return environment.environment_id
+        return folder.folder_id

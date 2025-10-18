@@ -4,7 +4,7 @@ from uuid import UUID
 
 
 @dataclass(frozen=True)
-class CreateEnvironmentCommand:
+class CreateFolderCommand:
     user_id: UUID
     name: str
     description: str | None
@@ -12,6 +12,6 @@ class CreateEnvironmentCommand:
     assistant_id: UUID
 
 
-class ICreateEnvironmentUseCase(ABC):
+class ICreateFolderUseCase(ABC):
     @abstractmethod
-    async def execute(self, command: CreateEnvironmentCommand) -> UUID: ...
+    async def execute(self, command: CreateFolderCommand) -> UUID: ...

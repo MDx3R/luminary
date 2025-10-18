@@ -25,15 +25,15 @@ class Folder:
     assistant_id: UUID
     created_at: DateTime
     _chats: set[UUID] = field(default_factory=set[UUID])
-    _files: set[UUID] = field(default_factory=set[UUID])
+    _sources: set[UUID] = field(default_factory=set[UUID])
 
     @property
     def chats(self) -> frozenset[UUID]:
         return frozenset(self._chats)
 
     @property
-    def files(self) -> frozenset[UUID]:
-        return frozenset(self._files)
+    def sources(self) -> frozenset[UUID]:
+        return frozenset(self._sources)
 
     def change_name(self, name: str) -> None:
         self.info = FolderInfo(name, self.info.description)
@@ -53,14 +53,14 @@ class Folder:
     def remove_chat(self, chat_id: UUID) -> None:
         self._chats.remove(chat_id)
 
-    def add_file(self, source_id: UUID) -> None:
-        self._files.add(source_id)
+    def add_source(self, source_id: UUID) -> None:
+        self._sources.add(source_id)
 
-    def remove_file(self, source_id: UUID) -> None:
-        self._files.remove(source_id)
+    def remove_source(self, source_id: UUID) -> None:
+        self._sources.remove(source_id)
 
-    def has_file(self, source_id: UUID) -> bool:
-        return source_id in self.files
+    def has_source(self, source_id: UUID) -> bool:
+        return source_id in self._sources
 
     def has_chat(self, chat_id: UUID) -> bool:
         return chat_id in self.chats

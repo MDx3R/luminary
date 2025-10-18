@@ -24,8 +24,9 @@ class AddSourceToFolderUseCase(IAddSourceToFolderUseCase):
         folder = await self.folder_repository.get_by_id(command.folder_id)
 
         if source.user_id != command.user_id or folder.user_id != command.user_id:
+            # TODO: Custom exc, permission policy
             raise PermissionError
 
-        folder.add_file(command.source_id)
+        folder.add_source(command.source_id)
 
         await self.folder_repository.save(folder)

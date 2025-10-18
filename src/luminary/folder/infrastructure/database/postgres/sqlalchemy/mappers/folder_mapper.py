@@ -17,7 +17,7 @@ class FolderMapper:
             assistant_id=base.assistant_id,
             created_at=DateTime(base.created_at),
             _chats=set(),
-            _files=set(),
+            _sources=set(),
         )
 
     @classmethod

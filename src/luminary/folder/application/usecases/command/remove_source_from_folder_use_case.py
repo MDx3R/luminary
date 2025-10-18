@@ -15,10 +15,11 @@ class RemoveSourceFromFolderUseCase(IRemoveSourceFromFolderUseCase):
         folder = await self.folder_repository.get_by_id(command.folder_id)
 
         if folder.user_id != command.user_id:
+            # TODO: Custom exc, permission policy
             raise PermissionError
 
-        if not folder.has_file(command.source_id):
+        if not folder.has_source(command.source_id):
             return
 
-        folder.remove_file(command.source_id)
+        folder.remove_source(command.source_id)
         await self.folder_repository.save(folder)

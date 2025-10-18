@@ -41,7 +41,7 @@ class CreateFolderUseCase(ICreateFolderUseCase):
             command.model_id,
             command.assistant_id,
         )
-        chat = self.chat_factory.create(folder.folder_id)
+        chat = self.chat_factory.create(folder.folder_id, name=None)
 
         async with self.uow:
             await self.folder_repository.add(folder)

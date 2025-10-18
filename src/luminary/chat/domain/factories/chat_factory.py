@@ -8,13 +8,19 @@ from luminary.chat.domain.interfaces.chat_factory import IChatFactory
 
 
 class ChatFactory(IChatFactory):
+    DEFAULT_CHAT_NAME: str = "Чат без имени"
+
     def __init__(self, clock: IClock, uuid_generator: IUUIDGenerator) -> None:
         self.clock = clock
         self.uuid_generator = uuid_generator
 
-    def create(self, folder_id: UUID) -> Chat:
+    def create(self, folder_id: UUID, name: str | None) -> Chat:
+        if name is None:
+            name = self.DEFAULT_CHAT_NAME
+
         return Chat.create(
             chat_id=self.uuid_generator.create(),
             folder_id=folder_id,
+            name=name,
             created_at=self.clock.now(),
         )

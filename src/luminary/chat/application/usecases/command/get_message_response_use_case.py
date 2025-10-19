@@ -37,7 +37,7 @@ class GetStreamingMessageResponseUseCase(IGetStreamingMessageResponseUseCase):
 
     async def execute(
         self, command: GetMessageResponseCommand
-    ) -> AsyncGenerator[StreamingMessageDTO, None]:
+    ) -> AsyncGenerator[StreamingMessageDTO]:
         chat = await self.chat_repository.get_by_id(command.chat_id)
         request = await self.message_repository.get_by_id(command.message_id)
         if chat.chat_id != request.message_id:

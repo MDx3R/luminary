@@ -18,6 +18,7 @@ class StreamState(int, Enum):
     START = "start"
     DELTA = "delta"
     END = "end"
+    ERROR = "error"
 
 
 @dataclass(frozen=True)
@@ -33,4 +34,4 @@ class IGetStreamingMessageResponseUseCase(ABC):
     @abstractmethod
     def execute(
         self, command: GetMessageResponseCommand
-    ) -> AsyncGenerator[StreamingMessageDTO, None]: ...
+    ) -> AsyncGenerator[StreamingMessageDTO]: ...

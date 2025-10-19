@@ -26,6 +26,9 @@ class Message:
         if self.tokens and self.tokens < 0:
             raise InvariantViolationError("Tokens cannot be negative")
 
+    def add_chunk(self, chunk: str) -> None:
+        self.content += chunk
+
     def start_processing(self) -> None:
         self.status = MessageStatus.PROCESSING
 

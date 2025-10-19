@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Self
 from uuid import UUID
 
 from common.domain.value_objects.datetime import DateTime
@@ -24,7 +23,6 @@ class MessageDTO:
     content: str
     tokens: int | None
     created_at: DateTime
-    response: Self | None
 
 
 class ISendMessageUseCase(ABC):

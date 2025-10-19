@@ -12,7 +12,7 @@ class ChatBase(Base):
     chat_id: Mapped[UUID] = mapped_column(PGUUID, primary_key=True)
 
     name: Mapped[str] = mapped_column(String, nullable=False)
-    system_prompt: Mapped[str | None] = mapped_column(String, nullable=True)
+    system_prompt: Mapped[str] = mapped_column(String, nullable=False)
     max_context_messages: Mapped[int] = mapped_column(SmallInteger, nullable=False)
 
     # TODO: Add FK

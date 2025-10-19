@@ -31,57 +31,23 @@ class SendMessageUseCase(ISendMessageUseCase):
     async def execute(self, command: SendMessageCommand) -> MessageDTO:
         chat = await self.chat_repository.get_by_id(command.chat_id)
 
+        # TODO: Policy
+
         message = self.message_factory.create(
-            chat.chat_id, chat.settings.model_id, Author.USER, command.message
+            chat_id=chat.chat_id,
+            model_id=chat.settings.model_id,
+            role=Author.USER,
+            content=command.message,
         )
-        message.start_processing()
 
         await self.message_repository.add(message)
 
-        # TODO: Send prompt
-        try:
-            response_content = "123"
-            request_tokens, response_tokens = 10, 10
-            response = self.message_factory.create(
-                chat.chat_id, chat.settings.model_id, Author.ASSISTANT, response_content
-            )
-        except Exception:
-            message.fail()
-            await self.message_repository.save(message)
-            return MessageDTO(
-                message_id=message.message_id,
-                chat_id=message.chat_id,
-                author=message.role,
-                status=message.status,
-                content=message.content,
-                tokens=None,
-                created_at=message.created_at,
-                response=None,
-            )
-
-        message.complete(request_tokens)
-
-        async with self.uow:
-            await self.message_repository.save(message)
-            await self.message_repository.save(response)
-
-        response_dto = MessageDTO(
-            message_id=response.message_id,
-            chat_id=response.chat_id,
-            author=response.role,
-            status=response.status,
-            content=response.content,
-            tokens=response_tokens,
-            created_at=response.created_at,
-            response=None,
-        )
         return MessageDTO(
             message_id=message.message_id,
             chat_id=message.chat_id,
             author=message.role,
             status=message.status,
             content=message.content,
-            tokens=request_tokens,
+            tokens=None,
             created_at=message.created_at,
-            response=response_dto,
         )

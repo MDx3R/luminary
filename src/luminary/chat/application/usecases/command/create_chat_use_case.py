@@ -1,5 +1,4 @@
-from decimal import Decimal
-from uuid import UUID, uuid4
+from uuid import UUID
 
 from luminary.chat.application.interfaces.repositories.chat_repository import (
     IChatRepository,
@@ -10,24 +9,28 @@ from luminary.chat.application.interfaces.usecases.command.create_chat_use_case 
 )
 from luminary.chat.domain.entity.chat import ChatSettings
 from luminary.chat.domain.interfaces.chat_factory import IChatFactory
-from luminary.model.domain.entity.model import Model
+from luminary.model.application.interfaces.repositories.model_repository import (
+    IModelRepository,
+)
 
 
 class CreateChatUseCase(ICreateChatUseCase):
     DEFAULT_MODEL_NAME: str = "gemini-2.5-flash-lite"
     DEFAULT_PROMPT: str = "You are a helpful assistant"
+    MAX_CONTEXT_MESSAGES: int = 20
 
     def __init__(
-        self, chat_factory: IChatFactory, chat_repository: IChatRepository
+        self,
+        chat_factory: IChatFactory,
+        chat_repository: IChatRepository,
+        model_repository: IModelRepository,
     ) -> None:
         self.chat_factory = chat_factory
         self.chat_repository = chat_repository
+        self.model_repository = model_repository
 
     async def execute(self, command: CreateChatCommand) -> UUID:
-        # TODO: Add repo call
-        model = Model(
-            uuid4(), self.DEFAULT_MODEL_NAME, "desc", Decimal(10), Decimal(10)
-        )
+        model = await self.model_repository.get_by_name(self.DEFAULT_MODEL_NAME)
 
         # TODO: Fetch default settings from repo
 
@@ -38,7 +41,7 @@ class CreateChatUseCase(ICreateChatUseCase):
             settings=ChatSettings(
                 model_id=model.model_id,
                 system_prompt=self.DEFAULT_PROMPT,
-                max_context_messages=20,
+                max_context_messages=self.MAX_CONTEXT_MESSAGES,
             ),
         )
 

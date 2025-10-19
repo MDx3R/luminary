@@ -66,7 +66,7 @@ class GetStreamingMessageResponseUseCase(IGetStreamingMessageResponseUseCase):
         request_tokens = 0
         response_tokens = 0  # TODO: How and when assign tokens
         async for chunk in self.ai_provider.stream_completion(
-            messages, chat.settings.system_prompt
+            messages, chat.settings.system_prompt, chat.settings.model_id
         ):
             response.add_chunk(chunk.content)
 

@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from collections.abc import AsyncGenerator
 from dataclasses import dataclass
+from uuid import UUID
 
 
 @dataclass(frozen=True)
@@ -23,5 +24,5 @@ class AIProvider(ABC):
 
     @abstractmethod
     def stream_completion(
-        self, messages: list[str], system_prompt: str
+        self, messages: list[str], system_prompt: str, model_id: UUID
     ) -> AsyncGenerator[ProviderStreamingResponse, None]: ...

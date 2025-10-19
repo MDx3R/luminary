@@ -26,6 +26,22 @@ class Message:
         if self.tokens and self.tokens < 0:
             raise InvariantViolationError("Tokens cannot be negative")
 
+    def start_processing(self) -> None:
+        self.status = MessageStatus.PROCESSING
+
+    def start_streaming(self) -> None:
+        self.status = MessageStatus.STREAMING
+
+    def cancel(self) -> None:
+        self.status = MessageStatus.CANCELLED
+
+    def fail(self) -> None:
+        self.status = MessageStatus.FAILED
+
+    def complete(self, tokens: int) -> None:
+        self.tokens = tokens
+        self.status = MessageStatus.COMPLETED
+
     @classmethod
     def create(  # noqa: PLR0913
         cls,

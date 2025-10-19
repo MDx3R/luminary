@@ -2,12 +2,19 @@ from unittest.mock import AsyncMock
 from uuid import uuid4
 
 import pytest
+from common.application.exceptions import NotFoundError
 from fastapi import FastAPI, status
 from fastapi.testclient import TestClient
 
 from luminary.assistant.application.exceptions import AssistantDuplicateNameError
 from luminary.assistant.application.interfaces.usecases.command.create_assistant_use_case import (
     ICreateAssistantUseCase,
+)
+from luminary.assistant.application.interfaces.usecases.command.delete_assistant_use_case import (
+    IDeleteAssistantUseCase,
+)
+from luminary.assistant.application.interfaces.usecases.command.update_assistant_use_case import (
+    IUpdateAssistantUseCase,
 )
 from luminary.assistant.presentation.http.fastapi.controllers import (
     assistant_command_router,
@@ -24,10 +31,18 @@ class TestAssistantControllers:
 
         # Mock UseCases
         self.create_assistant_use_case = AsyncMock(spec=ICreateAssistantUseCase)
+        self.update_assistant_use_case = AsyncMock(spec=IUpdateAssistantUseCase)
+        self.delete_assistant_use_case = AsyncMock(spec=IDeleteAssistantUseCase)
 
         # Override dependencies
         self.app.dependency_overrides[ICreateAssistantUseCase] = (
             lambda: self.create_assistant_use_case
+        )
+        self.app.dependency_overrides[IUpdateAssistantUseCase] = (
+            lambda: self.update_assistant_use_case
+        )
+        self.app.dependency_overrides[IDeleteAssistantUseCase] = (
+            lambda: self.delete_assistant_use_case
         )
 
     async def test_create_assistant_success(self):
@@ -87,3 +102,89 @@ class TestAssistantControllers:
         # Assert
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
         self.create_assistant_use_case.execute.assert_not_awaited()
+
+    async def test_update_assistant_success(self):
+        # Arrange
+        assistant_id = uuid4()
+        name = "Updated"
+        description = "Desc"
+        prompt = None
+        self.update_assistant_use_case.execute.return_value = None
+
+        # Act
+        response = self.client.patch(
+            f"/{assistant_id}",
+            json={"name": name, "description": description, "prompt": prompt},
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": "Bearer valid_token",
+            },
+        )
+
+        # Assert
+        assert response.status_code == status.HTTP_200_OK
+        self.update_assistant_use_case.execute.assert_awaited_once()
+
+    async def test_update_assistant_not_found(self):
+        # Arrange
+        assistant_id = uuid4()
+
+        self.update_assistant_use_case.execute.side_effect = NotFoundError(assistant_id)
+
+        # Act
+        response = self.client.patch(
+            f"/{assistant_id}",
+            json={"name": "n", "description": "d", "prompt": None},
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": "Bearer valid_token",
+            },
+        )
+
+        # Assert
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+
+    async def test_delete_assistant_success(self):
+        # Arrange
+        assistant_id = uuid4()
+        self.delete_assistant_use_case.execute.return_value = None
+
+        # Act
+        response = self.client.delete(
+            f"/{assistant_id}",
+            headers={
+                "Authorization": "Bearer valid_token",
+            },
+        )
+
+        # Assert
+        assert response.status_code == status.HTTP_200_OK
+        self.delete_assistant_use_case.execute.assert_awaited_once()
+
+    async def test_delete_assistant_ignores_not_found(self):
+        # Arrange
+        assistant_id = uuid4()
+        self.delete_assistant_use_case.execute.side_effect = NotFoundError(assistant_id)
+
+        # Act
+        response = self.client.delete(
+            f"/{assistant_id}",
+            headers={
+                "Authorization": "Bearer valid_token",
+            },
+        )
+
+        # Assert
+        assert response.status_code == status.HTTP_200_OK
+        self.delete_assistant_use_case.execute.assert_awaited_once()
+
+    async def test_delete_assistant_unauthenticated(self):
+        # Arrange
+        assistant_id = uuid4()
+
+        # Act
+        response = self.client.delete(f"/{assistant_id}")
+
+        # Assert
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+        self.delete_assistant_use_case.execute.assert_not_awaited()

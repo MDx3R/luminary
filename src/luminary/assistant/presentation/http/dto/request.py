@@ -5,3 +5,9 @@ class CreateAssistantRequest(BaseModel):
     name: str
     description: str
     prompt: str | None
+
+
+class UpdateAssistantRequest(BaseModel):
+    name: str
+    description: str
+    prompt: str | None

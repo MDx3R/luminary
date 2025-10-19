@@ -1,7 +1,9 @@
 from common.domain.value_objects.datetime import DateTime
 
 from luminary.source.domain.entity.source import Source
-from luminary.source.sqlalchemy.models.source_base import SourceBase
+from luminary.source.infrastructure.database.postgres.sqlalchemy.models.source_base import (
+    SourceBase,
+)
 
 
 class SourceMapper:

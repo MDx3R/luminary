@@ -1,7 +1,9 @@
 from common.domain.value_objects.datetime import DateTime
 
 from luminary.chat.domain.entity.chat import Chat, ChatInfo, ChatSettings
-from luminary.chat.sqlalchemy.models.chat_base import ChatBase
+from luminary.chat.infrastructure.database.postgres.sqlalchemy.models.chat_base import (
+    ChatBase,
+)
 
 
 class ChatMapper:

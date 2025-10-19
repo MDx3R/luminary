@@ -9,8 +9,12 @@ from luminary.chat.application.interfaces.repositories.chat_repository import (
     IChatRepository,
 )
 from luminary.chat.domain.entity.chat import Chat
-from luminary.chat.sqlalchemy.mappers.chat_mapper import ChatMapper
-from luminary.chat.sqlalchemy.models.chat_base import ChatBase
+from luminary.chat.infrastructure.database.postgres.sqlalchemy.mappers.chat_mapper import (
+    ChatMapper,
+)
+from luminary.chat.infrastructure.database.postgres.sqlalchemy.models.chat_base import (
+    ChatBase,
+)
 
 
 class ChatRepository(IChatRepository):

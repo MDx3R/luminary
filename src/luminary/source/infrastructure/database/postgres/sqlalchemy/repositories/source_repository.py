@@ -8,8 +8,12 @@ from luminary.source.application.interfaces.respositories.source_repository impo
     ISourceRepository,
 )
 from luminary.source.domain.entity.source import Source
-from luminary.source.sqlalchemy.mappers.source_mapper import SourceMapper
-from luminary.source.sqlalchemy.models.source_base import SourceBase
+from luminary.source.infrastructure.database.postgres.sqlalchemy.mappers.source_mapper import (
+    SourceMapper,
+)
+from luminary.source.infrastructure.database.postgres.sqlalchemy.models.source_base import (
+    SourceBase,
+)
 
 
 class SourceRepository(ISourceRepository):

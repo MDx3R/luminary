@@ -1,9 +1,15 @@
 from abc import ABC, abstractmethod
 from uuid import UUID
 
-from luminary.chat.domain.entity.chat import Chat
+from luminary.chat.domain.entity.chat import Chat, ChatSettings
 
 
 class IChatFactory(ABC):
     @abstractmethod
-    def create(self, folder_id: UUID, user_id: UUID, name: str | None) -> Chat: ...
+    def create(
+        self,
+        user_id: UUID,
+        folder_id: UUID | None,
+        name: str | None,
+        settings: ChatSettings,
+    ) -> Chat: ...

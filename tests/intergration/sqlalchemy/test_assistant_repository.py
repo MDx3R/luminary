@@ -120,3 +120,20 @@ class TestAssistantRepository:
         assert updated_assistant
         assert updated_assistant.info.name == "Updated Assistant"
         assert updated_assistant.info.description == "Updated Description"
+
+    async def test_remove_success(self):
+        # Arrange
+        assistant = await self._add_assistant()
+
+        # Act
+        await self.assistant_repository.remove(assistant)
+
+        # Assert
+        assert await self._exists(assistant) is False
+
+    async def test_remove_no_record_success(self):
+        # Arrange
+        assistant = make_assistant()
+
+        # Act & Assert
+        await self.assistant_repository.remove(assistant)  # no error

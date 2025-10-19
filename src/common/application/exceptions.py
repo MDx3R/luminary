@@ -20,6 +20,12 @@ class NotFoundError(ApplicationError):
         self.entity_id = entity_id
 
 
+class AccessPolicyError(ApplicationError):
+    def __init__(self, entity_id: UUID, message: str) -> None:
+        super().__init__(f"{message}: {entity_id}")
+        self.entity_id = entity_id
+
+
 class RepositoryError(ApplicationError): ...
 
 

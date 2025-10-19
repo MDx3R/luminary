@@ -2,7 +2,7 @@ from uuid import UUID
 
 from common.application.exceptions import NotFoundError
 from common.infrastructure.database.sqlalchemy.executor import QueryExecutor
-from sqlalchemy import exists, select
+from sqlalchemy import delete, exists, select
 
 from luminary.assistant.application.interfaces.repositories.assistant_repository import (
     IAssistantRepository,
@@ -42,3 +42,9 @@ class AssistantRepository(IAssistantRepository):
     async def save(self, entity: Assistant) -> None:
         model = AssistantMapper.to_persistence(entity)
         await self.executor.save(model)
+
+    async def remove(self, entity: Assistant) -> None:
+        stmt = delete(AssistantBase).where(
+            AssistantBase.assistant_id == entity.assistant_id
+        )
+        await self.executor.execute(stmt)

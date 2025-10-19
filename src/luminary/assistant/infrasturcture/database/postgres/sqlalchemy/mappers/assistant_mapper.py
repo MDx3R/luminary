@@ -1,4 +1,8 @@
-from luminary.assistant.domain.entity.assisnant import Assistant, Instructions
+from luminary.assistant.domain.entity.assisnant import (
+    Assistant,
+    AssistantInfo,
+    Instructions,
+)
 from luminary.assistant.infrasturcture.database.postgres.sqlalchemy.models.assistant_base import (
     AssistantBase,
 )
@@ -13,8 +17,7 @@ class AssistantMapper:
         return Assistant(
             assistant_id=base.assistant_id,
             user_id=base.user_id,
-            name=base.name,
-            description=base.description,
+            info=AssistantInfo(name=base.name, description=base.description),
             instructions=inst,
         )
 
@@ -26,7 +29,7 @@ class AssistantMapper:
         return AssistantBase(
             assistant_id=assistant.assistant_id,
             user_id=assistant.user_id,
-            name=assistant.name,
-            description=assistant.description,
+            name=assistant.info.name,
+            description=assistant.info.description,
             prompt=prompt,
         )

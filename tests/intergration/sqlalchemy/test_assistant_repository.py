@@ -6,7 +6,7 @@ from common.infrastructure.database.sqlalchemy.executor import QueryExecutor
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from tests.unit.assistant.utils import make_assistant
 
-from luminary.assistant.domain.entity.assisnant import Assistant
+from luminary.assistant.domain.entity.assisnant import Assistant, AssistantInfo
 from luminary.assistant.infrasturcture.database.postgres.sqlalchemy.mappers.assistant_mapper import (
     AssistantMapper,
 )
@@ -67,7 +67,7 @@ class TestAssistantRepository:
 
         # Act
         result = await self.assistant_repository.exists_by_name_for_user(
-            assistant.name, assistant.user_id
+            assistant.info.name, assistant.user_id
         )
 
         # Assert
@@ -91,7 +91,7 @@ class TestAssistantRepository:
 
         # Act
         result = await self.assistant_repository.exists_by_name_for_user(
-            assistant.name, uuid4()
+            assistant.info.name, uuid4()
         )
 
         # Assert
@@ -110,7 +110,7 @@ class TestAssistantRepository:
     async def test_save_success(self):
         # Arrange
         assistant = await self._add_assistant()
-        assistant.name = "Updated Assistant"
+        assistant.info = AssistantInfo("Updated Assistant", "Updated Description")
 
         # Act
         await self.assistant_repository.save(assistant)
@@ -118,4 +118,5 @@ class TestAssistantRepository:
         # Assert
         updated_assistant = await self._get(assistant)
         assert updated_assistant
-        assert updated_assistant.name == "Updated Assistant"
+        assert updated_assistant.info.name == "Updated Assistant"
+        assert updated_assistant.info.description == "Updated Description"

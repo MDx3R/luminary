@@ -4,7 +4,7 @@ import pytest
 from common.domain.exceptions import InvariantViolationError
 from tests.unit.assistant.utils import make_instructions
 
-from luminary.assistant.domain.entity.assisnant import Assistant
+from luminary.assistant.domain.entity.assisnant import Assistant, AssistantInfo
 
 
 class TestAssistantEntity:
@@ -15,8 +15,7 @@ class TestAssistantEntity:
         self.assistant = Assistant(
             assistant_id=self.assistant_id,
             user_id=self.user_id,
-            name="Test Assistant",
-            description="Test Description",
+            info=AssistantInfo(name="Test Assistant", description="Test Description"),
             instructions=make_instructions(prompt="Test Prompt"),
         )
 
@@ -40,8 +39,8 @@ class TestAssistantEntity:
         # Assert
         assert assistant.assistant_id == assistant_id
         assert assistant.user_id == user_id
-        assert assistant.name == name
-        assert assistant.description == description
+        assert assistant.info.name == name
+        assert assistant.info.description == description
         assert assistant.instructions == instructions
 
     def test_create_assistant_no_instructions(self):
@@ -93,7 +92,7 @@ class TestAssistantEntity:
         self.assistant.change_name(new_name)
 
         # Assert
-        assert self.assistant.name == new_name
+        assert self.assistant.info.name == new_name
 
     def test_change_description(self):
         # Arrange
@@ -103,7 +102,7 @@ class TestAssistantEntity:
         self.assistant.change_description(new_description)
 
         # Assert
-        assert self.assistant.description == new_description
+        assert self.assistant.info.description == new_description
 
     def test_change_instructions(self):
         # Arrange

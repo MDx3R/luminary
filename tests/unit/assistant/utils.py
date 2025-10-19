@@ -1,6 +1,10 @@
 from uuid import UUID, uuid4
 
-from luminary.assistant.domain.entity.assisnant import Assistant, Instructions
+from luminary.assistant.domain.entity.assisnant import (
+    Assistant,
+    AssistantInfo,
+    Instructions,
+)
 
 
 # Factory function to create an Instructions instance
@@ -27,7 +31,6 @@ def make_assistant(
     return Assistant(
         assistant_id=assistant_id,
         user_id=user_id,
-        name=name,
-        description=description,
+        info=AssistantInfo(name=name, description=description),
         instructions=instructions,
     )

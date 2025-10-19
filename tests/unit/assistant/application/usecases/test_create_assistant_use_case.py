@@ -2,8 +2,6 @@ from unittest.mock import AsyncMock, Mock
 from uuid import uuid4
 
 import pytest
-from common.domain.exceptions import InvariantViolationError
-from common.domain.interfaces.uuid_generator import IUUIDGenerator
 from tests.unit.assistant.utils import make_assistant, make_instructions
 
 from luminary.assistant.application.exceptions import AssistantDuplicateNameError
@@ -16,6 +14,7 @@ from luminary.assistant.application.interfaces.usecases.command.create_assistant
 from luminary.assistant.application.usecases.command.create_assistant_use_case import (
     CreateAssistantUseCase,
 )
+from luminary.assistant.domain.interfaces.assistant_factory import IAssistantFactory
 
 
 @pytest.mark.asyncio
@@ -24,22 +23,22 @@ class TestCreateAssistantUseCase:
     def setup(self):
         self.assistant_id = uuid4()
 
-        self.uuid_generator = Mock(spec=IUUIDGenerator)
-        self.uuid_generator.create.return_value = self.assistant_id
+        self.assistant = make_assistant(assistant_id=self.assistant_id)
 
         self.assistant_repository = AsyncMock(spec=IAssistantRepository)
 
-        self.assistant = make_assistant(assistant_id=self.assistant_id)
+        self.assistant_factory = Mock(spec=IAssistantFactory)
+        self.assistant_factory.create.return_value = self.assistant
 
         self.command = CreateAssistantCommand(
             user_id=self.assistant.user_id,
-            name=self.assistant.name,
-            description=self.assistant.description,
+            name=self.assistant.info.name,
+            description=self.assistant.info.description,
             prompt=None,
         )
 
         self.use_case = CreateAssistantUseCase(
-            self.uuid_generator, self.assistant_repository
+            self.assistant_factory, self.assistant_repository
         )
 
     async def test_create_assistant_success(self):
@@ -63,11 +62,12 @@ class TestCreateAssistantUseCase:
             assistant_id=self.assistant_id,
             instructions=make_instructions(prompt=prompt),
         )
+        self.assistant_factory.create.return_value = assistant
 
         command = CreateAssistantCommand(
             user_id=assistant.user_id,
-            name=assistant.name,
-            description=assistant.description,
+            name=assistant.info.name,
+            description=assistant.info.description,
             prompt=prompt,
         )
 
@@ -94,20 +94,4 @@ class TestCreateAssistantUseCase:
         self.assistant_repository.exists_by_name_for_user.assert_awaited_once_with(
             self.command.name, self.command.user_id
         )
-        self.assistant_repository.add.assert_not_awaited()
-
-    async def test_create_assistant_invalid_name(self):
-        # Arrange
-        command = CreateAssistantCommand(
-            user_id=uuid4(),
-            name="",
-            description="Test Description",
-            prompt="Test Prompt",
-        )
-        self.assistant_repository.exists_by_name_for_user.return_value = False
-
-        # Act & Assert
-        with pytest.raises(InvariantViolationError):
-            await self.use_case.execute(command)
-
         self.assistant_repository.add.assert_not_awaited()

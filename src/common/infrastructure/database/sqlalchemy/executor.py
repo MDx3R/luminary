@@ -94,7 +94,7 @@ class QueryExecutor:
     async def execute(self, statement: Any) -> Result[Any]:
         async with self.uow.get_session() as session:
             result = await session.execute(statement)
-            return result  # type: ignore[no-any-return]
+            return result
 
     async def add(
         self,

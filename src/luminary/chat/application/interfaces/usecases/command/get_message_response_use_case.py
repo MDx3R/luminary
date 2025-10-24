@@ -14,7 +14,7 @@ class GetMessageResponseCommand:
     message_id: UUID
 
 
-class StreamState(int, Enum):
+class StreamState(str, Enum):
     START = "start"
     DELTA = "delta"
     END = "end"

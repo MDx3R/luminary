@@ -1,8 +1,10 @@
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, Mock
 from uuid import UUID, uuid4
 
 import pytest
+from common.domain.value_objects.datetime import DateTime
 
 from luminary.chat.application.interfaces.repositories.chat_repository import (
     IChatRepository,
@@ -13,7 +15,7 @@ from luminary.chat.application.interfaces.usecases.command.create_chat_use_case 
 from luminary.chat.application.usecases.command.create_chat_use_case import (
     CreateChatUseCase,
 )
-from luminary.chat.domain.entity.chat import ChatSettings
+from luminary.chat.domain.entity.chat import Chat, ChatInfo, ChatSettings
 from luminary.chat.domain.interfaces.chat_factory import IChatFactory
 from luminary.model.application.interfaces.repositories.model_repository import (
     IModelRepository,
@@ -22,8 +24,6 @@ from luminary.model.application.interfaces.repositories.model_repository import 
 
 @dataclass(frozen=True)
 class CreateChatFactoryParams:
-    """DTO для параметров создания чата через фабрику."""
-
     user_id: UUID
     folder_id: UUID | None
     name: str | None
@@ -36,24 +36,8 @@ class MockModel:
         self.name: str = name
 
 
-class MockChat:
-    def __init__(self, chat_id: UUID) -> None:
-        self.chat_id: UUID = chat_id
-
-
 @pytest.mark.asyncio
 class TestCreateChatUseCase:
-    chat_id: UUID
-    user_id: UUID
-    model_id: UUID
-    folder_id: UUID
-    chat_repository: AsyncMock
-    chat_factory: Mock
-    model_repository: AsyncMock
-    mock_chat: MockChat
-    command: CreateChatCommand
-    use_case: CreateChatUseCase
-
     @pytest.fixture(autouse=True)
     def setup(self) -> None:
         self.chat_id = uuid4()
@@ -65,31 +49,54 @@ class TestCreateChatUseCase:
         self.chat_factory = Mock(spec=IChatFactory)
         self.model_repository = AsyncMock(spec=IModelRepository)
 
-        self.mock_chat = MockChat(self.chat_id)
-        self.chat_factory.create.return_value = self.mock_chat
-
-        self.model_repository.get_by_name.return_value = MockModel(
-            self.model_id, "gemini-2.5-flash-lite"
-        )
-
         self.command = CreateChatCommand(user_id=self.user_id)
+
         self.use_case = CreateChatUseCase(
             self.chat_factory, self.chat_repository, self.model_repository
         )
 
+    def make_chat(
+        self,
+        chat_id: UUID | None = None,
+        user_id: UUID | None = None,
+        model_id: UUID | None = None,
+    ) -> Chat:
+        return Chat(
+            chat_id=chat_id or self.chat_id,
+            user_id=user_id or self.user_id,
+            folder_id=self.folder_id,
+            created_at=DateTime(datetime.now(UTC)),
+            info=ChatInfo(name="Test Chat"),
+            settings=ChatSettings(
+                model_id=model_id or self.model_id,
+                system_prompt="Test prompt",
+                max_context_messages=10,
+            ),
+        )
+
     async def test_create_chat_success(self) -> None:
-        """Проверяем успешное создание чата."""
-        result: UUID = await self.use_case.execute(self.command)
+        chat = self.make_chat()
+        model = MockModel(model_id=self.model_id, name="gemini-2.5-flash-lite")
+
+        self.chat_factory.create.return_value = chat
+        self.model_repository.get_by_name.return_value = model
+
+        result = await self.use_case.execute(self.command)
 
         assert result == self.chat_id
         self.model_repository.get_by_name.assert_awaited_once_with(
             "gemini-2.5-flash-lite"
         )
         self.chat_factory.create.assert_called_once()
-        self.chat_repository.add.assert_awaited_once_with(self.mock_chat)
+        self.chat_repository.add.assert_awaited_once_with(chat)
 
     async def test_create_chat_calls_factory_with_correct_params(self) -> None:
-        """Проверяем, что фабрика вызывается с правильными параметрами."""
+        chat = self.make_chat()
+        model = MockModel(model_id=self.model_id, name="gemini-2.5-flash-lite")
+
+        self.chat_factory.create.return_value = chat
+        self.model_repository.get_by_name.return_value = model
+
         await self.use_case.execute(self.command)
 
         expected_params = CreateChatFactoryParams(

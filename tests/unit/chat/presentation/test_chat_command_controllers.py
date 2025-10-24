@@ -25,14 +25,6 @@ from luminary.chat.domain.enums import Author, MessageStatus
 
 @pytest.mark.asyncio
 class TestChatCommandController:
-    user_id: UUID
-    chat_id: UUID
-    message_id: UUID
-    create_chat_use_case: AsyncMock
-    send_message_use_case: AsyncMock
-    get_message_response_use_case: Mock
-    message_dto: MessageDTO
-
     @pytest.fixture(autouse=True)
     def setup(self) -> None:
         self.user_id = uuid4()
@@ -68,7 +60,6 @@ class TestChatCommandController:
         self.create_chat_use_case.execute.assert_awaited_once()
 
     async def test_send_message_returns_message_dto(self) -> None:
-        """Проверяем, что отправка сообщения возвращает правильный DTO."""
         command: SendMessageCommand = SendMessageCommand(
             user_id=self.user_id,
             chat_id=self.chat_id,
@@ -91,8 +82,6 @@ class TestChatCommandController:
         self.send_message_use_case.execute.assert_awaited_once_with(command)
 
     async def test_streaming_response_format(self) -> None:
-        """Проверяем формат стримингового ответа через сравнение с ожидаемыми DTO."""
-
         async def mock_stream() -> AsyncGenerator[StreamingMessageDTO, None]:
             yield StreamingMessageDTO(
                 state=StreamState.START,

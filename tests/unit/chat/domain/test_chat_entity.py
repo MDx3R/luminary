@@ -46,19 +46,16 @@ class TestChatEntity:
         assert chat.settings.max_context_messages == max_context_messages
 
     def test_chat_info_empty_name_raises_error(self) -> None:
-        """Проверяем, что ChatInfo не принимает пустое имя."""
         with pytest.raises(InvariantViolationError) as exc_info:
             ChatInfo(name="")
         assert "Chat name cannot be empty" in str(exc_info.value)
 
     def test_chat_info_whitespace_name_raises_error(self) -> None:
-        """Проверяем, что ChatInfo не принимает имя из пробелов."""
         with pytest.raises(InvariantViolationError) as exc_info:
             ChatInfo(name="   ")
         assert "Chat name cannot be empty" in str(exc_info.value)
 
     def test_chat_settings_empty_prompt_raises_error(self) -> None:
-        """Проверяем, что ChatSettings не принимает пустой system_prompt."""
         with pytest.raises(InvariantViolationError) as exc_info:
             ChatSettings(
                 model_id=uuid4(),
@@ -68,7 +65,6 @@ class TestChatEntity:
         assert "System prompt cannot be empty" in str(exc_info.value)
 
     def test_chat_settings_negative_context_raises_error(self) -> None:
-        """Проверяем, что ChatSettings не принимает отрицательное max_context_messages."""
         with pytest.raises(InvariantViolationError) as exc_info:
             ChatSettings(
                 model_id=uuid4(),
@@ -80,7 +76,6 @@ class TestChatEntity:
         )
 
     def test_chat_settings_zero_context_raises_error(self) -> None:
-        """Проверяем, что ChatSettings не принимает нулевое max_context_messages."""
         with pytest.raises(InvariantViolationError) as exc_info:
             ChatSettings(
                 model_id=uuid4(),
@@ -92,7 +87,6 @@ class TestChatEntity:
         )
 
     def test_change_chat_name_success(self) -> None:
-        """Проверяем изменение имени чата."""
         chat: Chat = self._create_chat(name="Old Name")
         new_name: str = "New Name"
 
@@ -101,7 +95,6 @@ class TestChatEntity:
         assert chat.info.name == new_name
 
     def test_change_chat_settings_success(self) -> None:
-        """Проверяем изменение настроек чата."""
         chat: Chat = self._create_chat()
         new_settings: ChatSettings = ChatSettings(
             model_id=uuid4(),
@@ -116,7 +109,6 @@ class TestChatEntity:
         assert chat.settings.max_context_messages == new_settings.max_context_messages
 
     def test_chat_with_none_folder_id_success(self) -> None:
-        """Проверяем создание чата без папки (folder_id = None)."""
         chat_id: UUID = uuid4()
         user_id: UUID = uuid4()
         model_id: UUID = uuid4()
@@ -144,7 +136,6 @@ class TestChatEntity:
         assert chat.created_at == created_at
 
     def test_change_chat_name_empty_raises_error(self) -> None:
-        """Проверяем, что нельзя изменить имя чата на пустое."""
         chat: Chat = self._create_chat(name="Old Name")
 
         with pytest.raises(InvariantViolationError) as exc_info:
@@ -152,7 +143,6 @@ class TestChatEntity:
         assert "Chat name cannot be empty" in str(exc_info.value)
 
     def test_change_chat_name_whitespace_raises_error(self) -> None:
-        """Проверяем, что нельзя изменить имя чата на пробелы."""
         chat: Chat = self._create_chat(name="Old Name")
 
         with pytest.raises(InvariantViolationError) as exc_info:
@@ -160,7 +150,6 @@ class TestChatEntity:
         assert "Chat name cannot be empty" in str(exc_info.value)
 
     def test_change_chat_settings_empty_prompt_raises_error(self) -> None:
-        """Проверяем, что нельзя изменить настройки с пустым промптом."""
         chat: Chat = self._create_chat()
 
         with pytest.raises(InvariantViolationError) as exc_info:
@@ -172,7 +161,6 @@ class TestChatEntity:
         assert "System prompt cannot be empty" in str(exc_info.value)
 
     def test_change_chat_settings_invalid_context_raises_error(self) -> None:
-        """Проверяем, что нельзя изменить настройки с невалидным количеством сообщений."""
         chat: Chat = self._create_chat()
 
         with pytest.raises(InvariantViolationError) as exc_info:
@@ -186,7 +174,6 @@ class TestChatEntity:
         )
 
     def test_change_chat_settings_with_valid_settings_success(self) -> None:
-        """Проверяем, что можно изменить настройки с валидными значениями."""
         chat: Chat = self._create_chat()
         valid_settings: ChatSettings = ChatSettings(
             model_id=uuid4(),
@@ -208,7 +195,6 @@ class TestChatEntity:
         model_id: UUID | None = None,
         folder_id: UUID | None = None,
     ) -> Chat:
-        """Вспомогательный метод для создания чата."""
         final_chat_id: UUID = chat_id or uuid4()
         final_user_id: UUID = user_id or uuid4()
         final_model_id: UUID = model_id or uuid4()

@@ -11,7 +11,6 @@ from luminary.chat.domain.enums import Author, MessageStatus
 
 class TestMessageEntity:
     def test_create_message_success(self) -> None:
-        """Проверяем успешное создание сообщения."""
         message_id: UUID = uuid4()
         chat_id: UUID = uuid4()
         model_id: UUID = uuid4()
@@ -37,7 +36,6 @@ class TestMessageEntity:
         assert message.status == MessageStatus.COMPLETED
 
     def test_message_naive_datetime_raises_error(self) -> None:
-        """Проверяем, что Message отклоняет наивные datetime."""
         with pytest.raises(InvariantViolationError):
             Message(
                 message_id=uuid4(),
@@ -51,7 +49,6 @@ class TestMessageEntity:
             )
 
     def test_add_chunk_success(self) -> None:
-        """Проверяем добавление чанка к сообщению."""
         message: Message = Message(
             message_id=uuid4(),
             chat_id=uuid4(),
@@ -68,7 +65,6 @@ class TestMessageEntity:
         assert message.content == "Hello world"
 
     def test_start_processing_changes_status(self) -> None:
-        """Проверяем изменение статуса на PROCESSING."""
         message: Message = Message(
             message_id=uuid4(),
             chat_id=uuid4(),
@@ -85,7 +81,6 @@ class TestMessageEntity:
         assert message.status == MessageStatus.PROCESSING
 
     def test_start_streaming_changes_status(self) -> None:
-        """Проверяем изменение статуса на STREAMING."""
         message: Message = Message(
             message_id=uuid4(),
             chat_id=uuid4(),
@@ -102,7 +97,6 @@ class TestMessageEntity:
         assert message.status == MessageStatus.STREAMING
 
     def test_cancel_changes_status(self) -> None:
-        """Проверяем изменение статуса на CANCELLED."""
         message: Message = Message(
             message_id=uuid4(),
             chat_id=uuid4(),
@@ -119,7 +113,6 @@ class TestMessageEntity:
         assert message.status == MessageStatus.CANCELLED
 
     def test_fail_changes_status(self) -> None:
-        """Проверяем изменение статуса на FAILED."""
         message: Message = Message(
             message_id=uuid4(),
             chat_id=uuid4(),
@@ -136,7 +129,6 @@ class TestMessageEntity:
         assert message.status == MessageStatus.FAILED
 
     def test_complete_changes_status_and_sets_tokens(self) -> None:
-        """Проверяем изменение статуса на COMPLETED и установку токенов."""
         message: Message = Message(
             message_id=uuid4(),
             chat_id=uuid4(),

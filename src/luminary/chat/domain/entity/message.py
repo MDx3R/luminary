@@ -21,7 +21,7 @@ class Message:
     tokens: int | None = None
 
     def __post_init__(self) -> None:
-        if self.content.strip():
+        if not self.content.strip():
             raise InvariantViolationError("Message cannot be empty")
         if self.tokens and self.tokens < 0:
             raise InvariantViolationError("Tokens cannot be negative")

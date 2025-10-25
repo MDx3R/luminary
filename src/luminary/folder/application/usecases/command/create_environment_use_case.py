@@ -6,7 +6,7 @@ from luminary.chat.application.interfaces.repositories.chat_repository import (
     IChatRepository,
 )
 from luminary.chat.domain.entity.chat import ChatSettings
-from luminary.chat.domain.interfaces.chat_factory import IChatFactory
+from luminary.chat.domain.interfaces.chat_factory import ChatFactoryDTO, IChatFactory
 from luminary.folder.application.interfaces.repositories.folder_repository import (
     IFolderRepository,
 )
@@ -43,12 +43,14 @@ class CreateFolderUseCase(ICreateFolderUseCase):
             command.assistant_id,
         )
         chat = self.chat_factory.create(
-            folder.folder_id,
-            command.user_id,
-            name=None,
-            settings=ChatSettings(
-                uuid4(), "prompt", 10
-            ),  # TODO: Replace with assistant service call
+            ChatFactoryDTO(
+                folder.folder_id,
+                command.user_id,
+                name=None,
+                settings=ChatSettings(
+                    uuid4(), "prompt", 10
+                ),  # TODO: Replace with assistant service call
+            )
         )
 
         async with self.uow:

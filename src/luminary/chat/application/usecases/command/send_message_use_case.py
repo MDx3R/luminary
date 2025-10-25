@@ -12,7 +12,10 @@ from luminary.chat.application.interfaces.usecases.command.send_message_use_case
     SendMessageCommand,
 )
 from luminary.chat.domain.enums import Author
-from luminary.chat.domain.interfaces.message_factory import IMessageFactory
+from luminary.chat.domain.interfaces.message_factory import (
+    IMessageFactory,
+    MessageFactoryDTO,
+)
 
 
 class SendMessageUseCase(ISendMessageUseCase):
@@ -34,10 +37,12 @@ class SendMessageUseCase(ISendMessageUseCase):
         # TODO: Policy
 
         message = self.message_factory.create(
-            chat_id=chat.chat_id,
-            model_id=chat.settings.model_id,
-            role=Author.USER,
-            content=command.message,
+            MessageFactoryDTO(
+                chat_id=chat.chat_id,
+                model_id=chat.settings.model_id,
+                role=Author.USER,
+                content=command.message,
+            )
         )
 
         await self.message_repository.add(message)

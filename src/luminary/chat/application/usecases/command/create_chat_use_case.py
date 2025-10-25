@@ -8,7 +8,7 @@ from luminary.chat.application.interfaces.usecases.command.create_chat_use_case 
     ICreateChatUseCase,
 )
 from luminary.chat.domain.entity.chat import ChatSettings
-from luminary.chat.domain.interfaces.chat_factory import IChatFactory
+from luminary.chat.domain.interfaces.chat_factory import ChatFactoryDTO, IChatFactory
 from luminary.model.application.interfaces.repositories.model_repository import (
     IModelRepository,
 )
@@ -35,14 +35,16 @@ class CreateChatUseCase(ICreateChatUseCase):
         # TODO: Fetch default settings from repo
 
         chat = self.chat_factory.create(
-            user_id=command.user_id,
-            folder_id=None,
-            name=None,
-            settings=ChatSettings(
-                model_id=model.model_id,
-                system_prompt=self.DEFAULT_PROMPT,
-                max_context_messages=self.MAX_CONTEXT_MESSAGES,
-            ),
+            ChatFactoryDTO(
+                user_id=command.user_id,
+                folder_id=None,
+                name=None,
+                settings=ChatSettings(
+                    model_id=model.model_id,
+                    system_prompt=self.DEFAULT_PROMPT,
+                    max_context_messages=self.MAX_CONTEXT_MESSAGES,
+                ),
+            )
         )
 
         await self.chat_repository.add(chat)

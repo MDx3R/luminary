@@ -150,7 +150,7 @@ class TestChatEntity:
         assert "Chat name cannot be empty" in str(exc_info.value)
 
     def test_change_chat_settings_empty_prompt_raises_error(self) -> None:
-        chat: Chat = self._create_chat()
+        self._create_chat()
 
         with pytest.raises(InvariantViolationError) as exc_info:
             ChatSettings(
@@ -161,7 +161,7 @@ class TestChatEntity:
         assert "System prompt cannot be empty" in str(exc_info.value)
 
     def test_change_chat_settings_invalid_context_raises_error(self) -> None:
-        chat: Chat = self._create_chat()
+        self._create_chat()
 
         with pytest.raises(InvariantViolationError) as exc_info:
             ChatSettings(
@@ -185,7 +185,7 @@ class TestChatEntity:
 
         assert chat.settings == valid_settings
 
-    def _create_chat(
+    def _create_chat(  # noqa: PLR0913
         self,
         chat_id: UUID | None = None,
         user_id: UUID | None = None,

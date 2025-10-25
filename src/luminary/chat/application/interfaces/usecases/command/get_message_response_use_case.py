@@ -7,6 +7,11 @@ from uuid import UUID
 from luminary.chat.domain.enums import Author, MessageStatus
 
 
+EMPTY_CONTENT: str = ""
+STREAM_START_CONTENT: str = "start"
+STREAM_END_CONTENT: str = "end"
+
+
 @dataclass(frozen=True)
 class GetMessageResponseCommand:
     user_id: UUID

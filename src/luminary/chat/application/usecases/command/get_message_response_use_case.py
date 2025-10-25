@@ -10,13 +10,19 @@ from luminary.chat.application.interfaces.repositories.message_repository import
     IMessageRepository,
 )
 from luminary.chat.application.interfaces.usecases.command.get_message_response_use_case import (
+    EMPTY_CONTENT,
+    STREAM_END_CONTENT,
+    STREAM_START_CONTENT,
     GetMessageResponseCommand,
     IGetStreamingMessageResponseUseCase,
     StreamingMessageDTO,
     StreamState,
 )
 from luminary.chat.domain.enums import Author
-from luminary.chat.domain.interfaces.message_factory import IMessageFactory
+from luminary.chat.domain.interfaces.message_factory import (
+    IMessageFactory,
+    MessageFactoryDTO,
+)
 from luminary.model.application.interfaces.services.ai_provider import AIProvider
 
 
@@ -46,10 +52,12 @@ class GetStreamingMessageResponseUseCase(IGetStreamingMessageResponseUseCase):
         # TODO: Policy
 
         response = self.message_factory.create(
-            chat_id=chat.chat_id,
-            model_id=chat.settings.model_id,
-            role=Author.ASSISTANT,
-            content="Placeholder",
+            MessageFactoryDTO(
+                chat_id=chat.chat_id,
+                model_id=chat.settings.model_id,
+                role=Author.ASSISTANT,
+                content=EMPTY_CONTENT,
+            )
         )
         response.start_streaming()
 
@@ -57,7 +65,7 @@ class GetStreamingMessageResponseUseCase(IGetStreamingMessageResponseUseCase):
 
         yield StreamingMessageDTO(
             state=StreamState.START,
-            content="start",
+            content=STREAM_START_CONTENT,
             message_id=response.message_id,
             author=response.role,
             status=response.status,
@@ -87,7 +95,7 @@ class GetStreamingMessageResponseUseCase(IGetStreamingMessageResponseUseCase):
 
         yield StreamingMessageDTO(
             state=StreamState.END,
-            content="end",
+            content=STREAM_END_CONTENT,
             message_id=response.message_id,
             author=response.role,
             status=response.status,

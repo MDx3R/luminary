@@ -22,7 +22,7 @@ class ChatSettings:
     max_context_messages: int
 
     def __post_init__(self) -> None:
-        if self.system_prompt.strip():
+        if not self.system_prompt.strip():
             raise InvariantViolationError("System prompt cannot be empty")
         if self.max_context_messages <= 0:
             raise InvariantViolationError(

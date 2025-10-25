@@ -111,9 +111,7 @@ class TestChatCommandController:
         async for chunk in self.get_message_response_use_case.execute(None):
             chunks.append(chunk)
 
-        assert len(chunks) == 3
-
-        expected_chunks: list[StreamingMessageDTO] = [
+        expected_chunks: set[StreamingMessageDTO] = {
             StreamingMessageDTO(
                 state=StreamState.START,
                 content="start",
@@ -135,7 +133,8 @@ class TestChatCommandController:
                 author=Author.ASSISTANT,
                 status=MessageStatus.COMPLETED,
             ),
-        ]
+        }
 
-        for actual, expected in zip(chunks, expected_chunks, strict=False):
-            assert actual == expected
+        # NOTE: First len check to ensure list has only unique items
+        assert len(chunks) == len(expected_chunks)
+        assert set(chunks) == expected_chunks

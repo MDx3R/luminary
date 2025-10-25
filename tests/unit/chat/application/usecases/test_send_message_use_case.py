@@ -22,7 +22,10 @@ from luminary.chat.application.usecases.command.send_message_use_case import (
 from luminary.chat.domain.entity.chat import Chat, ChatInfo, ChatSettings
 from luminary.chat.domain.entity.message import Message
 from luminary.chat.domain.enums import Author, MessageStatus
-from luminary.chat.domain.interfaces.message_factory import IMessageFactory
+from luminary.chat.domain.interfaces.message_factory import (
+    IMessageFactory,
+    MessageFactoryDTO,
+)
 
 
 @pytest.mark.asyncio
@@ -122,10 +125,12 @@ class TestSendMessageUseCase:
         await self.use_case.execute(self.command)
 
         self.message_factory.create.assert_called_once_with(
-            chat_id=chat.chat_id,
-            model_id=chat.settings.model_id,
-            role=Author.USER,
-            content=self.command.message,
+            MessageFactoryDTO(
+                chat_id=chat.chat_id,
+                model_id=chat.settings.model_id,
+                role=Author.USER,
+                content=self.command.message,
+            )
         )
 
     async def test_send_message_returns_dto_with_no_tokens(self) -> None:

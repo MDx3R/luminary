@@ -16,7 +16,7 @@ from luminary.chat.application.usecases.command.create_chat_use_case import (
     CreateChatUseCase,
 )
 from luminary.chat.domain.entity.chat import Chat, ChatInfo, ChatSettings
-from luminary.chat.domain.interfaces.chat_factory import IChatFactory
+from luminary.chat.domain.interfaces.chat_factory import ChatFactoryDTO, IChatFactory
 from luminary.model.application.interfaces.repositories.model_repository import (
     IModelRepository,
 )
@@ -99,7 +99,7 @@ class TestCreateChatUseCase:
 
         await self.use_case.execute(self.command)
 
-        expected_params = CreateChatFactoryParams(
+        expected_data = ChatFactoryDTO(
             user_id=self.user_id,
             folder_id=None,
             name=None,
@@ -110,12 +110,4 @@ class TestCreateChatUseCase:
             ),
         )
 
-        call_args = self.chat_factory.create.call_args
-        actual_params = CreateChatFactoryParams(
-            user_id=call_args.kwargs["user_id"],
-            folder_id=call_args.kwargs["folder_id"],
-            name=call_args.kwargs["name"],
-            settings=call_args.kwargs["settings"],
-        )
-
-        assert actual_params == expected_params
+        self.chat_factory.create.assert_called_once_with(expected_data)

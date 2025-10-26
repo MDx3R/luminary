@@ -22,7 +22,7 @@ class ChatSettings:
     max_context_messages: int
 
     def __post_init__(self) -> None:
-        if self.system_prompt.strip():
+        if not self.system_prompt.strip():
             raise InvariantViolationError("System prompt cannot be empty")
         if self.max_context_messages <= 0:
             raise InvariantViolationError(
@@ -41,6 +41,13 @@ class Chat:
 
     def change_name(self, new_name: str) -> None:
         self.info = ChatInfo(new_name)
+
+    def change_system_prompt(self, new_system_prompt: str) -> None:
+        self.settings = ChatSettings(
+            self.settings.model_id,
+            new_system_prompt,
+            self.settings.max_context_messages,
+        )
 
     def change_settings(self, new_settings: ChatSettings) -> None:
         self.settings = new_settings

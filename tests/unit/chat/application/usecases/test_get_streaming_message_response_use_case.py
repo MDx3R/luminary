@@ -4,6 +4,7 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock
 from uuid import UUID, uuid4
 
+from luminary.chat.application.interfaces.policies.chat_access_policy import IChatAccessPolicy
 import pytest
 from common.application.exceptions import NotFoundError
 from common.application.interfaces.transactions.unit_of_work import IUnitOfWork
@@ -44,6 +45,7 @@ class TestGetStreamingMessageResponseUseCase:
         self.ai_provider = AsyncMock(spec=AIProvider)
         self.chat_repository = AsyncMock(spec=IChatRepository)
         self.message_repository = AsyncMock(spec=IMessageRepository)
+        self.chat_access_policy = AsyncMock(spec=IChatAccessPolicy)
 
         self.command = GetMessageResponseCommand(
             message_id=self.message_id,
@@ -57,6 +59,7 @@ class TestGetStreamingMessageResponseUseCase:
             self.ai_provider,
             self.chat_repository,
             self.message_repository,
+            self.chat_access_policy,
         )
 
     def make_chat(self) -> Chat:

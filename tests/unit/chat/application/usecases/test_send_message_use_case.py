@@ -6,6 +6,9 @@ import pytest
 from common.application.interfaces.transactions.unit_of_work import IUnitOfWork
 from common.domain.value_objects.datetime import DateTime
 
+from luminary.chat.application.interfaces.policies.chat_access_policy import (
+    IChatAccessPolicy,
+)
 from luminary.chat.application.interfaces.repositories.chat_repository import (
     IChatRepository,
 )
@@ -41,6 +44,7 @@ class TestSendMessageUseCase:
         self.message_repository = AsyncMock(spec=IMessageRepository)
         self.message_factory = Mock(spec=IMessageFactory)
         self.uow = AsyncMock(spec=IUnitOfWork)
+        self.chat_access_policy = AsyncMock(spec=IChatAccessPolicy)
 
         self.command = SendMessageCommand(
             user_id=self.user_id,
@@ -53,6 +57,7 @@ class TestSendMessageUseCase:
             self.uow,
             self.chat_repository,
             self.message_repository,
+            self.chat_access_policy,
         )
 
     def make_chat(

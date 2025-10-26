@@ -13,4 +13,4 @@ class AssistantBase(Base):
     user_id: Mapped[UUID] = mapped_column(PGUUID, nullable=False)
     name: Mapped[str] = mapped_column(String, nullable=False)
     description: Mapped[str] = mapped_column(String, nullable=False)
-    prompt: Mapped[str | None] = mapped_column(String, nullable=True)
+    prompt: Mapped[str] = mapped_column(String, nullable=False)

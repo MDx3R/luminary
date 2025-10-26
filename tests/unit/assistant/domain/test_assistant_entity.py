@@ -43,25 +43,6 @@ class TestAssistantEntity:
         assert assistant.info.description == description
         assert assistant.instructions == instructions
 
-    def test_create_assistant_no_instructions(self):
-        # Arrange
-        assistant_id = uuid4()
-        user_id = uuid4()
-        name = "Test Assistant"
-        description = "Test Description"
-
-        # Act
-        assistant = Assistant.create(
-            assistant_id=assistant_id,
-            user_id=user_id,
-            name=name,
-            description=description,
-            instructions=None,
-        )
-
-        # Assert
-        assert assistant.instructions is None
-
     def test_create_assistant_invalid_name(self):
         # Arrange & Act & Assert
         with pytest.raises(InvariantViolationError):
@@ -70,7 +51,7 @@ class TestAssistantEntity:
                 user_id=uuid4(),
                 name="",
                 description="Test Description",
-                instructions=None,
+                instructions=make_instructions(),
             )
 
     def test_create_assistant_invalid_description(self):
@@ -81,7 +62,7 @@ class TestAssistantEntity:
                 user_id=uuid4(),
                 name="Test Name",
                 description="",
-                instructions=None,
+                instructions=make_instructions(),
             )
 
     def test_change_name(self):
@@ -113,10 +94,3 @@ class TestAssistantEntity:
 
         # Assert
         assert self.assistant.instructions == new_instructions
-
-    def test_remove_instructions(self):
-        # Act
-        self.assistant.remove_instructions()
-
-        # Assert
-        assert self.assistant.instructions is None

@@ -31,7 +31,7 @@ class Assistant:
     assistant_id: UUID
     user_id: UUID
     info: AssistantInfo
-    instructions: Instructions | None
+    instructions: Instructions
 
     def change_name(self, new_name: str) -> None:
         self.info = AssistantInfo(new_name, self.info.description)
@@ -42,9 +42,6 @@ class Assistant:
     def change_instructions(self, new_instructions: Instructions) -> None:
         self.instructions = new_instructions
 
-    def remove_instructions(self) -> None:
-        self.instructions = None
-
     @classmethod
     def create(
         cls,
@@ -52,7 +49,7 @@ class Assistant:
         user_id: UUID,
         name: str,
         description: str,
-        instructions: Instructions | None,
+        instructions: Instructions,
     ) -> Self:
         return cls(
             assistant_id=assistant_id,

@@ -13,18 +13,12 @@ class AssistantFactory(IAssistantFactory):
         self.uuid_generator = uuid_generator
 
     def create(
-        self,
-        user_id: UUID,
-        name: str,
-        description: str,
-        prompt: str | None,
+        self, user_id: UUID, name: str, description: str, prompt: str
     ) -> Assistant:
-        instructions = Instructions(prompt) if prompt else None
-
         return Assistant.create(
             assistant_id=self.uuid_generator.create(),
             user_id=user_id,
             name=name,
             description=description,
-            instructions=instructions,
+            instructions=Instructions(prompt),
         )

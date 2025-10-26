@@ -26,11 +26,8 @@ class UpdateAssistantUseCase(IUpdateAssistantUseCase):
 
         assistant.change_name(command.name)
         assistant.change_description(command.description)
-
-        if command.prompt:
-            assistant.change_instructions(Instructions(command.prompt))
-        else:
-            assistant.remove_instructions()
+        default_prompt = "You're a helpful assistant"  # TODO: Retrieve or define default prompt somewhere
+        assistant.change_instructions(Instructions(command.prompt or default_prompt))
 
         # TODO: Check if assistant has changed
 

@@ -21,6 +21,9 @@ from luminary.assistant.application.usecases.command.apply_assistant_to_chat imp
 )
 from luminary.assistant.domain.entity.assisnant import Assistant
 from luminary.assistant.domain.interfaces.assistant_service import IAssistantService
+from luminary.chat.application.interfaces.policies.chat_access_policy import (
+    IChatAccessPolicy,
+)
 from luminary.chat.application.interfaces.repositories.chat_repository import (
     IChatRepository,
 )
@@ -50,6 +53,8 @@ class TestApplyAssistantToChatUseCase:
         self.assistant_service = Mock(spec=IAssistantService)
         self.assistant_access_policy = Mock(spec=IAssistantAccessPolicy)
 
+        self.chat_access_policy = Mock(spec=IChatAccessPolicy)
+
         self.assistant_repository = AsyncMock(spec=IAssistantRepository)
         self.chat_repository = AsyncMock(spec=IChatRepository)
 
@@ -64,6 +69,7 @@ class TestApplyAssistantToChatUseCase:
             self.assistant_access_policy,
             self.assistant_repository,
             self.chat_repository,
+            self.chat_access_policy,
         )
 
     def mock_service_call(self, assistant: Assistant, chat: Chat) -> None:
@@ -98,6 +104,9 @@ class TestApplyAssistantToChatUseCase:
             self.command.user_id, self.assistant
         )
         self.chat_repository.get_by_id.assert_awaited_once_with(self.command.chat_id)
+        self.chat_access_policy.assert_is_allowed.assert_called_once_with(
+            self.command.user_id, self.chat
+        )
         self.assistant_service.apply_assistant_instructions_to_chat.assert_called_once_with(
             self.assistant, self.chat
         )
@@ -118,7 +127,15 @@ class TestApplyAssistantToChatUseCase:
         )
         self.chat_repository.save.assert_not_awaited()
 
-    @pytest.mark.skip
     async def test_chat_access_denied_raises(self):
-        # TODO: Add
-        ...
+        # Arrange
+        self.chat_access_policy.assert_is_allowed.side_effect = AccessPolicyError(
+            self.chat.chat_id, "denied"
+        )
+
+        # Act & Assert
+        with pytest.raises(AccessPolicyError):
+            await self.use_case.execute(self.command)
+
+        self.chat_repository.get_by_id.assert_awaited_once_with(self.chat.chat_id)
+        self.chat_repository.save.assert_not_awaited()

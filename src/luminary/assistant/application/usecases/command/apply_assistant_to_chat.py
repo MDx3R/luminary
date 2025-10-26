@@ -9,6 +9,9 @@ from luminary.assistant.application.interfaces.usecases.command.apply_assistant_
     IApplyAssistantToChatUseCase,
 )
 from luminary.assistant.domain.interfaces.assistant_service import IAssistantService
+from luminary.chat.application.interfaces.policies.chat_access_policy import (
+    IChatAccessPolicy,
+)
 from luminary.chat.application.interfaces.repositories.chat_repository import (
     IChatRepository,
 )
@@ -21,18 +24,20 @@ class ApplyAssistantToChatUseCase(IApplyAssistantToChatUseCase):
         assistant_access_policy: IAssistantAccessPolicy,
         assistant_repository: IAssistantRepository,
         chat_repository: IChatRepository,
+        chat_access_policy: IChatAccessPolicy,
     ) -> None:
         self.assistant_service = assistant_service
         self.assistant_access_policy = assistant_access_policy
         self.assistant_repository = assistant_repository
         self.chat_repository = chat_repository
+        self.chat_access_policy = chat_access_policy
 
     async def execute(self, command: ApplyAssistantToChatCommand) -> None:
         assistant = await self.assistant_repository.get_by_id(command.assistant_id)
         self.assistant_access_policy.assert_is_allowed(command.user_id, assistant)
 
         chat = await self.chat_repository.get_by_id(command.chat_id)
-        # TODO: Policy
+        self.chat_access_policy.assert_is_allowed(command.user_id, chat)
 
         self.assistant_service.apply_assistant_instructions_to_chat(assistant, chat)
 

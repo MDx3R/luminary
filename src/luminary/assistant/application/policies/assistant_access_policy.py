@@ -15,5 +15,6 @@ class AssistantAccessPolicy(IAssistantAccessPolicy):
     def assert_is_allowed(self, user_id: UUID, assistant: Assistant) -> None:
         if not self.is_allowed(user_id, assistant):
             raise AccessPolicyError(
-                assistant.user_id, "assistant is accessable only to user who created it"
+                assistant.assistant_id,
+                "assistant is accessable only to user who created it",
             )

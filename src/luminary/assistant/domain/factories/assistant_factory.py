@@ -8,23 +8,20 @@ from luminary.assistant.domain.interfaces.assistant_factory import IAssistantFac
 
 
 class AssistantFactory(IAssistantFactory):
+    # TODO: Remove as we fetch default settings from repo
+    DEFAULT_PROMPT: str = "You are a helpful assistant"
+
     def __init__(self, clock: IClock, uuid_generator: IUUIDGenerator) -> None:
         self.clock = clock
         self.uuid_generator = uuid_generator
 
     def create(
-        self,
-        user_id: UUID,
-        name: str,
-        description: str,
-        prompt: str | None,
+        self, user_id: UUID, name: str, description: str, prompt: str | None
     ) -> Assistant:
-        instructions = Instructions(prompt) if prompt else None
-
         return Assistant.create(
             assistant_id=self.uuid_generator.create(),
             user_id=user_id,
             name=name,
             description=description,
-            instructions=instructions,
+            instructions=Instructions(prompt or self.DEFAULT_PROMPT),
         )

@@ -42,6 +42,13 @@ class Chat:
     def change_name(self, new_name: str) -> None:
         self.info = ChatInfo(new_name)
 
+    def change_system_prompt(self, new_system_prompt: str) -> None:
+        self.settings = ChatSettings(
+            self.settings.model_id,
+            new_system_prompt,
+            self.settings.max_context_messages,
+        )
+
     def change_settings(self, new_settings: ChatSettings) -> None:
         self.settings = new_settings
 

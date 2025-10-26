@@ -32,5 +32,5 @@ def make_assistant(
         assistant_id=assistant_id,
         user_id=user_id,
         info=AssistantInfo(name=name, description=description),
-        instructions=instructions,
+        instructions=instructions or make_instructions(),
     )

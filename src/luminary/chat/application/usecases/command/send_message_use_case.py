@@ -1,5 +1,8 @@
 from common.application.interfaces.transactions.unit_of_work import IUnitOfWork
 
+from luminary.chat.application.interfaces.policies.chat_access_policy import (
+    IChatAccessPolicy,
+)
 from luminary.chat.application.interfaces.repositories.chat_repository import (
     IChatRepository,
 )
@@ -25,16 +28,18 @@ class SendMessageUseCase(ISendMessageUseCase):
         uow: IUnitOfWork,
         chat_repository: IChatRepository,
         message_repository: IMessageRepository,
+        chat_access_policy: IChatAccessPolicy,
     ) -> None:
         self.message_factory = message_factory
         self.uow = uow
         self.chat_repository = chat_repository
         self.message_repository = message_repository
+        self.chat_access_policy = chat_access_policy
 
     async def execute(self, command: SendMessageCommand) -> MessageDTO:
         chat = await self.chat_repository.get_by_id(command.chat_id)
 
-        # TODO: Policy
+        self.chat_access_policy.assert_is_allowed(command.user_id, chat)
 
         message = self.message_factory.create(
             MessageFactoryDTO(

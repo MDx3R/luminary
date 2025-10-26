@@ -3,6 +3,9 @@ from collections.abc import AsyncGenerator
 from common.application.exceptions import NotFoundError
 from common.application.interfaces.transactions.unit_of_work import IUnitOfWork
 
+from luminary.chat.application.interfaces.policies.chat_access_policy import (
+    IChatAccessPolicy,
+)
 from luminary.chat.application.interfaces.repositories.chat_repository import (
     IChatRepository,
 )
@@ -27,19 +30,21 @@ from luminary.model.application.interfaces.services.ai_provider import AIProvide
 
 
 class GetStreamingMessageResponseUseCase(IGetStreamingMessageResponseUseCase):
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
         message_factory: IMessageFactory,
         uow: IUnitOfWork,
         ai_provider: AIProvider,
         chat_repository: IChatRepository,
         message_repository: IMessageRepository,
+        chat_access_policy: IChatAccessPolicy,
     ) -> None:
         self.message_factory = message_factory
         self.uow = uow
         self.ai_provider = ai_provider
         self.chat_repository = chat_repository
         self.message_repository = message_repository
+        self.chat_access_policy = chat_access_policy
 
     async def execute(
         self, command: GetMessageResponseCommand
@@ -49,7 +54,7 @@ class GetStreamingMessageResponseUseCase(IGetStreamingMessageResponseUseCase):
         if chat.chat_id != request.chat_id:
             raise NotFoundError(request.message_id)
 
-        # TODO: Policy
+        self.chat_access_policy.assert_is_allowed(command.user_id, chat)
 
         response = self.message_factory.create(
             MessageFactoryDTO(

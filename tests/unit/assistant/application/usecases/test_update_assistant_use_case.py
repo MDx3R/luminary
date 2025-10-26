@@ -49,16 +49,20 @@ class TestUpdateAssistantUseCase:
         await self.use_case.execute(self.command)
 
         # Assert
+        # NOTE: Changes applied on self.assistant object via reference
+        assert self.assistant.info.name == self.command.name
+        assert self.assistant.info.description == self.command.description
+        assert self.assistant.instructions is not None  # TODO: Check default prompt
+
         self.assistant_repository.get_by_id.assert_awaited_once_with(
-            self.assistant.assistant_id
+            self.command.assistant_id
         )
         self.assistant_access_policy.assert_is_allowed.assert_called_once_with(
             self.command.user_id, self.assistant
         )
-        # NOTE: Changes applied on self.assistant object via reference
         self.assistant_repository.save.assert_awaited_once_with(self.assistant)
 
-    async def test_update_assistant_add_instructions(self):
+    async def test_update_assistant_change_instructions(self):
         # Arrange
         prompt = "New prompt"
         command = UpdateAssistantCommand(
@@ -71,16 +75,19 @@ class TestUpdateAssistantUseCase:
 
         # Act
         await self.use_case.execute(command)
+        # NOTE: Changes applied on self.assistant object via reference
+        assert self.assistant.info.name == command.name
+        assert self.assistant.info.description == command.description
+        assert self.assistant.instructions.prompt == command.prompt
 
         # Assert
         self.assistant_repository.get_by_id.assert_awaited()
         self.assistant_access_policy.assert_is_allowed.assert_called_once_with(
             command.user_id, self.assistant
         )
-        # NOTE: Changes applied on self.assistant object via reference
         self.assistant_repository.save.assert_awaited_once_with(self.assistant)
 
-    async def test_update_assistant_remove_instructions(self):
+    async def test_update_assistant_reset_instructions(self):
         # Arrange
         assistant = make_assistant(
             assistant_id=self.assistant_id,
@@ -98,6 +105,9 @@ class TestUpdateAssistantUseCase:
 
         # Act
         await self.use_case.execute(command)
+        assert self.assistant.info.name == command.name
+        assert self.assistant.info.description == command.description
+        assert self.assistant.instructions is not None  # TODO: Check default prompt
 
         # Assert
         self.assistant_repository.get_by_id.assert_awaited()

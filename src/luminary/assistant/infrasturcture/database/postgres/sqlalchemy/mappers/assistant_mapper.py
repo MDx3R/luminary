@@ -20,13 +20,10 @@ class AssistantMapper:
 
     @classmethod
     def to_persistence(cls, assistant: Assistant) -> AssistantBase:
-        inst = assistant.instructions
-        prompt = inst.prompt if inst else None
-
         return AssistantBase(
             assistant_id=assistant.assistant_id,
             user_id=assistant.user_id,
             name=assistant.info.name,
             description=assistant.info.description,
-            prompt=prompt,
+            prompt=assistant.instructions.prompt,
         )

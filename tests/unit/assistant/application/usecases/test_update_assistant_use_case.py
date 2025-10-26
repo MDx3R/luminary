@@ -78,7 +78,6 @@ class TestUpdateAssistantUseCase:
         # NOTE: Changes applied on self.assistant object via reference
         assert self.assistant.info.name == command.name
         assert self.assistant.info.description == command.description
-        assert self.assistant.instructions is not None
         assert self.assistant.instructions.prompt == command.prompt
 
         # Assert

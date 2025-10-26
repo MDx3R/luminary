@@ -29,5 +29,4 @@ class TestAssistantService:
 
         self.service.apply_assistant_instructions_to_chat(assistant, chat)
 
-        assert assistant.instructions is not None
         assert chat.settings.system_prompt == assistant.instructions.prompt

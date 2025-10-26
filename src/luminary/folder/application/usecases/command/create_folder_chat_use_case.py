@@ -51,7 +51,7 @@ class CreateFolderChatUseCase(ICreateFolderChatUseCase):
             name=None,
             settings=ChatSettings(
                 folder.model_id,
-                assistant.instructions.prompt if assistant.instructions else "prompt",
+                assistant.instructions.prompt,
                 20,
             ),
         )

@@ -73,7 +73,6 @@ class TestApplyAssistantToChatUseCase:
         )
 
     def mock_service_call(self, assistant: Assistant, chat: Chat) -> None:
-        assert assistant.instructions
         chat.settings = ChatSettings(
             chat.settings.model_id,
             assistant.instructions.prompt,
@@ -94,7 +93,6 @@ class TestApplyAssistantToChatUseCase:
 
         # Assert
         # NOTE: Changes applied on self.chat object via reference
-        assert self.assistant.instructions is not None
         assert self.chat.settings.system_prompt == self.assistant.instructions.prompt
 
         self.assistant_repository.get_by_id.assert_awaited_once_with(

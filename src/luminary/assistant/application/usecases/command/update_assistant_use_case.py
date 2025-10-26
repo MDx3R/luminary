@@ -26,7 +26,9 @@ class UpdateAssistantUseCase(IUpdateAssistantUseCase):
 
         assistant.change_name(command.name)
         assistant.change_description(command.description)
-        default_prompt = "You're a helpful assistant"  # TODO: Retrieve or define default prompt somewhere
+        default_prompt = (
+            "You're a helpful assistant"  # TODO: Fetch default settings from repo
+        )
         assistant.change_instructions(Instructions(command.prompt or default_prompt))
 
         # TODO: Check if assistant has changed

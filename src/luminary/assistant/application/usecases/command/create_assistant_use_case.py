@@ -27,12 +27,8 @@ class CreateAssistantUseCase(ICreateAssistantUseCase):
         if exists:
             raise AssistantDuplicateNameError(command.user_id, command.name)
 
-        default_prompt = "You're a helpful assistant"  # TODO: Retrieve or define default prompt somewhere
         assisnant = self.assistant_factory.create(
-            command.user_id,
-            command.name,
-            command.description,
-            command.prompt or default_prompt,
+            command.user_id, command.name, command.description, command.prompt
         )
 
         await self.assistant_repository.add(assisnant)

@@ -1,8 +1,14 @@
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
+from uuid import UUID
 
-from luminary.source.application.dto.source_dto import DeleteSourceDTO
+
+@dataclass(frozen=True)
+class DeleteSourceCommand:
+    user_id: UUID
+    source_id: UUID
 
 
 class IDeleteSourceUseCase(ABC):
     @abstractmethod
-    async def execute(self, dto: DeleteSourceDTO) -> None: ...
+    async def execute(self, command: DeleteSourceCommand) -> None: ...

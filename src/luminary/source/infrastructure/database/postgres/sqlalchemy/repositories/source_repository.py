@@ -4,7 +4,7 @@ from common.application.exceptions import NotFoundError
 from common.infrastructure.database.sqlalchemy.executor import QueryExecutor
 from sqlalchemy import select
 
-from luminary.source.application.interfaces.respositories.source_repository import (
+from luminary.source.application.interfaces.repositories.source_repository import (
     ISourceRepository,
 )
 from luminary.source.domain.entity.source import Source

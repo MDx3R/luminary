@@ -2,10 +2,6 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from uuid import UUID
 
-from luminary.source.application.interfaces.usecases.command.create_source_use_case import (
-    SourceDTO,
-)
-
 
 @dataclass(frozen=True)
 class UpdateSourceCommand:
@@ -16,4 +12,4 @@ class UpdateSourceCommand:
 
 class IUpdateSourceUseCase(ABC):
     @abstractmethod
-    async def execute(self, command: UpdateSourceCommand) -> SourceDTO: ...
+    async def execute(self, command: UpdateSourceCommand) -> None: ...

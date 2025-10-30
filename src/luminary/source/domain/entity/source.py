@@ -28,3 +28,7 @@ class Source:
         return cls(
             source_id=source_id, user_id=user_id, name=name, created_at=created_at
         )
+    
+    def update_name(self, name: str) -> None:
+        self._validate_name(name)
+        self.name = name

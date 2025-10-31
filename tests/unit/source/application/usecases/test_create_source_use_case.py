@@ -1,9 +1,8 @@
-from datetime import UTC, datetime
 from unittest.mock import AsyncMock, Mock
 from uuid import UUID, uuid4
 
 import pytest
-from common.domain.value_objects.datetime import DateTime
+from tests.unit.source.utils import make_source
 
 from luminary.source.application.interfaces.repositories.source_repository import (
     ISourceRepository,
@@ -16,20 +15,6 @@ from luminary.source.application.usecases.command.create_source_use_case import 
 )
 from luminary.source.domain.entity.source import Source
 from luminary.source.domain.interfaces.source_factory import ISourceFactory
-
-
-def make_source(
-    source_id: UUID | None = None,
-    user_id: UUID | None = None,
-    name: str = "Test Source",
-    created_at: DateTime | None = None,
-) -> Source:
-    return Source(
-        source_id=source_id or uuid4(),
-        user_id=user_id or uuid4(),
-        name=name,
-        created_at=created_at or DateTime(datetime.now(UTC)),
-    )
 
 
 @pytest.mark.asyncio

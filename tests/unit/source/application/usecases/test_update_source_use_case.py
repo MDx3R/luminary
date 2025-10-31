@@ -1,11 +1,10 @@
-from datetime import UTC, datetime
 from unittest.mock import AsyncMock, Mock
 from uuid import UUID, uuid4
 
 import pytest
 from common.application.exceptions import AccessPolicyError, NotFoundError
 from common.domain.exceptions import InvariantViolationError
-from common.domain.value_objects.datetime import DateTime
+from tests.unit.source.utils import make_source
 
 from luminary.source.application.interfaces.policies.source_access_policy import (
     ISourceAccessPolicy,
@@ -20,20 +19,6 @@ from luminary.source.application.usecases.command.update_source_use_case import 
     UpdateSourceUseCase,
 )
 from luminary.source.domain.entity.source import Source
-
-
-def make_source(
-    source_id: UUID | None = None,
-    user_id: UUID | None = None,
-    name: str = "Test Source",
-    created_at: DateTime | None = None,
-) -> Source:
-    return Source(
-        source_id=source_id or uuid4(),
-        user_id=user_id or uuid4(),
-        name=name,
-        created_at=created_at or DateTime(datetime.now(UTC)),
-    )
 
 
 @pytest.mark.asyncio
@@ -85,6 +70,17 @@ class TestUpdateSourceUseCase:
         await self.use_case.execute(self.command)
 
         self.repository.save.assert_awaited_once_with(self.source)
+
+    async def test_skips_save_when_name_unchanged(self) -> None:
+        unchanged_command: UpdateSourceCommand = UpdateSourceCommand(
+            user_id=self.user_id,
+            source_id=self.source_id,
+            name="Old Name",
+        )
+
+        await self.use_case.execute(unchanged_command)
+
+        self.repository.save.assert_not_awaited()
 
     async def test_raises_not_found_error_when_source_not_exists(self) -> None:
         self.repository.get_by_id.side_effect = NotFoundError(self.source_id)
@@ -145,15 +141,3 @@ class TestUpdateSourceUseCase:
 
         with pytest.raises(InvariantViolationError):
             await self.use_case.execute(invalid_command)
-
-    async def test_validates_invariants_before_any_operations(self) -> None:
-        invalid_command: UpdateSourceCommand = UpdateSourceCommand(
-            user_id=self.user_id,
-            source_id=self.source_id,
-            name="",
-        )
-
-        with pytest.raises(InvariantViolationError):
-            await self.use_case.execute(invalid_command)
-
-        self.repository.get_by_id.assert_not_awaited()

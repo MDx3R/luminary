@@ -31,7 +31,7 @@ jobs:
 on:
   push:
     branches:
-      - feature/add-ci/cd
+      - '**' 
 
 jobs:
   test:

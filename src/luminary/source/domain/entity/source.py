@@ -30,5 +30,4 @@ class Source:
         )
     
     def update_name(self, name: str) -> None:
-        self._validate_name(name)
         self.name = name

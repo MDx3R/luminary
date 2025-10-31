@@ -1,3 +1,5 @@
+from common.domain.exceptions import InvariantViolationError
+
 from luminary.source.application.interfaces.policies.source_access_policy import (
     ISourceAccessPolicy,
 )
@@ -20,6 +22,10 @@ class UpdateSourceUseCase(IUpdateSourceUseCase):
         self.access_policy = access_policy
 
     async def execute(self, command: UpdateSourceCommand) -> None:
+
+        if not command.name.strip():
+            raise InvariantViolationError("Source name cannot be empty")
+
         source = await self.repository.get_by_id(command.source_id)
         self.access_policy.assert_is_allowed(command.user_id, source)
 

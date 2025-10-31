@@ -8,9 +8,9 @@ Luminary - Python-проект (FastAPI + SQLAlchemy) с архитектуро�
   - `common/` — общие библиотеки (инфраструктура, интерфейсы, реализации сервисов)
   - `luminary/` — основной пакет приложения (assistant, chat, model, source и т.д.)
 - `tests/` — юнит и интеграционные тесты
-- 'ci/' - CI/CD проекта
-  - 'Dockerfiles/' - Dockerfile проекта
-  - 'template/' - шаблоны для CI/CD
+- `ci/` - CI/CD проекта
+  - `Dockerfiles/` - Dockerfile проекта
+  - `template/` - шаблоны для CI/CD
 
 ## Требования
 

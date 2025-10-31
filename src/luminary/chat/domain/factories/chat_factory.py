@@ -1,8 +1,10 @@
+from uuid import UUID
+
 from common.domain.interfaces.clock import IClock
 from common.domain.interfaces.uuid_generator import IUUIDGenerator
 
-from luminary.chat.domain.entity.chat import Chat
-from luminary.chat.domain.interfaces.chat_factory import ChatFactoryDTO, IChatFactory
+from luminary.chat.domain.entity.chat import Chat, ChatSettings
+from luminary.chat.domain.interfaces.chat_factory import IChatFactory
 
 
 class ChatFactory(IChatFactory):
@@ -12,16 +14,21 @@ class ChatFactory(IChatFactory):
         self.clock = clock
         self.uuid_generator = uuid_generator
 
-    def create(self, data: ChatFactoryDTO) -> Chat:
-        name = data.name
+    def create(
+        self,
+        user_id: UUID,
+        folder_id: UUID | None,
+        name: str | None,
+        settings: ChatSettings,
+    ) -> Chat:
         if name is None:
             name = self.DEFAULT_CHAT_NAME
 
         return Chat.create(
             chat_id=self.uuid_generator.create(),
-            folder_id=data.folder_id,
-            user_id=data.user_id,
+            folder_id=folder_id,
+            user_id=user_id,
             name=name,
-            settings=data.settings,
+            settings=settings,
             created_at=self.clock.now(),
         )

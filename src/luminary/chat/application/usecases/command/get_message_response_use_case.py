@@ -13,19 +13,13 @@ from luminary.chat.application.interfaces.repositories.message_repository import
     IMessageRepository,
 )
 from luminary.chat.application.interfaces.usecases.command.get_message_response_use_case import (
-    EMPTY_CONTENT,
-    STREAM_END_CONTENT,
-    STREAM_START_CONTENT,
     GetMessageResponseCommand,
     IGetStreamingMessageResponseUseCase,
     StreamingMessageDTO,
     StreamState,
 )
 from luminary.chat.domain.enums import Author
-from luminary.chat.domain.interfaces.message_factory import (
-    IMessageFactory,
-    MessageFactoryDTO,
-)
+from luminary.chat.domain.interfaces.message_factory import IMessageFactory
 from luminary.model.application.interfaces.services.ai_provider import AIProvider
 
 
@@ -51,18 +45,16 @@ class GetStreamingMessageResponseUseCase(IGetStreamingMessageResponseUseCase):
     ) -> AsyncGenerator[StreamingMessageDTO]:
         chat = await self.chat_repository.get_by_id(command.chat_id)
         request = await self.message_repository.get_by_id(command.message_id)
-        if chat.chat_id != request.chat_id:
+        if chat.chat_id != request.message_id:
             raise NotFoundError(request.message_id)
 
         self.chat_access_policy.assert_is_allowed(command.user_id, chat)
 
         response = self.message_factory.create(
-            MessageFactoryDTO(
-                chat_id=chat.chat_id,
-                model_id=chat.settings.model_id,
-                role=Author.ASSISTANT,
-                content=EMPTY_CONTENT,
-            )
+            chat_id=chat.chat_id,
+            model_id=chat.settings.model_id,
+            role=Author.ASSISTANT,
+            content="Placeholder",
         )
         response.start_streaming()
 
@@ -70,7 +62,7 @@ class GetStreamingMessageResponseUseCase(IGetStreamingMessageResponseUseCase):
 
         yield StreamingMessageDTO(
             state=StreamState.START,
-            content=STREAM_START_CONTENT,
+            content="start",
             message_id=response.message_id,
             author=response.role,
             status=response.status,
@@ -100,7 +92,7 @@ class GetStreamingMessageResponseUseCase(IGetStreamingMessageResponseUseCase):
 
         yield StreamingMessageDTO(
             state=StreamState.END,
-            content=STREAM_END_CONTENT,
+            content="end",
             message_id=response.message_id,
             author=response.role,
             status=response.status,

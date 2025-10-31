@@ -8,7 +8,7 @@ from luminary.chat.application.interfaces.repositories.chat_repository import (
     IChatRepository,
 )
 from luminary.chat.domain.entity.chat import ChatSettings
-from luminary.chat.domain.interfaces.chat_factory import IChatFactory
+from luminary.chat.domain.interfaces.chat_factory import ChatFactoryDTO, IChatFactory
 from luminary.folder.application.interfaces.policies.folder_access_policy import (
     IFolderAccessPolicy,
 )
@@ -46,14 +46,16 @@ class CreateFolderChatUseCase(ICreateFolderChatUseCase):
         # NOTE: No need to check access to assistant
 
         chat = self.chat_factory.create(
-            folder.folder_id,
-            command.user_id,
-            name=None,
-            settings=ChatSettings(
-                folder.model_id,
-                assistant.instructions.prompt,
-                20,
-            ),
+            ChatFactoryDTO(
+                folder.folder_id,
+                command.user_id,
+                name=None,
+                settings=ChatSettings(
+                    folder.model_id,
+                    assistant.instructions.prompt,
+                    20,
+                ),
+            )
         )
 
         await self.chat_repository.add(chat)

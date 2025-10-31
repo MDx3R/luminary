@@ -14,7 +14,10 @@ class Source:
     created_at: DateTime
 
     def __post_init__(self) -> None:
-        if not self.name.strip():
+        self._validate_name(self.name)
+
+    def _validate_name(self, name: str) -> None:
+        if not name.strip():
             raise InvariantViolationError("Source name cannot be empty")
 
     @classmethod
@@ -30,4 +33,5 @@ class Source:
         )
     
     def update_name(self, name: str) -> None:
+        self._validate_name(name)
         self.name = name

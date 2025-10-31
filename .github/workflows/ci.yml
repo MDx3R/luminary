@@ -10,7 +10,7 @@ on:
       - main 
 
 jobs:
-  ruff:
+  test:
     runs-on: ubuntu-latest
 
     steps:

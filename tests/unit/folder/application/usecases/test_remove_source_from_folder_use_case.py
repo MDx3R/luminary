@@ -1,21 +1,16 @@
 from unittest.mock import AsyncMock, Mock
 from uuid import uuid4
-
 import pytest
 from common.application.exceptions import AccessPolicyError
 
-from luminary.folder.application.interfaces.usecases.command.remove_source_from_folder_use_case import (
-    RemoveSourceFromFolderCommand,
-)
-from luminary.folder.application.usecases.command.remove_source_from_folder_use_case import (
-    RemoveSourceFromFolderUseCase,
-)
-
+from luminary.folder.application.usecases.command.remove_source_from_folder_use_case import RemoveSourceFromFolderUseCase
+from luminary.folder.application.interfaces.usecases.command.remove_source_from_folder_use_case import RemoveSourceFromFolderCommand
+from luminary.folder.application.interfaces.policies.folder_access_policy import IFolderAccessPolicy
 
 class TestRemoveSourceFromFolderUseCase:
     @pytest.fixture
     def setup(self):
-        self.folder_access_policy = Mock()
+        self.folder_access_policy = Mock(spec=IFolderAccessPolicy)  # spec добавлен
         self.folder_repository = AsyncMock()
         
         self.use_case = RemoveSourceFromFolderUseCase(
@@ -30,6 +25,7 @@ class TestRemoveSourceFromFolderUseCase:
         )
         
         return self
+
 
     @pytest.mark.asyncio
     async def test_remove_source_from_folder_success(self, setup):

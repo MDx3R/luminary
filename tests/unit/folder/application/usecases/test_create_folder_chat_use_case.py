@@ -1,22 +1,18 @@
 from unittest.mock import AsyncMock, Mock
 from uuid import uuid4
-
 import pytest
 
-from luminary.folder.application.interfaces.usecases.command.create_folder_chat_use_case import (
-    CreateFolderChatCommand,
-)
-from luminary.folder.application.usecases.command.create_folder_chat_use_case import (
-    CreateFolderChatUseCase,
-)
-
+from luminary.folder.application.usecases.command.create_folder_chat_use_case import CreateFolderChatUseCase
+from luminary.folder.application.interfaces.usecases.command.create_folder_chat_use_case import CreateFolderChatCommand
+from luminary.folder.application.interfaces.policies.folder_access_policy import IFolderAccessPolicy
+from luminary.assistant.domain.interfaces.assistant_service import IAssistantService
 
 class TestCreateFolderChatUseCase:
     @pytest.fixture
     def setup(self):
         self.chat_factory = Mock()
-        self.folder_access_policy = Mock()
-        self.assistant_service = Mock()
+        self.folder_access_policy = Mock(spec=IFolderAccessPolicy)  # spec добавлен
+        self.assistant_service = Mock(spec=IAssistantService)  # spec добавлен
         self.assistant_repository = AsyncMock()
         self.folder_repository = AsyncMock()
         self.chat_repository = AsyncMock()

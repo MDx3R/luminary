@@ -1,23 +1,21 @@
 from unittest.mock import AsyncMock, Mock
 from uuid import uuid4
-
 import pytest
 from common.application.exceptions import AccessPolicyError
 
-from luminary.folder.application.interfaces.usecases.command.add_source_to_folder_use_case import (
-    AddSourceToFolderCommand,
-)
-from luminary.folder.application.usecases.command.add_source_to_folder_use_case import (
-    AddSourceToFolderUseCase,
-)
+from luminary.folder.application.usecases.command.add_source_to_folder_use_case import AddSourceToFolderUseCase
+from luminary.folder.application.interfaces.usecases.command.add_source_to_folder_use_case import AddSourceToFolderCommand
+from luminary.folder.application.interfaces.policies.folder_access_policy import IFolderAccessPolicy
+from luminary.source.application.interfaces.policies.source_access_policy import ISourceAccessPolicy
 
 
 class TestAddSourceToFolderUseCase:
     @pytest.fixture
     def setup(self):
-        self.folder_access_policy = Mock()
+        # Используем spec для правильных моков
+        self.folder_access_policy = Mock(spec=IFolderAccessPolicy)
         self.folder_repository = AsyncMock()
-        self.source_access_policy = Mock()
+        self.source_access_policy = Mock(spec=ISourceAccessPolicy)
         self.source_repository = AsyncMock()
         
         self.use_case = AddSourceToFolderUseCase(

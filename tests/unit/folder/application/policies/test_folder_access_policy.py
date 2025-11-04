@@ -1,11 +1,13 @@
+from datetime import UTC, datetime
 from uuid import uuid4
+
 import pytest
 from common.application.exceptions import AccessPolicyError
+from common.domain.value_objects.datetime import DateTime
 
 from luminary.folder.application.policies.folder_access_policy import FolderAccessPolicy
 from luminary.folder.domain.entity.folder import Folder, FolderInfo
-from common.domain.value_objects.datetime import DateTime
-from datetime import UTC, datetime
+
 
 class TestFolderAccessPolicy:
     @pytest.fixture

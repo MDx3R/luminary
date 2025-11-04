@@ -1,9 +1,11 @@
 from unittest.mock import Mock
 from uuid import uuid4
+
 import pytest
 
-from luminary.folder.domain.factories.folder_factory import FolderFactory
 from luminary.folder.domain.entity.folder import Folder
+from luminary.folder.domain.factories.folder_factory import FolderFactory
+
 
 class TestFolderFactory:
     @pytest.fixture

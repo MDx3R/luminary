@@ -1,9 +1,15 @@
 from unittest.mock import AsyncMock, Mock
 from uuid import uuid4
+
 import pytest
 
-from luminary.folder.application.usecases.command.create_folder_chat_use_case import CreateFolderChatUseCase
-from luminary.folder.application.interfaces.usecases.command.create_folder_chat_use_case import CreateFolderChatCommand
+from luminary.folder.application.interfaces.usecases.command.create_folder_chat_use_case import (
+    CreateFolderChatCommand,
+)
+from luminary.folder.application.usecases.command.create_folder_chat_use_case import (
+    CreateFolderChatUseCase,
+)
+
 
 class TestCreateFolderChatUseCase:
     @pytest.fixture

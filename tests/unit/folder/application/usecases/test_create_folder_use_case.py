@@ -1,9 +1,15 @@
 from unittest.mock import AsyncMock, Mock
 from uuid import uuid4
+
 import pytest
 
-from luminary.folder.application.usecases.command.create_folder_use_case import CreateFolderUseCase
-from luminary.folder.application.interfaces.usecases.command.create_folder_use_case import CreateFolderCommand
+from luminary.folder.application.interfaces.usecases.command.create_folder_use_case import (
+    CreateFolderCommand,
+)
+from luminary.folder.application.usecases.command.create_folder_use_case import (
+    CreateFolderUseCase,
+)
+
 
 class TestCreateFolderUseCase:
     @pytest.fixture

@@ -3,12 +3,14 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock
 from uuid import uuid4
 
-from luminary.chat.application.interfaces.policies.chat_access_policy import IChatAccessPolicy
 import pytest
 from common.application.exceptions import NotFoundError
 from common.application.interfaces.transactions.unit_of_work import IUnitOfWork
 from tests.unit.chat.utils import make_chat, make_message
 
+from luminary.chat.application.interfaces.policies.chat_access_policy import (
+    IChatAccessPolicy,
+)
 from luminary.chat.application.interfaces.repositories.chat_repository import (
     IChatRepository,
 )

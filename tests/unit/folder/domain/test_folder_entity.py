@@ -1,10 +1,12 @@
+from datetime import UTC, datetime
 from uuid import uuid4
+
 import pytest
 from common.domain.exceptions import InvariantViolationError
 from common.domain.value_objects.datetime import DateTime
-from datetime import UTC, datetime
 
 from luminary.folder.domain.entity.folder import Folder, FolderInfo
+
 
 class TestFolderEntity:
     @pytest.fixture

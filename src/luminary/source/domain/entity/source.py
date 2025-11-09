@@ -20,6 +20,9 @@ class Source(ABC):
     def is_owned_by(self, user_id: UUID) -> bool:
         return self.owner_id == user_id
 
+    def is_content_editable(self) -> bool:
+        return False
+
     def update_title(self, title: str) -> None:
         self.title = Title(title)
 

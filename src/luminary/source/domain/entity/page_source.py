@@ -13,6 +13,9 @@ from luminary.source.domain.enums import SourceType
 class PageSource(Source):
     editable: bool
 
+    def is_content_editable(self) -> bool:
+        return self.editable
+
     def lock(self) -> None:
         self.editable = False
 

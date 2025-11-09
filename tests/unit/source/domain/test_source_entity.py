@@ -6,6 +6,7 @@ import pytest
 from common.domain.exceptions import InvariantViolationError
 from common.domain.value_objects.datetime import DateTime
 from common.domain.value_objects.title import Title
+from common.domain.value_objects.url import Url
 
 from luminary.source.domain.entity.file_source import FileSource
 from luminary.source.domain.entity.link_source import LinkSource
@@ -68,6 +69,10 @@ class TestSourceEntity:
         assert self.source.is_owned_by(self.source.owner_id)
         assert not self.source.is_owned_by(uuid4())
 
+    def test_is_content_editable(self) -> None:
+        # Act & Assert
+        assert not self.source.is_content_editable()
+
 
 class TestFileSource:
     @pytest.fixture(autouse=True)
@@ -109,6 +114,10 @@ class TestFileSource:
         assert source.meta == self.meta
         assert source.created_at == self.created_at
 
+    def test_is_content_editable(self) -> None:
+        # Act & Assert
+        assert not self.source.is_content_editable()
+
     def test_create_file_source_invalid_meta(self) -> None:
         # Arrange & Act & Assert
         with pytest.raises(InvariantViolationError):
@@ -129,16 +138,26 @@ class TestLinkSource:
         self.url = "https://example.com"
         self.created_at = DateTime(datetime.now(UTC))
 
-        self.link_source = LinkSource.create(
+        self.link_source = LinkSource(
+            source_id=self.source_id,
+            owner_id=self.owner_id,
+            title=Title(self.title),
+            url=Url(self.url),
+            content_id=None,
+            type=SourceType.LINK,
+            fetched_at=None,
+            fetch_status=FetchStatus.NOT_FETCHED,
+            created_at=self.created_at,
+        )
+
+    def test_create_link_source_success(self) -> None:
+        source = LinkSource.create(
             source_id=self.source_id,
             owner_id=self.owner_id,
             title=self.title,
             url=self.url,
             created_at=self.created_at,
         )
-
-    def test_create_link_source_success(self) -> None:
-        source = self.link_source
 
         assert source.source_id == self.source_id
         assert source.owner_id == self.owner_id
@@ -180,6 +199,10 @@ class TestLinkSource:
         # Assert
         assert source.fetch_status == FetchStatus.FAILED
 
+    def test_is_content_editable(self) -> None:
+        # Act & Assert
+        assert not self.link_source.is_content_editable()
+
 
 class TestPageSource:
     @pytest.fixture(autouse=True)
@@ -189,15 +212,23 @@ class TestPageSource:
         self.title = "Test Page"
         self.created_at = DateTime(datetime.now(UTC))
 
-        self.base_page = PageSource.create(
+        self.base_page = PageSource(
+            source_id=self.source_id,
+            owner_id=self.owner_id,
+            title=Title(self.title),
+            content_id=None,
+            type=SourceType.PAGE,
+            editable=True,
+            created_at=self.created_at,
+        )
+
+    def test_create_page_source_success(self) -> None:
+        source = PageSource.create(
             source_id=self.source_id,
             owner_id=self.owner_id,
             title=self.title,
             created_at=self.created_at,
         )
-
-    def test_create_page_source_success(self) -> None:
-        source = self.base_page
 
         assert source.source_id == self.source_id
         assert source.owner_id == self.owner_id
@@ -259,3 +290,18 @@ class TestPageSource:
 
         # Assert
         assert source.editable is True
+
+    def test_is_content_editable(self) -> None:
+        # Arrange
+        source = replace(self.base_page)
+        source.editable = True
+
+        # Act & Assert
+        assert source.is_content_editable()
+
+        # Arrange
+        source = replace(self.base_page)
+        source.editable = False
+
+        # Act & Assert
+        assert not source.is_content_editable()

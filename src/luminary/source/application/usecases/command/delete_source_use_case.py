@@ -22,4 +22,4 @@ class DeleteSourceUseCase(IDeleteSourceUseCase):
     async def execute(self, command: DeleteSourceCommand) -> None:
         source = await self.repository.get_by_id(command.source_id)
         self.access_policy.assert_is_allowed(command.user_id, source)
-        await self.repository.delete(command.source_id)
+        await self.repository.remove(source)

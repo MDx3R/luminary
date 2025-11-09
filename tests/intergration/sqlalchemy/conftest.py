@@ -22,12 +22,24 @@ from testcontainers.postgres import PostgresContainer
 from luminary.assistant.infrasturcture.database.postgres.sqlalchemy.models.assistant_base import (
     AssistantBase,
 )
+from luminary.source.infrastructure.database.postgres.sqlalchemy.models.source_base import (
+    FileSourceBase,
+    LinkSourceBase,
+    PageSourceBase,
+    SourceBase,
+)
 
 
 os.environ["TESTCONTAINERS_RYUK_DISABLED"] = "true"
 
 # Needed for proper database configuration, e.g. fkeys and tables
-__models__: list[type[Base]] = [AssistantBase]
+__models__: list[type[Base]] = [
+    AssistantBase,
+    SourceBase,
+    FileSourceBase,
+    LinkSourceBase,
+    PageSourceBase,
+]
 
 
 class StaticSessionFactory(ISessionFactory):

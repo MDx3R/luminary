@@ -60,7 +60,7 @@ class TestDeleteSourceUseCase:
     async def test_calls_repository_delete_with_source_id(self) -> None:
         await self.use_case.execute(self.command)
 
-        self.repository.delete.assert_awaited_once_with(self.source_id)
+        self.repository.remove.assert_awaited_once_with(self.source)
 
     async def test_raises_not_found_error_when_source_not_exists(self) -> None:
         self.repository.get_by_id.side_effect = NotFoundError(self.source_id)
@@ -82,7 +82,7 @@ class TestDeleteSourceUseCase:
         with pytest.raises(NotFoundError):
             await self.use_case.execute(self.command)
 
-        self.repository.delete.assert_not_awaited()
+        self.repository.remove.assert_not_awaited()
 
     async def test_raises_access_policy_error_when_access_denied(self) -> None:
         self.access_policy.assert_is_allowed.side_effect = AccessPolicyError(
@@ -100,4 +100,4 @@ class TestDeleteSourceUseCase:
         with pytest.raises(AccessPolicyError):
             await self.use_case.execute(self.command)
 
-        self.repository.delete.assert_not_awaited()
+        self.repository.remove.assert_not_awaited()

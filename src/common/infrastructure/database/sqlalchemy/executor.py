@@ -96,26 +96,22 @@ class QueryExecutor:
             result = await session.execute(statement)
             return result
 
-    async def add(
-        self,
-        model: Base,
-    ) -> None:
+    async def add(self, model: Base) -> None:
         async with self.uow.get_session() as session:
             session.add(model)
             await session.flush()
 
-    async def add_all(
-        self,
-        models: Sequence[Base],
-    ) -> None:
+    async def add_all(self, models: Sequence[Base]) -> None:
         async with self.uow.get_session() as session:
             session.add_all(models)
             await session.flush()
 
-    async def save(
-        self,
-        model: Base,
-    ) -> None:
+    async def save(self, model: Base) -> None:
         async with self.uow.get_session() as session:
             model = await session.merge(model)
+            await session.flush()
+
+    async def delete(self, model: Base) -> None:
+        async with self.uow.get_session() as session:
+            await session.delete(model)
             await session.flush()

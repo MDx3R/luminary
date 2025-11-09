@@ -30,18 +30,18 @@ class TestUpdateSourceUseCase:
 
         self.source: Source = make_source(
             source_id=self.source_id,
-            user_id=self.user_id,
-            name="Old Name",
+            owner_id=self.user_id,
+            title="Old Name",
         )
 
         self.access_policy: Mock = Mock(spec=ISourceAccessPolicy)
         self.repository: AsyncMock = AsyncMock(spec=ISourceRepository)
         self.repository.get_by_id.return_value = self.source
 
-        self.command: UpdateSourceCommand = UpdateSourceCommand(
+        self.command = UpdateSourceCommand(
             user_id=self.user_id,
             source_id=self.source_id,
-            name="New Name",
+            title="New Name",
         )
 
         self.use_case: UpdateSourceUseCase = UpdateSourceUseCase(
@@ -64,7 +64,7 @@ class TestUpdateSourceUseCase:
     async def test_updates_source_name(self) -> None:
         await self.use_case.execute(self.command)
 
-        assert self.source.name == "New Name"
+        assert self.source.title.value == "New Name"
 
     async def test_calls_repository_save_with_updated_source(self) -> None:
         await self.use_case.execute(self.command)
@@ -72,10 +72,10 @@ class TestUpdateSourceUseCase:
         self.repository.save.assert_awaited_once_with(self.source)
 
     async def test_skips_save_when_name_unchanged(self) -> None:
-        unchanged_command: UpdateSourceCommand = UpdateSourceCommand(
+        unchanged_command = UpdateSourceCommand(
             user_id=self.user_id,
             source_id=self.source_id,
-            name="Old Name",
+            title="Old Name",
         )
 
         await self.use_case.execute(unchanged_command)
@@ -123,20 +123,20 @@ class TestUpdateSourceUseCase:
         self.repository.save.assert_not_awaited()
 
     async def test_raises_invariant_violation_when_name_is_empty(self) -> None:
-        invalid_command: UpdateSourceCommand = UpdateSourceCommand(
+        invalid_command = UpdateSourceCommand(
             user_id=self.user_id,
             source_id=self.source_id,
-            name="",
+            title="",
         )
 
         with pytest.raises(InvariantViolationError):
             await self.use_case.execute(invalid_command)
 
     async def test_raises_invariant_violation_when_name_is_whitespace(self) -> None:
-        invalid_command: UpdateSourceCommand = UpdateSourceCommand(
+        invalid_command = UpdateSourceCommand(
             user_id=self.user_id,
             source_id=self.source_id,
-            name="   ",
+            title="   ",
         )
 
         with pytest.raises(InvariantViolationError):

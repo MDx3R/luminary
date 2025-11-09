@@ -17,8 +17,14 @@ class Source(ABC):
     content_id: UUID | None
     created_at: DateTime
 
+    def is_owned_by(self, user_id: UUID) -> bool:
+        return self.owner_id == user_id
+
     def update_title(self, title: str) -> None:
         self.title = Title(title)
+
+    def title_matches(self, title: str) -> bool:
+        return self.title.value == title
 
     def set_content(self, content_id: UUID) -> None:
         self.content_id = content_id

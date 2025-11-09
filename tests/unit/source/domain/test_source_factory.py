@@ -39,10 +39,8 @@ class TestSourceFactory:
             checksum="abc123",
         )
         dto = FileSourceFactoryDTO(
-            source_id=self.source_id,
             owner_id=self.owner_id,
             title="Test File",
-            created_at=self.created_at,
             meta=meta,
         )
 
@@ -62,10 +60,8 @@ class TestSourceFactory:
         # Arrange
         url = "https://example.com"
         dto = LinkSourceFactoryDTO(
-            source_id=self.source_id,
             owner_id=self.owner_id,
             title="Test Link",
-            created_at=self.created_at,
             url=url,
         )
 
@@ -84,10 +80,8 @@ class TestSourceFactory:
     def test_create_page_source(self) -> None:
         # Arrange
         dto = PageSourceFactoryDTO(
-            source_id=self.source_id,
             owner_id=self.owner_id,
             title="Test Page",
-            created_at=self.created_at,
         )
 
         # Act

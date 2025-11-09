@@ -28,7 +28,7 @@ class TestDeleteSourceUseCase:
         self.source_id: UUID = uuid4()
 
         self.source: Source = make_source(
-            source_id=self.source_id, user_id=self.user_id
+            source_id=self.source_id, owner_id=self.user_id
         )
 
         self.access_policy: Mock = Mock(spec=ISourceAccessPolicy)

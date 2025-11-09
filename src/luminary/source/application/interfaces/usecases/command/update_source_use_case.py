@@ -7,7 +7,7 @@ from uuid import UUID
 class UpdateSourceCommand:
     user_id: UUID
     source_id: UUID
-    name: str
+    title: str
 
 
 class IUpdateSourceUseCase(ABC):

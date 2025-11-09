@@ -33,7 +33,7 @@ class SourceFactory(ISourceFactory):
                 source_id=self.uuid_generator.create(),
                 owner_id=data.owner_id,
                 title=data.title,
-                created_at=data.created_at,
+                created_at=self.clock.now(),
                 meta=data.meta,
             )
 
@@ -43,7 +43,7 @@ class SourceFactory(ISourceFactory):
                 source_id=self.uuid_generator.create(),
                 owner_id=data.owner_id,
                 title=data.title,
-                created_at=data.created_at,
+                created_at=self.clock.now(),
                 url=data.url,
             )
 
@@ -53,7 +53,7 @@ class SourceFactory(ISourceFactory):
                 source_id=self.uuid_generator.create(),
                 owner_id=data.owner_id,
                 title=data.title,
-                created_at=data.created_at,
+                created_at=self.clock.now(),
             )
 
     def __init__(self, clock: IClock, uuid_generator: IUUIDGenerator) -> None:

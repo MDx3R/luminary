@@ -58,6 +58,16 @@ class TestSourceEntity:
         # Assert
         assert self.source.content_id == content_id
 
+    def test_title_matches(self) -> None:
+        # Act & Assert
+        assert self.source.title_matches(self.source.title.value)
+        assert not self.source.title_matches("random title")
+
+    def test_is_owned_by(self) -> None:
+        # Act & Assert
+        assert self.source.is_owned_by(self.source.owner_id)
+        assert not self.source.is_owned_by(uuid4())
+
 
 class TestFileSource:
     @pytest.fixture(autouse=True)

@@ -1,4 +1,3 @@
-
 from luminary.source.application.interfaces.policies.source_access_policy import (
     ISourceAccessPolicy,
 )
@@ -24,8 +23,8 @@ class UpdateSourceUseCase(IUpdateSourceUseCase):
         source = await self.repository.get_by_id(command.source_id)
         self.access_policy.assert_is_allowed(command.user_id, source)
 
-        if source.name == command.name:
+        if source.title_matches(command.title):
             return None
 
-        source.update_name(command.name)
+        source.update_title(command.title)
         await self.repository.save(source)

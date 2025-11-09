@@ -34,7 +34,6 @@ class SourceFactory(ISourceFactory):
                 owner_id=data.owner_id,
                 title=data.title,
                 created_at=self.clock.now(),
-                meta=data.meta,
                 file_id=data.file_id,
             )
 

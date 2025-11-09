@@ -4,14 +4,12 @@ from typing import overload
 from uuid import UUID
 
 from luminary.source.domain.entity.source import Source
-from luminary.source.domain.value_objects.file_meta import FileMeta
 
 
 @dataclass(frozen=True)
 class FileSourceFactoryDTO:
     owner_id: UUID
     title: str
-    meta: FileMeta
     file_id: UUID
 
 

@@ -27,7 +27,6 @@ from luminary.source.domain.interfaces.source_factory import (
     LinkSourceFactoryDTO,
     PageSourceFactoryDTO,
 )
-from luminary.source.domain.value_objects.file_meta import FileMeta
 
 
 @pytest.mark.asyncio
@@ -37,19 +36,12 @@ class TestCreateFileSourceUseCase:
         self.user_id: UUID = uuid4()
         self.source_id: UUID = uuid4()
         self.title = "Test File"
-        self.meta = FileMeta(
-            filename="test.txt",
-            mime_type="text/plain",
-            filesize=100,
-            checksum="abc123",
-        )
         self.file_id: UUID = uuid4()
 
         self.source = make_file_source(
             source_id=self.source_id,
             owner_id=self.user_id,
             title=self.title,
-            meta=self.meta,
         )
 
         self.source_factory: Mock = Mock(spec=ISourceFactory)
@@ -57,7 +49,7 @@ class TestCreateFileSourceUseCase:
         self.source_repository: AsyncMock = AsyncMock(spec=ISourceRepository)
 
         self.command = CreateFileSourceCommand(
-            user_id=self.user_id, title=self.title, meta=self.meta, file_id=self.file_id
+            user_id=self.user_id, title=self.title, file_id=self.file_id
         )
 
         self.use_case = CreateFileSourceUseCase(
@@ -71,10 +63,7 @@ class TestCreateFileSourceUseCase:
 
         # Assert
         expected_dto = FileSourceFactoryDTO(
-            owner_id=self.user_id,
-            title=self.title,
-            meta=self.meta,
-            file_id=self.file_id,
+            owner_id=self.user_id, title=self.title, file_id=self.file_id
         )
         self.source_factory.create.assert_called_once_with(expected_dto)
 

@@ -2,14 +2,11 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from uuid import UUID
 
-from luminary.source.domain.value_objects.file_meta import FileMeta
-
 
 @dataclass(frozen=True)
 class CreateFileSourceCommand:
     user_id: UUID
     title: str
-    meta: FileMeta
     file_id: UUID
 
 

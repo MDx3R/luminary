@@ -15,7 +15,6 @@ from luminary.source.domain.interfaces.source_factory import (
     LinkSourceFactoryDTO,
     PageSourceFactoryDTO,
 )
-from luminary.source.domain.value_objects.file_meta import FileMeta
 
 
 class TestSourceFactory:
@@ -33,14 +32,8 @@ class TestSourceFactory:
     def test_create_file_source(self) -> None:
         # Arrange
         file_id = uuid4()
-        meta = FileMeta(
-            filename="test.txt",
-            mime_type="text/plain",
-            filesize=100,
-            checksum="abc123",
-        )
         dto = FileSourceFactoryDTO(
-            owner_id=self.owner_id, title="Test File", meta=meta, file_id=file_id
+            owner_id=self.owner_id, title="Test File", file_id=file_id
         )
 
         # Act
@@ -52,7 +45,6 @@ class TestSourceFactory:
         assert source.owner_id == self.owner_id
         assert source.title.value == dto.title
         assert source.type == SourceType.FILE
-        assert source.meta == meta
         assert source.created_at == self.created_at
 
     def test_create_link_source(self) -> None:

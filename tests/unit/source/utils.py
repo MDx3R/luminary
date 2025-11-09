@@ -40,6 +40,7 @@ def make_file_source(  # noqa: PLR0913
     content_id: UUID | None = None,
     created_at: DateTime | None = None,
     meta: FileMeta | None = None,
+    file_id: UUID | None = None,
 ) -> FileSource:
     if meta is None:
         meta = FileMeta(
@@ -57,6 +58,7 @@ def make_file_source(  # noqa: PLR0913
         content_id=content_id,
         created_at=created_at or DateTime(datetime.now(UTC)),
         meta=meta,
+        file_id=file_id or uuid4(),
     )
 
 

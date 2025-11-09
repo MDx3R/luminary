@@ -12,14 +12,16 @@ from luminary.source.domain.value_objects.file_meta import FileMeta
 
 @dataclass
 class FileSource(Source):
+    file_id: UUID
     meta: FileMeta
 
     @classmethod
-    def create(
+    def create(  # noqa: PLR0913
         cls,
         source_id: UUID,
         owner_id: UUID,
         title: str,
+        file_id: UUID,
         meta: FileMeta,
         created_at: DateTime,
     ) -> Self:
@@ -29,6 +31,7 @@ class FileSource(Source):
             title=Title(title),
             content_id=None,
             type=SourceType.FILE,
+            file_id=file_id,
             meta=meta,
             created_at=created_at,
         )

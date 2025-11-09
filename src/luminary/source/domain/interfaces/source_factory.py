@@ -12,6 +12,7 @@ class FileSourceFactoryDTO:
     owner_id: UUID
     title: str
     meta: FileMeta
+    file_id: UUID
 
 
 @dataclass(frozen=True)

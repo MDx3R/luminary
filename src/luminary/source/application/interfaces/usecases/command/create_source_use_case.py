@@ -10,6 +10,7 @@ class CreateFileSourceCommand:
     user_id: UUID
     title: str
     meta: FileMeta
+    file_id: UUID
 
 
 class ICreateFileSourceUseCase(ABC):

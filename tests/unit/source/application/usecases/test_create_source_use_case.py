@@ -43,6 +43,7 @@ class TestCreateFileSourceUseCase:
             filesize=100,
             checksum="abc123",
         )
+        self.file_id: UUID = uuid4()
 
         self.source = make_file_source(
             source_id=self.source_id,
@@ -56,9 +57,7 @@ class TestCreateFileSourceUseCase:
         self.source_repository: AsyncMock = AsyncMock(spec=ISourceRepository)
 
         self.command = CreateFileSourceCommand(
-            user_id=self.user_id,
-            title=self.title,
-            meta=self.meta,
+            user_id=self.user_id, title=self.title, meta=self.meta, file_id=self.file_id
         )
 
         self.use_case = CreateFileSourceUseCase(
@@ -75,6 +74,7 @@ class TestCreateFileSourceUseCase:
             owner_id=self.user_id,
             title=self.title,
             meta=self.meta,
+            file_id=self.file_id,
         )
         self.source_factory.create.assert_called_once_with(expected_dto)
 

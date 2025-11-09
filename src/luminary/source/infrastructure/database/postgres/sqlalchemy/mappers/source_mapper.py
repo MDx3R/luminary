@@ -40,6 +40,7 @@ class SourceMapper:
                 filesize=base.filesize,
                 checksum=base.checksum,
             ),
+            file_id=base.file_id,
             created_at=DateTime(base.created_at),
         )
 
@@ -94,6 +95,7 @@ class SourceMapper:
             mime_type=source.meta.mime_type,
             filesize=source.meta.filesize,
             checksum=source.meta.checksum,
+            file_id=source.file_id,
         )
 
     @to_persistence.register

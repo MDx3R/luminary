@@ -32,7 +32,10 @@ class CreateFileSourceUseCase(ICreateFileSourceUseCase):
         # TODO: Remove meta, consider different flow
         source = self.source_factory.create(
             FileSourceFactoryDTO(
-                owner_id=command.user_id, title=command.title, meta=command.meta
+                owner_id=command.user_id,
+                title=command.title,
+                meta=command.meta,
+                file_id=command.file_id,
             )
         )
         await self.source_repository.add(source)

@@ -35,6 +35,9 @@ class FileSourceBase(SourceBase):
     filesize: Mapped[int] = mapped_column(Integer, nullable=False)
     checksum: Mapped[str] = mapped_column(String, nullable=False)
 
+    # TODO: Add FK
+    file_id: Mapped[UUID] = mapped_column(PGUUID)
+
     __mapper_args__ = {"polymorphic_identity": SourceType.FILE}  # noqa: RUF012
 
 

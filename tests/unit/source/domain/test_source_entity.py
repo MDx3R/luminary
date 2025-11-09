@@ -80,6 +80,7 @@ class TestFileSource:
         self.source_id = uuid4()
         self.owner_id = uuid4()
         self.content_id = uuid4()
+        self.file_id = uuid4()
         self.title = "Test File"
         self.meta = FileMeta(
             filename="test.txt", mime_type="text/plain", filesize=100, checksum="abc123"
@@ -93,6 +94,7 @@ class TestFileSource:
             meta=self.meta,
             content_id=self.content_id,
             type=SourceType.FILE,
+            file_id=self.file_id,
             created_at=self.created_at,
         )
 
@@ -103,6 +105,7 @@ class TestFileSource:
             owner_id=self.owner_id,
             title=self.title,
             meta=self.meta,
+            file_id=self.file_id,
             created_at=self.created_at,
         )
 
@@ -112,6 +115,7 @@ class TestFileSource:
         assert source.title.value == self.title
         assert source.type == SourceType.FILE
         assert source.meta == self.meta
+        assert source.file_id == self.file_id
         assert source.created_at == self.created_at
 
     def test_is_content_editable(self) -> None:

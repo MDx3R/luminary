@@ -32,6 +32,7 @@ class TestSourceFactory:
 
     def test_create_file_source(self) -> None:
         # Arrange
+        file_id = uuid4()
         meta = FileMeta(
             filename="test.txt",
             mime_type="text/plain",
@@ -39,9 +40,7 @@ class TestSourceFactory:
             checksum="abc123",
         )
         dto = FileSourceFactoryDTO(
-            owner_id=self.owner_id,
-            title="Test File",
-            meta=meta,
+            owner_id=self.owner_id, title="Test File", meta=meta, file_id=file_id
         )
 
         # Act
@@ -59,11 +58,7 @@ class TestSourceFactory:
     def test_create_link_source(self) -> None:
         # Arrange
         url = "https://example.com"
-        dto = LinkSourceFactoryDTO(
-            owner_id=self.owner_id,
-            title="Test Link",
-            url=url,
-        )
+        dto = LinkSourceFactoryDTO(owner_id=self.owner_id, title="Test Link", url=url)
 
         # Act
         source = self.factory.create(dto)
@@ -79,10 +74,7 @@ class TestSourceFactory:
 
     def test_create_page_source(self) -> None:
         # Arrange
-        dto = PageSourceFactoryDTO(
-            owner_id=self.owner_id,
-            title="Test Page",
-        )
+        dto = PageSourceFactoryDTO(owner_id=self.owner_id, title="Test Page")
 
         # Act
         source = self.factory.create(dto)

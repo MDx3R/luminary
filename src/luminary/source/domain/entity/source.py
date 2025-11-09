@@ -1,37 +1,24 @@
+from abc import ABC
 from dataclasses import dataclass
-from typing import Self
 from uuid import UUID
 
-from common.domain.exceptions import InvariantViolationError
 from common.domain.value_objects.datetime import DateTime
+from common.domain.value_objects.title import Title
+
+from luminary.source.domain.enums import SourceType
 
 
 @dataclass
-class Source:
+class Source(ABC):
     source_id: UUID
-    user_id: UUID
-    name: str
+    owner_id: UUID
+    title: Title
+    type: SourceType
+    content_id: UUID | None
     created_at: DateTime
 
-    def __post_init__(self) -> None:
-        self._validate_name(self.name)
+    def update_title(self, title: str) -> None:
+        self.title = Title(title)
 
-    def _validate_name(self, name: str) -> None:
-        if not name.strip():
-            raise InvariantViolationError("Source name cannot be empty")
-
-    @classmethod
-    def create(
-        cls,
-        source_id: UUID,
-        user_id: UUID,
-        name: str,
-        created_at: DateTime,
-    ) -> Self:
-        return cls(
-            source_id=source_id, user_id=user_id, name=name, created_at=created_at
-        )
-    
-    def update_name(self, name: str) -> None:
-        self._validate_name(name)
-        self.name = name
+    def set_content(self, content_id: UUID) -> None:
+        self.content_id = content_id

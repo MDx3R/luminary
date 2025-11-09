@@ -50,6 +50,7 @@ class ChatRepository(IChatRepository):
         await self.executor.add(model)
 
     async def save(self, entity: Chat) -> None:
+        # TODO: Remove this after refactor on entities for them to be eventual consistent
         model = ChatMapper.to_persistence(entity)
         async with self.executor.uow:
             stmt = delete(ChatSourceBase).where(
@@ -63,6 +64,7 @@ class ChatRepository(IChatRepository):
             await self.executor.save(model)
 
     async def save_all(self, entities: Iterable[Chat]) -> None:
+        # TODO: Remove this after refactor on entities for them to be eventual consistent
         models = [ChatMapper.to_persistence(e) for e in entities]
         async with self.executor.uow:
             chat_ids = [e.chat_id for e in entities]

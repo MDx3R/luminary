@@ -11,7 +11,7 @@ from luminary.folder.application.interfaces.usecases.command.add_source_to_folde
 from luminary.source.application.interfaces.policies.source_access_policy import (
     ISourceAccessPolicy,
 )
-from luminary.source.application.interfaces.respositories.source_repository import (
+from luminary.source.application.interfaces.repositories.source_repository import (
     ISourceRepository,
 )
 

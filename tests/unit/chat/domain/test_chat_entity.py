@@ -79,6 +79,11 @@ class TestChat:
 
         assert chat == self.chat
 
+    def test_add_source_success(self):
+        source_id = uuid4()
+        self.chat.add_source(source_id)
+        assert source_id in self.chat.sources
+
     def test_change_chat_name_success(self):
         self.chat.change_name("New Name")
         assert self.chat.info.name == "New Name"

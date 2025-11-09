@@ -39,6 +39,7 @@ class RemoveSourceFromFolderUseCase(IRemoveSourceFromFolderUseCase):
 
     async def remove_source_from_chats(self, source_id: UUID, folder: Folder) -> None:
         # TODO: Add tests
+        # TODO: Eventual consistency
         chats = await self.chat_repository.get_by_folder_id(folder.folder_id)
 
         for ch in chats:

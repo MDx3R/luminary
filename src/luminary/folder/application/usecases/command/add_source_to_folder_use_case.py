@@ -49,6 +49,7 @@ class AddSourceToFolderUseCase(IAddSourceToFolderUseCase):
 
     async def add_source_to_chats(self, source: Source, folder: Folder) -> None:
         # TODO: Add tests
+        # TODO: Eventual consistency
         chats = await self.chat_repository.get_by_folder_id(folder.folder_id)
 
         for ch in chats:

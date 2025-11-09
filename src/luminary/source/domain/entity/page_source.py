@@ -31,7 +31,7 @@ class PageSource(Source):
             source_id=source_id,
             owner_id=owner_id,
             title=Title(title),
-            type=SourceType.LINK,
+            type=SourceType.PAGE,
             content_id=None,
             editable=True,
             created_at=created_at,

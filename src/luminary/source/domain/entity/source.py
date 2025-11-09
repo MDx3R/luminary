@@ -1,30 +1,33 @@
+from abc import ABC
 from dataclasses import dataclass
-from typing import Self
 from uuid import UUID
 
-from common.domain.exceptions import InvariantViolationError
 from common.domain.value_objects.datetime import DateTime
+from common.domain.value_objects.title import Title
+
+from luminary.source.domain.enums import SourceType
 
 
 @dataclass
-class Source:
+class Source(ABC):
     source_id: UUID
-    user_id: UUID
-    name: str
+    owner_id: UUID
+    title: Title
+    type: SourceType
+    content_id: UUID | None
     created_at: DateTime
 
-    def __post_init__(self) -> None:
-        if not self.name.strip():
-            raise InvariantViolationError("Source name cannot be empty")
+    def is_owned_by(self, user_id: UUID) -> bool:
+        return self.owner_id == user_id
 
-    @classmethod
-    def create(
-        cls,
-        source_id: UUID,
-        user_id: UUID,
-        name: str,
-        created_at: DateTime,
-    ) -> Self:
-        return cls(
-            source_id=source_id, user_id=user_id, name=name, created_at=created_at
-        )
+    def is_content_editable(self) -> bool:
+        return False
+
+    def update_title(self, title: str) -> None:
+        self.title = Title(title)
+
+    def title_matches(self, title: str) -> bool:
+        return self.title.value == title
+
+    def set_content(self, content_id: UUID) -> None:
+        self.content_id = content_id

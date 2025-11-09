@@ -3,8 +3,9 @@ from uuid import UUID
 from common.application.exceptions import NotFoundError
 from common.infrastructure.database.sqlalchemy.executor import QueryExecutor
 from sqlalchemy import select
+from sqlalchemy.orm import with_polymorphic
 
-from luminary.source.application.interfaces.respositories.source_repository import (
+from luminary.source.application.interfaces.repositories.source_repository import (
     ISourceRepository,
 )
 from luminary.source.domain.entity.source import Source
@@ -21,7 +22,9 @@ class SourceRepository(ISourceRepository):
         self.executor = executor
 
     async def get_by_id(self, source_id: UUID) -> Source:
-        stmt = select(SourceBase).where(SourceBase.source_id == source_id)
+        stmt = select(with_polymorphic(SourceBase, "*")).where(
+            SourceBase.source_id == source_id
+        )
 
         result = await self.executor.execute_scalar_one(stmt)
         if not result:
@@ -35,3 +38,11 @@ class SourceRepository(ISourceRepository):
     async def save(self, entity: Source) -> None:
         model = SourceMapper.to_persistence(entity)
         await self.executor.save(model)
+
+    async def remove(self, entity: Source) -> None:
+        # NOTE: Select is needed for proper delete
+        stmt = select(SourceBase).where(SourceBase.source_id == entity.source_id)
+        result = await self.executor.execute_scalar_one(stmt)
+        if not result:
+            return
+        await self.executor.delete(result)

@@ -8,26 +8,35 @@ from luminary.chat.domain.entity.message import Message
 from luminary.chat.domain.enums import Author, MessageStatus
 
 
-def make_chat(
+def make_chat(  # noqa: PLR0913
     *,
     chat_id: UUID | None = None,
     user_id: UUID | None = None,
     folder_id: UUID | None = None,
     model_id: UUID | None = None,
     settings: ChatSettings | None = None,
+    name: str = "Test Chat",
 ) -> Chat:
     return Chat(
         chat_id=chat_id or uuid4(),
         user_id=user_id or uuid4(),
         folder_id=folder_id or uuid4(),
         created_at=DateTime(datetime.now(UTC)),
-        info=ChatInfo(name="Test Chat"),
-        settings=settings
-        or ChatSettings(
-            model_id=model_id or uuid4(),
-            system_prompt="Test prompt",
-            max_context_messages=10,
-        ),
+        info=ChatInfo(name=name),
+        settings=settings or make_chat_settings(model_id=model_id),
+    )
+
+
+def make_chat_settings(
+    *,
+    model_id: UUID | None = None,
+    system_prompt: str = "Test prompt",
+    max_context_messages: int = 10,
+) -> ChatSettings:
+    return ChatSettings(
+        model_id=model_id or uuid4(),
+        system_prompt=system_prompt,
+        max_context_messages=max_context_messages,
     )
 
 

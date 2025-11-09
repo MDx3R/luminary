@@ -10,7 +10,7 @@ from luminary.source.domain.entity.source import Source
 
 class SourceAccessPolicy(ISourceAccessPolicy):
     def is_allowed(self, user_id: UUID, source: Source) -> bool:
-        return source.user_id == user_id
+        return source.is_owned_by(user_id)
 
     def assert_is_allowed(self, user_id: UUID, source: Source) -> None:
         if not self.is_allowed(user_id, source):

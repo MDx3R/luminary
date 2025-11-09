@@ -1,4 +1,5 @@
-from dataclasses import dataclass
+from collections.abc import Sequence
+from dataclasses import dataclass, field
 from typing import Self
 from uuid import UUID
 
@@ -38,6 +39,17 @@ class Chat:
     info: ChatInfo
     settings: ChatSettings
     created_at: DateTime
+    _sources: set[UUID] = field(default_factory=set[UUID])
+
+    @property
+    def sources(self) -> Sequence[UUID]:
+        return list(self._sources)
+
+    def add_source(self, source_id: UUID) -> None:
+        self._sources.add(source_id)
+
+    def remove_source(self, source_id: UUID) -> None:
+        self._sources.remove(source_id)
 
     def change_name(self, new_name: str) -> None:
         self.info = ChatInfo(new_name)

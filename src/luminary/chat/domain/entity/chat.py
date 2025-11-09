@@ -48,6 +48,9 @@ class Chat:
     def add_source(self, source_id: UUID) -> None:
         self._sources.add(source_id)
 
+    def remove_source(self, source_id: UUID) -> None:
+        self._sources.remove(source_id)
+
     def change_name(self, new_name: str) -> None:
         self.info = ChatInfo(new_name)
 

@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from collections.abc import Sequence
+from collections.abc import Iterable, Sequence
 from uuid import UUID
 
 from luminary.chat.domain.entity.chat import Chat
@@ -14,3 +14,5 @@ class IChatRepository(ABC):
     async def add(self, entity: Chat) -> None: ...
     @abstractmethod
     async def save(self, entity: Chat) -> None: ...
+    @abstractmethod
+    async def save_all(self, entities: Iterable[Chat]) -> None: ...

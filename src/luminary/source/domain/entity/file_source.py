@@ -7,12 +7,11 @@ from common.domain.value_objects.title import Title
 
 from luminary.source.domain.entity.source import Source
 from luminary.source.domain.enums import SourceType
-from luminary.source.domain.value_objects.file_meta import FileMeta
 
 
 @dataclass
 class FileSource(Source):
-    meta: FileMeta
+    file_id: UUID
 
     @classmethod
     def create(
@@ -20,7 +19,7 @@ class FileSource(Source):
         source_id: UUID,
         owner_id: UUID,
         title: str,
-        meta: FileMeta,
+        file_id: UUID,
         created_at: DateTime,
     ) -> Self:
         return cls(
@@ -29,6 +28,6 @@ class FileSource(Source):
             title=Title(title),
             content_id=None,
             type=SourceType.FILE,
-            meta=meta,
+            file_id=file_id,
             created_at=created_at,
         )

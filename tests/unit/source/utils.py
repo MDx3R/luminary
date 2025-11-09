@@ -10,7 +10,6 @@ from luminary.source.domain.entity.link_source import LinkSource
 from luminary.source.domain.entity.page_source import PageSource
 from luminary.source.domain.entity.source import Source
 from luminary.source.domain.enums import FetchStatus, SourceType
-from luminary.source.domain.value_objects.file_meta import FileMeta
 
 
 def make_source(  # noqa: PLR0913
@@ -39,16 +38,8 @@ def make_file_source(  # noqa: PLR0913
     title: str = "Test File",
     content_id: UUID | None = None,
     created_at: DateTime | None = None,
-    meta: FileMeta | None = None,
+    file_id: UUID | None = None,
 ) -> FileSource:
-    if meta is None:
-        meta = FileMeta(
-            filename="test.txt",
-            mime_type="text/plain",
-            filesize=100,
-            checksum="abc123",
-        )
-
     return FileSource(
         source_id=source_id or uuid4(),
         owner_id=owner_id or uuid4(),
@@ -56,7 +47,7 @@ def make_file_source(  # noqa: PLR0913
         type=SourceType.FILE,
         content_id=content_id,
         created_at=created_at or DateTime(datetime.now(UTC)),
-        meta=meta,
+        file_id=file_id or uuid4(),
     )
 
 

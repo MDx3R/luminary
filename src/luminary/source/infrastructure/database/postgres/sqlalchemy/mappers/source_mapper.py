@@ -10,7 +10,6 @@ from luminary.source.domain.entity.link_source import LinkSource
 from luminary.source.domain.entity.page_source import PageSource
 from luminary.source.domain.entity.source import Source
 from luminary.source.domain.enums import SourceType
-from luminary.source.domain.value_objects.file_meta import FileMeta
 from luminary.source.infrastructure.database.postgres.sqlalchemy.models.source_base import (
     FileSourceBase,
     LinkSourceBase,
@@ -34,12 +33,7 @@ class SourceMapper:
             title=Title(base.title),
             type=SourceType.FILE,
             content_id=base.content_id,
-            meta=FileMeta(
-                filename=base.filename,
-                mime_type=base.mime_type,
-                filesize=base.filesize,
-                checksum=base.checksum,
-            ),
+            file_id=base.file_id,
             created_at=DateTime(base.created_at),
         )
 
@@ -90,10 +84,7 @@ class SourceMapper:
             type=source.type.value,
             content_id=source.content_id,
             created_at=source.created_at.value,
-            filename=source.meta.filename,
-            mime_type=source.meta.mime_type,
-            filesize=source.meta.filesize,
-            checksum=source.meta.checksum,
+            file_id=source.file_id,
         )
 
     @to_persistence.register

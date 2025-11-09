@@ -2,7 +2,7 @@ from datetime import datetime
 from uuid import UUID
 
 from common.infrastructure.database.sqlalchemy.models.base import Base
-from sqlalchemy import Boolean, DateTime, Enum, ForeignKey, Integer, String
+from sqlalchemy import Boolean, DateTime, Enum, ForeignKey, String
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -30,10 +30,9 @@ class FileSourceBase(SourceBase):
     source_id: Mapped[UUID] = mapped_column(
         PGUUID, ForeignKey("sources.source_id"), primary_key=True
     )
-    filename: Mapped[str] = mapped_column(String, nullable=False)
-    mime_type: Mapped[str] = mapped_column(String, nullable=False)
-    filesize: Mapped[int] = mapped_column(Integer, nullable=False)
-    checksum: Mapped[str] = mapped_column(String, nullable=False)
+
+    # TODO: Add FK
+    file_id: Mapped[UUID] = mapped_column(PGUUID)
 
     __mapper_args__ = {"polymorphic_identity": SourceType.FILE}  # noqa: RUF012
 

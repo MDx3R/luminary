@@ -2,6 +2,7 @@ from uuid import UUID, uuid4
 
 import pytest
 from common.application.exceptions import NotFoundError
+from common.domain.value_objects.title import Title
 from common.domain.value_objects.url import Url
 from common.infrastructure.database.sqlalchemy.executor import QueryExecutor
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
@@ -10,7 +11,6 @@ from tests.unit.source.utils import make_file_source, make_link_source, make_pag
 from luminary.source.domain.entity.file_source import FileSource
 from luminary.source.domain.entity.link_source import LinkSource
 from luminary.source.domain.entity.page_source import PageSource
-from luminary.source.domain.value_objects.file_meta import FileMeta
 from luminary.source.infrastructure.database.postgres.sqlalchemy.mappers.source_mapper import (
     SourceMapper,
 )
@@ -163,13 +163,7 @@ class TestSourceRepository:
     async def test_save_file_source_success(self):
         # Arrange
         source = await self._add_file_source()
-        new_meta = FileMeta(
-            filename="updated.txt",
-            mime_type="text/plain",
-            filesize=200,
-            checksum="def456",
-        )
-        source.meta = new_meta
+        source.title = Title("New File Source 123")
 
         # Act
         await self.source_repository.save(source)
@@ -177,7 +171,7 @@ class TestSourceRepository:
         # Assert
         updated_source = await self._get_file_source(source.source_id)
         assert updated_source is not None
-        assert updated_source.meta == new_meta
+        assert updated_source.title == source.title
 
     async def test_save_link_source_success(self):
         # Arrange

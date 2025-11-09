@@ -29,10 +29,10 @@ class CreateFileSourceUseCase(ICreateFileSourceUseCase):
         self.source_factory = source_factory
 
     async def execute(self, command: CreateFileSourceCommand) -> UUID:
-        # TODO: Remove meta, consider different flow
+        # TODO: Consider different flow
         source = self.source_factory.create(
             FileSourceFactoryDTO(
-                owner_id=command.user_id, title=command.title, meta=command.meta
+                owner_id=command.user_id, title=command.title, file_id=command.file_id
             )
         )
         await self.source_repository.add(source)

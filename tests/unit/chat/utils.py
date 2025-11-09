@@ -22,12 +22,20 @@ def make_chat(
         folder_id=folder_id or uuid4(),
         created_at=DateTime(datetime.now(UTC)),
         info=ChatInfo(name="Test Chat"),
-        settings=settings
-        or ChatSettings(
-            model_id=model_id or uuid4(),
-            system_prompt="Test prompt",
-            max_context_messages=10,
-        ),
+        settings=settings or make_chat_settings(model_id=model_id),
+    )
+
+
+def make_chat_settings(
+    *,
+    model_id: UUID | None = None,
+    system_prompt: str = "Test prompt",
+    max_context_messages: int = 10,
+) -> ChatSettings:
+    return ChatSettings(
+        model_id=model_id or uuid4(),
+        system_prompt=system_prompt,
+        max_context_messages=max_context_messages,
     )
 
 

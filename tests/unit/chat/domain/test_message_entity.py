@@ -1,41 +1,74 @@
 from datetime import UTC, datetime
-from uuid import UUID, uuid4
+from typing import Literal
+from uuid import uuid4
 
 import pytest
 from common.domain.exceptions import InvariantViolationError
 from common.domain.value_objects.datetime import DateTime
 
+from luminary.chat.domain.entity.attachment import Attachment
 from luminary.chat.domain.entity.message import Message
 from luminary.chat.domain.enums import Author, MessageStatus
 
 
-class TestMessageEntity:
-    def test_create_message_success(self) -> None:
-        message_id: UUID = uuid4()
-        chat_id: UUID = uuid4()
-        model_id: UUID = uuid4()
-        content: str = "Hello, world!"
-        created_at: DateTime = DateTime(datetime.now(UTC))
+class TestAttachment:
+    def test_create_success(self):
+        att = Attachment(name="file.txt", content_id=uuid4(), source_id=uuid4())
+        assert att.name == "file.txt"
 
-        message: Message = Message(
-            message_id=message_id,
-            chat_id=chat_id,
-            model_id=model_id,
-            content=content,
+    @pytest.mark.parametrize("name", ["", "   "])
+    def test_invalid_name_raises(self, name: Literal[""] | Literal["   "]):
+        with pytest.raises(InvariantViolationError):
+            Attachment(name=name, content_id=uuid4(), source_id=uuid4())
+
+
+class TestMessage:
+    @pytest.fixture(autouse=True)
+    def setup(self):
+        self.message_id = uuid4()
+        self.chat_id = uuid4()
+        self.model_id = uuid4()
+        self.content = "Hello, world!"
+        self.created_at = DateTime(datetime.now(UTC))
+
+        self.message = Message(
+            message_id=self.message_id,
+            chat_id=self.chat_id,
+            model_id=self.model_id,
+            content=self.content,
             role=Author.USER,
             status=MessageStatus.COMPLETED,
-            created_at=created_at,
-            edited_at=created_at,
+            created_at=self.created_at,
+            edited_at=self.created_at,
         )
 
-        assert message.message_id == message_id
-        assert message.chat_id == chat_id
-        assert message.model_id == model_id
-        assert message.content == content
-        assert message.role == Author.USER
-        assert message.status == MessageStatus.COMPLETED
+    def test_attachments_property_empty(self):
+        assert self.message.attachments == []
 
-    def test_message_naive_datetime_raises_error(self) -> None:
+    def test_add_attachment_success(self):
+        att = Attachment(name="file.txt", content_id=uuid4(), source_id=uuid4())
+        self.message.add_attachment(att)
+        assert att in self.message.attachments
+
+    def test_add_attachment_non_user_raises(self):
+        self.message.role = Author.SYSTEM
+        att = Attachment(name="file.txt", content_id=uuid4(), source_id=uuid4())
+        with pytest.raises(InvariantViolationError):
+            self.message.add_attachment(att)
+
+    def test_create_message_success(self):
+        message = Message.create(
+            message_id=self.message_id,
+            chat_id=self.chat_id,
+            model_id=self.model_id,
+            content=self.content,
+            role=Author.USER,
+            status=MessageStatus.COMPLETED,
+            created_at=self.created_at,
+        )
+        assert message == self.message
+
+    def test_message_naive_datetime_raises_error(self):
         with pytest.raises(InvariantViolationError):
             Message(
                 message_id=uuid4(),
@@ -48,101 +81,33 @@ class TestMessageEntity:
                 edited_at=DateTime(datetime.now()),
             )
 
-    def test_add_chunk_success(self) -> None:
-        message: Message = Message(
-            message_id=uuid4(),
-            chat_id=uuid4(),
-            model_id=uuid4(),
-            content="Hello",
-            role=Author.USER,
-            status=MessageStatus.PENDING,
-            created_at=DateTime(datetime.now(UTC)),
-            edited_at=DateTime(datetime.now(UTC)),
-        )
+    def test_add_chunk_success(self):
+        self.message.content = "Hello"
+        self.message.add_chunk(" world")
+        assert self.message.content == "Hello world"
 
-        message.add_chunk(" world")
+    def test_start_processing_changes_status(self):
+        self.message.start_processing()
+        assert self.message.status == MessageStatus.PROCESSING
 
-        assert message.content == "Hello world"
+    def test_start_streaming_changes_status(self):
+        self.message.start_streaming()
+        assert self.message.status == MessageStatus.STREAMING
 
-    def test_start_processing_changes_status(self) -> None:
-        message: Message = Message(
-            message_id=uuid4(),
-            chat_id=uuid4(),
-            model_id=uuid4(),
-            content="Test",
-            role=Author.USER,
-            status=MessageStatus.PENDING,
-            created_at=DateTime(datetime.now(UTC)),
-            edited_at=DateTime(datetime.now(UTC)),
-        )
+    def test_cancel_changes_status(self):
+        self.message.status = MessageStatus.PROCESSING
+        self.message.cancel()
+        assert self.message.status == MessageStatus.CANCELLED
 
-        message.start_processing()
+    def test_fail_changes_status(self):
+        self.message.status = MessageStatus.PROCESSING
+        self.message.fail()
+        assert self.message.status == MessageStatus.FAILED
 
-        assert message.status == MessageStatus.PROCESSING
-
-    def test_start_streaming_changes_status(self) -> None:
-        message: Message = Message(
-            message_id=uuid4(),
-            chat_id=uuid4(),
-            model_id=uuid4(),
-            content="Test",
-            role=Author.USER,
-            status=MessageStatus.PENDING,
-            created_at=DateTime(datetime.now(UTC)),
-            edited_at=DateTime(datetime.now(UTC)),
-        )
-
-        message.start_streaming()
-
-        assert message.status == MessageStatus.STREAMING
-
-    def test_cancel_changes_status(self) -> None:
-        message: Message = Message(
-            message_id=uuid4(),
-            chat_id=uuid4(),
-            model_id=uuid4(),
-            content="Test",
-            role=Author.USER,
-            status=MessageStatus.PROCESSING,
-            created_at=DateTime(datetime.now(UTC)),
-            edited_at=DateTime(datetime.now(UTC)),
-        )
-
-        message.cancel()
-
-        assert message.status == MessageStatus.CANCELLED
-
-    def test_fail_changes_status(self) -> None:
-        message: Message = Message(
-            message_id=uuid4(),
-            chat_id=uuid4(),
-            model_id=uuid4(),
-            content="Test",
-            role=Author.USER,
-            status=MessageStatus.PROCESSING,
-            created_at=DateTime(datetime.now(UTC)),
-            edited_at=DateTime(datetime.now(UTC)),
-        )
-
-        message.fail()
-
-        assert message.status == MessageStatus.FAILED
-
-    def test_complete_changes_status_and_sets_tokens(self) -> None:
-        message: Message = Message(
-            message_id=uuid4(),
-            chat_id=uuid4(),
-            model_id=uuid4(),
-            content="Test",
-            role=Author.USER,
-            status=MessageStatus.STREAMING,
-            tokens=None,
-            created_at=DateTime(datetime.now(UTC)),
-            edited_at=DateTime(datetime.now(UTC)),
-        )
-
-        tokens: int = 150
-        message.complete(tokens)
-
-        assert message.status == MessageStatus.COMPLETED
-        assert message.tokens == tokens
+    def test_complete_changes_status_and_sets_tokens(self):
+        self.message.status = MessageStatus.STREAMING
+        self.message.tokens = None
+        tokens = 150
+        self.message.complete(tokens)
+        assert self.message.status == MessageStatus.COMPLETED
+        assert self.message.tokens == tokens

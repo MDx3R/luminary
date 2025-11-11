@@ -20,14 +20,25 @@ from luminary.chat.application.interfaces.usecases.command.send_message_use_case
     ISendMessageUseCase,
     SendMessageCommand,
 )
+from luminary.chat.application.interfaces.usecases.query.get_chat_use_case import (
+    GetChatQuery,
+    IGetChatUseCase,
+)
+from luminary.chat.application.interfaces.usecases.query.get_user_chats_use_case import (
+    GetUserChatsQuery,
+    IGetUserChatsUseCase,
+)
 from luminary.chat.presentation.http.dto.request import SendMessageRequest
 from luminary.chat.presentation.http.dto.response import (
+    ChatListItemResponse,
+    ChatResponse,
     MessageResponse,
     StreamingMessageResponse,
 )
 
 
 chat_command_router = APIRouter()
+chat_query_router = APIRouter()
 
 
 @cbv(chat_command_router)
@@ -80,3 +91,41 @@ class ChatCommandController:
 
         # TODO: Error handling
         return StreamingResponse(process_stream())
+
+
+@cbv(chat_query_router)
+class ChatQueryController:
+    get_chat_use_case: IGetChatUseCase = Depends()
+    get_user_chats_use_case: IGetUserChatsUseCase = Depends()
+
+    @chat_query_router.get(
+        "/{chat_id}",
+        dependencies=[Depends(require_authenticated)],
+        summary="Получить чат по ID",
+        description="Возвращает полную информацию o чате. Требует права доступа к чату.",
+    )
+    async def get_chat(
+        self,
+        chat_id: UUID,
+        descriptor: Annotated[UUID, Depends(get_descriptor)],
+    ) -> ChatResponse:
+        dto = await self.get_chat_use_case.execute(
+            GetChatQuery(user_id=descriptor, chat_id=chat_id)
+        )
+        return ChatResponse.from_dto(dto)
+
+    @chat_query_router.get(
+        "/",
+        dependencies=[Depends(require_authenticated)],
+        summary="Получить список чатов пользователя",
+        description="Возвращает список чатов. Опционально можно фильтровать по папке.",
+    )
+    async def get_user_chats(
+        self,
+        descriptor: Annotated[UUID, Depends(get_descriptor)],
+        folder_id: UUID | None = None,
+    ) -> list[ChatListItemResponse]:
+        dtos = await self.get_user_chats_use_case.execute(
+            GetUserChatsQuery(user_id=descriptor, folder_id=folder_id)
+        )
+        return [ChatListItemResponse.from_dto(dto) for dto in dtos]

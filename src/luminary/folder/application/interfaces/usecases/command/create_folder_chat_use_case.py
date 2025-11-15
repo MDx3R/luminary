@@ -7,6 +7,7 @@ from uuid import UUID
 class CreateFolderChatCommand:
     user_id: UUID
     folder_id: UUID
+    # TODO: Add name field
 
 
 class ICreateFolderChatUseCase(ABC):

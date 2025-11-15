@@ -13,7 +13,6 @@ from luminary.folder.application.interfaces.usecases.command.create_folder_use_c
 from luminary.folder.domain.interfaces.folder_factory import (
     IFolderFactory,
 )
-from luminary.model.domain.entity.model import ModelId
 
 
 class CreateFolderUseCase(ICreateFolderUseCase):
@@ -30,7 +29,6 @@ class CreateFolderUseCase(ICreateFolderUseCase):
             command.name,
             command.description,
             UserId(command.user_id),
-            ModelId(command.model_id),
             AssistantId(command.assistant_id),
         )
 

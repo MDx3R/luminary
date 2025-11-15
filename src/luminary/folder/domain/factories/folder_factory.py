@@ -7,7 +7,6 @@ from luminary.folder.domain.entity.folder import Folder, FolderId
 from luminary.folder.domain.interfaces.folder_factory import (
     IFolderFactory,
 )
-from luminary.model.domain.entity.model import ModelId
 
 
 class FolderFactory(IFolderFactory):
@@ -20,7 +19,6 @@ class FolderFactory(IFolderFactory):
         name: str,
         description: str | None,
         user_id: UserId,
-        model_id: ModelId,
         assistant_id: AssistantId,
     ) -> Folder:
         return Folder.create(
@@ -28,7 +26,6 @@ class FolderFactory(IFolderFactory):
             name=name,
             description=description,
             owner_id=user_id,
-            model_id=model_id,
             assistant_id=assistant_id,
             created_at=self.clock.now(),
         )

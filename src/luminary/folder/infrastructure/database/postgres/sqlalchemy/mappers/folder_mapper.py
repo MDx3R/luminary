@@ -9,7 +9,6 @@ from luminary.folder.infrastructure.database.postgres.sqlalchemy.models.folder_b
     FolderChatBase,
     FolderSourceBase,
 )
-from luminary.model.domain.entity.model import ModelId
 from luminary.source.domain.entity.source import SourceId
 
 
@@ -23,7 +22,6 @@ class FolderMapper:
             id=FolderId(base.folder_id),
             owner_id=UserId(base.user_id),
             info=FolderInfo(base.name, base.description),
-            model_id=ModelId(base.model_id),
             assistant_id=AssistantId(base.assistant_id),
             created_at=DateTime(base.created_at),
             _chats=chats,
@@ -48,7 +46,6 @@ class FolderMapper:
             user_id=folder.id.value,
             name=folder.info.name,
             description=folder.info.description,
-            model_id=folder.model_id.value,
             assistant_id=folder.assistant_id.value,
             created_at=folder.created_at.value,
             chats=chats,

@@ -7,7 +7,6 @@ from common.domain.value_objects.id import EntityId, UserId
 
 from luminary.assistant.domain.entity.assisnant import AssistantId
 from luminary.chat.domain.value_objects.chat_id import ChatId
-from luminary.model.domain.entity.model import ModelId
 from luminary.source.domain.entity.source import SourceId
 
 
@@ -30,7 +29,6 @@ class Folder:
     id: FolderId
     owner_id: UserId
     info: FolderInfo
-    model_id: ModelId
     assistant_id: AssistantId
     created_at: DateTime
     _chats: set[ChatId] = field(default_factory=set[ChatId])
@@ -52,9 +50,6 @@ class Folder:
 
     def change_description(self, description: str) -> None:
         self.info = FolderInfo(self.info.name, description)
-
-    def change_model(self, model_id: ModelId) -> None:
-        self.model_id = model_id
 
     def change_assistant(self, assistant_id: AssistantId) -> None:
         self.assistant_id = assistant_id
@@ -84,7 +79,6 @@ class Folder:
         owner_id: UserId,
         name: str,
         description: str | None,
-        model_id: ModelId,
         assistant_id: AssistantId,
         created_at: DateTime,
     ) -> Self:
@@ -92,7 +86,6 @@ class Folder:
             id=id,
             info=FolderInfo(name=name, description=description),
             owner_id=owner_id,
-            model_id=model_id,
             assistant_id=assistant_id,
             created_at=created_at,
         )

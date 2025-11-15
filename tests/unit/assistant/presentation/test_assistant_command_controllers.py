@@ -16,6 +16,7 @@ from luminary.assistant.application.interfaces.usecases.command.delete_assistant
 from luminary.assistant.application.interfaces.usecases.command.update_assistant_use_case import (
     IUpdateAssistantUseCase,
 )
+from luminary.assistant.domain.entity.assisnant import AssistantId
 from luminary.assistant.presentation.http.fastapi.controllers import (
     assistant_command_router,
 )
@@ -129,7 +130,9 @@ class TestAssistantControllers:
         # Arrange
         assistant_id = uuid4()
 
-        self.update_assistant_use_case.execute.side_effect = NotFoundError(assistant_id)
+        self.update_assistant_use_case.execute.side_effect = NotFoundError(
+            AssistantId(assistant_id)
+        )
 
         # Act
         response = self.client.patch(
@@ -164,7 +167,9 @@ class TestAssistantControllers:
     async def test_delete_assistant_ignores_not_found(self):
         # Arrange
         assistant_id = uuid4()
-        self.delete_assistant_use_case.execute.side_effect = NotFoundError(assistant_id)
+        self.delete_assistant_use_case.execute.side_effect = NotFoundError(
+            AssistantId(assistant_id)
+        )
 
         # Act
         response = self.client.delete(

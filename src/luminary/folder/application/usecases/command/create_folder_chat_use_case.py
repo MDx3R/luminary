@@ -1,5 +1,7 @@
 from uuid import UUID
 
+from common.domain.value_objects.id import UserId
+
 from luminary.assistant.application.interfaces.repositories.assistant_repository import (
     IAssistantRepository,
 )
@@ -7,8 +9,8 @@ from luminary.assistant.domain.interfaces.assistant_service import IAssistantSer
 from luminary.chat.application.interfaces.repositories.chat_repository import (
     IChatRepository,
 )
-from luminary.chat.domain.entity.chat import ChatSettings
 from luminary.chat.domain.interfaces.chat_factory import ChatFactoryDTO, IChatFactory
+from luminary.chat.domain.value_objects.chat_settings import ChatSettings
 from luminary.folder.application.interfaces.policies.folder_access_policy import (
     IFolderAccessPolicy,
 )
@@ -19,6 +21,7 @@ from luminary.folder.application.interfaces.usecases.command.create_folder_chat_
     CreateFolderChatCommand,
     ICreateFolderChatUseCase,
 )
+from luminary.folder.domain.entity.folder import FolderId
 
 
 class CreateFolderChatUseCase(ICreateFolderChatUseCase):
@@ -39,16 +42,19 @@ class CreateFolderChatUseCase(ICreateFolderChatUseCase):
         self.chat_repository = chat_repository
 
     async def execute(self, command: CreateFolderChatCommand) -> UUID:
-        folder = await self.folder_repository.get_by_id(command.folder_id)
-        self.folder_access_policy.assert_is_allowed(command.user_id, folder)
+        user_id = UserId(command.user_id)
+        folder_id = FolderId(command.folder_id)
+
+        folder = await self.folder_repository.get_by_id(folder_id)
+        self.folder_access_policy.assert_is_allowed(user_id, folder)
 
         assistant = await self.assistant_repository.get_by_id(folder.assistant_id)
         # NOTE: No need to check access to assistant
 
         chat = self.chat_factory.create(
             ChatFactoryDTO(
-                folder.folder_id,
-                command.user_id,
+                user_id,
+                folder_id,
                 name=None,
                 settings=ChatSettings(
                     folder.model_id,
@@ -60,4 +66,4 @@ class CreateFolderChatUseCase(ICreateFolderChatUseCase):
 
         await self.chat_repository.add(chat)
 
-        return chat.chat_id
+        return chat.id.value

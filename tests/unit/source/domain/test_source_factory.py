@@ -3,11 +3,13 @@ from uuid import uuid4
 
 import pytest
 from common.domain.value_objects.datetime import DateTime
+from common.domain.value_objects.id import UserId
 from tests.unit.utils import MockClock, MockUUIDGenerator
 
 from luminary.source.domain.entity.file_source import FileSource
 from luminary.source.domain.entity.link_source import LinkSource
 from luminary.source.domain.entity.page_source import PageSource
+from luminary.source.domain.entity.source import SourceId
 from luminary.source.domain.enums import SourceType
 from luminary.source.domain.factories.source_factory import SourceFactory
 from luminary.source.domain.interfaces.source_factory import (
@@ -20,13 +22,13 @@ from luminary.source.domain.interfaces.source_factory import (
 class TestSourceFactory:
     @pytest.fixture(autouse=True)
     def setup(self) -> None:
-        self.source_id = uuid4()
-        self.owner_id = uuid4()
+        self.source_id = SourceId(uuid4())
+        self.owner_id = UserId(uuid4())
         self.created_at = DateTime(datetime.now(UTC))
 
         self.factory = SourceFactory(
             clock=MockClock(self.created_at),
-            uuid_generator=MockUUIDGenerator(self.source_id),
+            uuid_generator=MockUUIDGenerator(self.source_id.value),
         )
 
     def test_create_file_source(self) -> None:
@@ -41,7 +43,7 @@ class TestSourceFactory:
 
         # Assert
         assert isinstance(source, FileSource)
-        assert source.source_id == self.source_id
+        assert source.id == self.source_id
         assert source.owner_id == self.owner_id
         assert source.title.value == dto.title
         assert source.type == SourceType.FILE
@@ -57,7 +59,7 @@ class TestSourceFactory:
 
         # Assert
         assert isinstance(source, LinkSource)
-        assert source.source_id == self.source_id
+        assert source.id == self.source_id
         assert source.owner_id == self.owner_id
         assert source.title.value == dto.title
         assert source.type == SourceType.LINK
@@ -73,7 +75,7 @@ class TestSourceFactory:
 
         # Assert
         assert isinstance(source, PageSource)
-        assert source.source_id == self.source_id
+        assert source.id == self.source_id
         assert source.owner_id == self.owner_id
         assert source.title.value == dto.title
         assert source.type == SourceType.PAGE

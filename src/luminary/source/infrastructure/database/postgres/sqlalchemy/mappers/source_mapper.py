@@ -1,6 +1,7 @@
 from functools import singledispatchmethod
 
 from common.domain.value_objects.datetime import DateTime
+from common.domain.value_objects.id import UserId
 from common.domain.value_objects.title import Title
 from common.domain.value_objects.url import Url
 from common.infrastructure.database.sqlalchemy.models.base import Base
@@ -8,7 +9,7 @@ from common.infrastructure.database.sqlalchemy.models.base import Base
 from luminary.source.domain.entity.file_source import FileSource
 from luminary.source.domain.entity.link_source import LinkSource
 from luminary.source.domain.entity.page_source import PageSource
-from luminary.source.domain.entity.source import Source
+from luminary.source.domain.entity.source import Source, SourceId
 from luminary.source.domain.enums import SourceType
 from luminary.source.infrastructure.database.postgres.sqlalchemy.models.source_base import (
     FileSourceBase,
@@ -28,8 +29,8 @@ class SourceMapper:
     @classmethod
     def _(cls, base: FileSourceBase) -> FileSource:
         return FileSource(
-            source_id=base.source_id,
-            owner_id=base.owner_id,
+            id=SourceId(base.source_id),
+            owner_id=UserId(base.owner_id),
             title=Title(base.title),
             type=SourceType.FILE,
             content_id=base.content_id,
@@ -45,8 +46,8 @@ class SourceMapper:
             fetched_at = DateTime(base.fetched_at)
 
         return LinkSource(
-            source_id=base.source_id,
-            owner_id=base.owner_id,
+            id=SourceId(base.source_id),
+            owner_id=UserId(base.owner_id),
             title=Title(base.title),
             type=SourceType.LINK,
             content_id=base.content_id,
@@ -60,8 +61,8 @@ class SourceMapper:
     @classmethod
     def _(cls, base: PageSourceBase) -> PageSource:
         return PageSource(
-            source_id=base.source_id,
-            owner_id=base.owner_id,
+            id=SourceId(base.source_id),
+            owner_id=UserId(base.owner_id),
             title=Title(base.title),
             type=SourceType.PAGE,
             content_id=base.content_id,
@@ -78,8 +79,8 @@ class SourceMapper:
     @classmethod
     def _(cls, source: FileSource) -> FileSourceBase:
         return FileSourceBase(
-            source_id=source.source_id,
-            owner_id=source.owner_id,
+            source_id=source.id.value,
+            owner_id=source.owner_id.value,
             title=source.title.value,
             type=source.type.value,
             content_id=source.content_id,
@@ -91,8 +92,8 @@ class SourceMapper:
     @classmethod
     def _(cls, source: LinkSource) -> LinkSourceBase:
         return LinkSourceBase(
-            source_id=source.source_id,
-            owner_id=source.owner_id,
+            source_id=source.id.value,
+            owner_id=source.owner_id.value,
             title=source.title.value,
             type=source.type.value,
             content_id=source.content_id,
@@ -106,8 +107,8 @@ class SourceMapper:
     @classmethod
     def _(cls, source: PageSource) -> PageSourceBase:
         return PageSourceBase(
-            source_id=source.source_id,
-            owner_id=source.owner_id,
+            source_id=source.id.value,
+            owner_id=source.owner_id.value,
             title=source.title.value,
             type=source.type.value,
             content_id=source.content_id,

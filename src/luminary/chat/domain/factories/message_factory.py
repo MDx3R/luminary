@@ -7,6 +7,7 @@ from luminary.chat.domain.interfaces.message_factory import (
     IMessageFactory,
     MessageFactoryDTO,
 )
+from luminary.chat.domain.value_objects.message_id import MessageId
 
 
 class MessageFactory(IMessageFactory):
@@ -21,7 +22,7 @@ class MessageFactory(IMessageFactory):
             status = MessageStatus.COMPLETED
 
         return Message.create(
-            message_id=self.uuid_generator.create(),
+            id=MessageId(self.uuid_generator.create()),
             chat_id=data.chat_id,
             model_id=data.model_id,
             role=data.role,

@@ -2,13 +2,14 @@ from datetime import UTC, datetime
 from uuid import UUID, uuid4
 
 from common.domain.value_objects.datetime import DateTime
+from common.domain.value_objects.id import UserId
 from common.domain.value_objects.title import Title
 from common.domain.value_objects.url import Url
 
 from luminary.source.domain.entity.file_source import FileSource
 from luminary.source.domain.entity.link_source import LinkSource
 from luminary.source.domain.entity.page_source import PageSource
-from luminary.source.domain.entity.source import Source
+from luminary.source.domain.entity.source import Source, SourceId
 from luminary.source.domain.enums import FetchStatus, SourceType
 
 
@@ -21,9 +22,11 @@ def make_source(  # noqa: PLR0913
     content_id: UUID | None = None,
     created_at: DateTime | None = None,
 ) -> Source:
+    source_id = source_id or uuid4()
+    owner_id = owner_id or uuid4()
     return Source(
-        source_id=source_id or uuid4(),
-        owner_id=owner_id or uuid4(),
+        id=SourceId(source_id),
+        owner_id=UserId(owner_id),
         title=Title(title),
         type=type,
         content_id=content_id,
@@ -40,9 +43,11 @@ def make_file_source(  # noqa: PLR0913
     created_at: DateTime | None = None,
     file_id: UUID | None = None,
 ) -> FileSource:
+    source_id = source_id or uuid4()
+    owner_id = owner_id or uuid4()
     return FileSource(
-        source_id=source_id or uuid4(),
-        owner_id=owner_id or uuid4(),
+        id=SourceId(source_id),
+        owner_id=UserId(owner_id),
         title=Title(title),
         type=SourceType.FILE,
         content_id=content_id,
@@ -62,9 +67,11 @@ def make_link_source(  # noqa: PLR0913
     fetched_at: DateTime | None = None,
     fetch_status: FetchStatus = FetchStatus.NOT_FETCHED,
 ) -> LinkSource:
+    source_id = source_id or uuid4()
+    owner_id = owner_id or uuid4()
     return LinkSource(
-        source_id=source_id or uuid4(),
-        owner_id=owner_id or uuid4(),
+        id=SourceId(source_id),
+        owner_id=UserId(owner_id),
         title=Title(title),
         type=SourceType.LINK,
         content_id=content_id,
@@ -84,9 +91,11 @@ def make_page_source(  # noqa: PLR0913
     created_at: DateTime | None = None,
     editable: bool = True,
 ) -> PageSource:
+    source_id = source_id or uuid4()
+    owner_id = owner_id or uuid4()
     return PageSource(
-        source_id=source_id or uuid4(),
-        owner_id=owner_id or uuid4(),
+        id=SourceId(source_id),
+        owner_id=UserId(owner_id),
         title=Title(title),
         type=SourceType.PAGE,
         content_id=content_id,

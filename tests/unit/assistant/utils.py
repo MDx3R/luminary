@@ -1,7 +1,10 @@
 from uuid import UUID, uuid4
 
+from common.domain.value_objects.id import UserId
+
 from luminary.assistant.domain.entity.assisnant import (
     Assistant,
+    AssistantId,
     AssistantInfo,
     Instructions,
 )
@@ -29,8 +32,8 @@ def make_assistant(
     assistant_id = assistant_id or uuid4()
     user_id = user_id or uuid4()
     return Assistant(
-        assistant_id=assistant_id,
-        user_id=user_id,
+        id=AssistantId(assistant_id),
+        owner_id=UserId(user_id),
         info=AssistantInfo(name=name, description=description),
         instructions=instructions or make_instructions(),
     )

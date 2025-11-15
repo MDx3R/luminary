@@ -1,23 +1,25 @@
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 from typing import Self
-from uuid import UUID
 
 from common.domain.exceptions import InvariantViolationError
 from common.domain.value_objects.datetime import DateTime
 
 from luminary.chat.domain.entity.attachment import Attachment
 from luminary.chat.domain.enums import Author, MessageStatus
+from luminary.chat.domain.value_objects.chat_id import ChatId
+from luminary.chat.domain.value_objects.message_id import MessageId
+from luminary.model.domain.entity.model import ModelId
 
 
 @dataclass
 class Message:
-    message_id: UUID
-    chat_id: UUID
+    id: MessageId
+    chat_id: ChatId
     role: Author
     status: MessageStatus
     content: str
-    model_id: UUID
+    model_id: ModelId
     edited_at: DateTime
     created_at: DateTime
     tokens: int | None = None
@@ -60,16 +62,16 @@ class Message:
     @classmethod
     def create(  # noqa: PLR0913
         cls,
-        message_id: UUID,
-        chat_id: UUID,
+        id: MessageId,
+        chat_id: ChatId,
         role: Author,
         status: MessageStatus,
         content: str,
-        model_id: UUID,
+        model_id: ModelId,
         created_at: DateTime,
     ) -> Self:
         return cls(
-            message_id=message_id,
+            id=id,
             chat_id=chat_id,
             model_id=model_id,
             role=role,

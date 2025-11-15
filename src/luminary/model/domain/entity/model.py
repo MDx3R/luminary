@@ -1,14 +1,18 @@
 from dataclasses import dataclass
 from decimal import Decimal
 from typing import Self
-from uuid import UUID
 
 from common.domain.exceptions import InvariantViolationError
+from common.domain.value_objects.id import EntityId
+
+
+@dataclass(frozen=True)
+class ModelId(EntityId): ...
 
 
 @dataclass
 class Model:
-    model_id: UUID
+    id: ModelId
     name: str
     description: str
     input_price: Decimal
@@ -27,10 +31,16 @@ class Model:
     @classmethod
     def create(
         cls,
-        model_id: UUID,
+        id: ModelId,
         name: str,
         description: str,
         input_price: Decimal,
         output_price: Decimal,
     ) -> Self:
-        return cls(model_id, name, description, input_price, output_price)
+        return cls(
+            id=id,
+            name=name,
+            description=description,
+            input_price=input_price,
+            output_price=output_price,
+        )

@@ -3,6 +3,7 @@ from uuid import uuid4
 
 import pytest
 from common.application.interfaces.transactions.unit_of_work import IUnitOfWork
+from common.domain.value_objects.id import UserId
 from tests.unit.chat.utils import make_chat, make_message
 
 from luminary.chat.application.interfaces.policies.chat_access_policy import (
@@ -26,14 +27,15 @@ from luminary.chat.domain.interfaces.message_factory import (
     IMessageFactory,
     MessageFactoryDTO,
 )
+from luminary.chat.domain.value_objects.chat_id import ChatId
 
 
 @pytest.mark.asyncio
 class TestSendMessageUseCase:
     @pytest.fixture(autouse=True)
     def setup(self) -> None:
-        self.user_id = uuid4()
-        self.chat_id = uuid4()
+        self.user_id = UserId(uuid4())
+        self.chat_id = ChatId(uuid4())
 
         self.chat_repository = AsyncMock(spec=IChatRepository)
         self.message_repository = AsyncMock(spec=IMessageRepository)
@@ -42,8 +44,8 @@ class TestSendMessageUseCase:
         self.chat_access_policy = AsyncMock(spec=IChatAccessPolicy)
 
         self.command = SendMessageCommand(
-            user_id=self.user_id,
-            chat_id=self.chat_id,
+            user_id=self.user_id.value,
+            chat_id=self.chat_id.value,
             message="Hello!",
         )
 
@@ -56,15 +58,15 @@ class TestSendMessageUseCase:
         )
 
     async def test_send_message_success(self) -> None:
-        chat = make_chat(chat_id=self.chat_id)
-        message = make_message(chat_id=chat.chat_id, content=self.command.message)
+        chat = make_chat(chat_id=self.chat_id.value)
+        message = make_message(chat_id=chat.id.value, content=self.command.message)
 
         self.chat_repository.get_by_id.return_value = chat
         self.message_factory.create.return_value = message
 
         expected_dto = MessageDTO(
-            message_id=message.message_id,
-            chat_id=self.chat_id,
+            message_id=message.id.value,
+            chat_id=self.chat_id.value,
             content="Hello!",
             author=Author.USER,
             status=MessageStatus.COMPLETED,
@@ -79,8 +81,8 @@ class TestSendMessageUseCase:
         self.message_repository.add.assert_awaited_once_with(message)
 
     async def test_send_message_calls_factory_with_correct_params(self) -> None:
-        chat = make_chat(chat_id=self.chat_id)
-        message = make_message(chat_id=chat.chat_id)
+        chat = make_chat(chat_id=self.chat_id.value)
+        message = make_message(chat_id=chat.id.value)
 
         self.chat_repository.get_by_id.return_value = chat
         self.message_factory.create.return_value = message
@@ -89,7 +91,7 @@ class TestSendMessageUseCase:
 
         self.message_factory.create.assert_called_once_with(
             MessageFactoryDTO(
-                chat_id=chat.chat_id,
+                chat_id=chat.id,
                 model_id=chat.settings.model_id,
                 role=Author.USER,
                 content=self.command.message,
@@ -97,8 +99,8 @@ class TestSendMessageUseCase:
         )
 
     async def test_send_message_returns_dto_with_no_tokens(self) -> None:
-        chat = make_chat(chat_id=self.chat_id)
-        message = make_message(chat_id=chat.chat_id)
+        chat = make_chat(chat_id=self.chat_id.value)
+        message = make_message(chat_id=chat.id.value)
 
         self.chat_repository.get_by_id.return_value = chat
         self.message_factory.create.return_value = message

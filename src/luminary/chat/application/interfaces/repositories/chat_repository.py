@@ -1,15 +1,16 @@
 from abc import ABC, abstractmethod
 from collections.abc import Iterable, Sequence
-from uuid import UUID
 
 from luminary.chat.domain.entity.chat import Chat
+from luminary.chat.domain.value_objects.chat_id import ChatId
+from luminary.folder.domain.entity.folder import FolderId
 
 
 class IChatRepository(ABC):
     @abstractmethod
-    async def get_by_id(self, chat_id: UUID) -> Chat: ...
+    async def get_by_id(self, id: ChatId) -> Chat: ...
     @abstractmethod
-    async def get_by_folder_id(self, folder_id: UUID) -> Sequence[Chat]: ...
+    async def get_by_folder_id(self, folder_id: FolderId) -> Sequence[Chat]: ...
     @abstractmethod
     async def add(self, entity: Chat) -> None: ...
     @abstractmethod

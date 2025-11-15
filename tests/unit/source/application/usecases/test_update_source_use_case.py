@@ -1,9 +1,10 @@
 from unittest.mock import AsyncMock, Mock
-from uuid import UUID, uuid4
+from uuid import uuid4
 
 import pytest
 from common.application.exceptions import AccessPolicyError, NotFoundError
 from common.domain.exceptions import InvariantViolationError
+from common.domain.value_objects.id import UserId
 from tests.unit.source.utils import make_source
 
 from luminary.source.application.interfaces.policies.source_access_policy import (
@@ -18,19 +19,19 @@ from luminary.source.application.interfaces.usecases.command.update_source_use_c
 from luminary.source.application.usecases.command.update_source_use_case import (
     UpdateSourceUseCase,
 )
-from luminary.source.domain.entity.source import Source
+from luminary.source.domain.entity.source import Source, SourceId
 
 
 @pytest.mark.asyncio
 class TestUpdateSourceUseCase:
     @pytest.fixture(autouse=True)
     def setup(self) -> None:
-        self.user_id: UUID = uuid4()
-        self.source_id: UUID = uuid4()
+        self.user_id = UserId(uuid4())
+        self.source_id = SourceId(uuid4())
 
         self.source: Source = make_source(
-            source_id=self.source_id,
-            owner_id=self.user_id,
+            source_id=self.source_id.value,
+            owner_id=self.user_id.value,
             title="Old Name",
         )
 
@@ -39,8 +40,8 @@ class TestUpdateSourceUseCase:
         self.repository.get_by_id.return_value = self.source
 
         self.command = UpdateSourceCommand(
-            user_id=self.user_id,
-            source_id=self.source_id,
+            user_id=self.user_id.value,
+            source_id=self.source_id.value,
             title="New Name",
         )
 
@@ -73,8 +74,8 @@ class TestUpdateSourceUseCase:
 
     async def test_skips_save_when_name_unchanged(self) -> None:
         unchanged_command = UpdateSourceCommand(
-            user_id=self.user_id,
-            source_id=self.source_id,
+            user_id=self.user_id.value,
+            source_id=self.source_id.value,
             title="Old Name",
         )
 
@@ -124,8 +125,8 @@ class TestUpdateSourceUseCase:
 
     async def test_raises_invariant_violation_when_name_is_empty(self) -> None:
         invalid_command = UpdateSourceCommand(
-            user_id=self.user_id,
-            source_id=self.source_id,
+            user_id=self.user_id.value,
+            source_id=self.source_id.value,
             title="",
         )
 
@@ -134,8 +135,8 @@ class TestUpdateSourceUseCase:
 
     async def test_raises_invariant_violation_when_name_is_whitespace(self) -> None:
         invalid_command = UpdateSourceCommand(
-            user_id=self.user_id,
-            source_id=self.source_id,
+            user_id=self.user_id.value,
+            source_id=self.source_id.value,
             title="   ",
         )
 

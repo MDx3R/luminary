@@ -2,43 +2,46 @@ from uuid import uuid4
 
 import pytest
 from common.domain.exceptions import InvariantViolationError
+from common.domain.value_objects.id import UserId
 from tests.unit.assistant.utils import make_instructions
 
-from luminary.assistant.domain.entity.assisnant import Assistant, AssistantInfo
+from luminary.assistant.domain.entity.assisnant import (
+    Assistant,
+    AssistantId,
+    AssistantInfo,
+)
 
 
 class TestAssistantEntity:
     @pytest.fixture(autouse=True)
     def setup(self) -> None:
-        self.assistant_id = uuid4()
-        self.user_id = uuid4()
+        self.assistant_id = AssistantId(uuid4())
+        self.user_id = UserId(uuid4())
         self.assistant = Assistant(
-            assistant_id=self.assistant_id,
-            user_id=self.user_id,
+            id=self.assistant_id,
+            owner_id=self.user_id,
             info=AssistantInfo(name="Test Assistant", description="Test Description"),
             instructions=make_instructions(prompt="Test Prompt"),
         )
 
     def test_create_assistant_success(self):
         # Arrange
-        assistant_id = uuid4()
-        user_id = uuid4()
         name = "Test Assistant"
         description = "Test Description"
         instructions = make_instructions(prompt="Test Prompt")
 
         # Act
         assistant = Assistant.create(
-            assistant_id=assistant_id,
-            user_id=user_id,
+            id=self.assistant_id,
+            owner_id=self.user_id,
             name=name,
             description=description,
             instructions=instructions,
         )
 
         # Assert
-        assert assistant.assistant_id == assistant_id
-        assert assistant.user_id == user_id
+        assert assistant.id == self.assistant_id
+        assert assistant.owner_id == self.user_id
         assert assistant.info.name == name
         assert assistant.info.description == description
         assert assistant.instructions == instructions
@@ -47,8 +50,8 @@ class TestAssistantEntity:
         # Arrange & Act & Assert
         with pytest.raises(InvariantViolationError):
             Assistant.create(
-                assistant_id=uuid4(),
-                user_id=uuid4(),
+                id=self.assistant_id,
+                owner_id=self.user_id,
                 name="",
                 description="Test Description",
                 instructions=make_instructions(),
@@ -58,8 +61,8 @@ class TestAssistantEntity:
         # Arrange & Act & Assert
         with pytest.raises(InvariantViolationError):
             Assistant.create(
-                assistant_id=uuid4(),
-                user_id=uuid4(),
+                id=self.assistant_id,
+                owner_id=self.user_id,
                 name="Test Name",
                 description="",
                 instructions=make_instructions(),

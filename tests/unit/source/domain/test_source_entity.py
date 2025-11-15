@@ -5,13 +5,14 @@ from uuid import uuid4
 import pytest
 from common.domain.exceptions import InvariantViolationError
 from common.domain.value_objects.datetime import DateTime
+from common.domain.value_objects.id import UserId
 from common.domain.value_objects.title import Title
 from common.domain.value_objects.url import Url
 
 from luminary.source.domain.entity.file_source import FileSource
 from luminary.source.domain.entity.link_source import LinkSource
 from luminary.source.domain.entity.page_source import PageSource
-from luminary.source.domain.entity.source import Source
+from luminary.source.domain.entity.source import Source, SourceId
 from luminary.source.domain.enums import FetchStatus, SourceType
 from luminary.source.domain.value_objects.file_meta import FileMeta
 
@@ -23,15 +24,15 @@ class _TestSource(Source):
 class TestSourceEntity:
     @pytest.fixture(autouse=True)
     def setup(self) -> None:
-        self.source_id = uuid4()
-        self.owner_id = uuid4()
+        self.source_id = SourceId(uuid4())
+        self.owner_id = UserId(uuid4())
         self.created_at = DateTime(datetime.now(UTC))
         self.title = Title("Test Source")
 
         # NOTE: Define and create concrete _TestSource
         # as Source is abstract
         self.source = _TestSource(
-            source_id=self.source_id,
+            id=self.source_id,
             owner_id=self.owner_id,
             title=self.title,
             type=SourceType.FILE,
@@ -67,7 +68,7 @@ class TestSourceEntity:
     def test_is_owned_by(self) -> None:
         # Act & Assert
         assert self.source.is_owned_by(self.source.owner_id)
-        assert not self.source.is_owned_by(uuid4())
+        assert not self.source.is_owned_by(UserId(uuid4()))
 
     def test_is_content_editable(self) -> None:
         # Act & Assert
@@ -77,15 +78,15 @@ class TestSourceEntity:
 class TestFileSource:
     @pytest.fixture(autouse=True)
     def setup(self) -> None:
-        self.source_id = uuid4()
-        self.owner_id = uuid4()
+        self.source_id = SourceId(uuid4())
+        self.owner_id = UserId(uuid4())
         self.content_id = uuid4()
         self.file_id = uuid4()
         self.title = "Test File"
         self.created_at = DateTime(datetime.now(UTC))
 
         self.source = FileSource(
-            source_id=self.source_id,
+            id=self.source_id,
             owner_id=self.owner_id,
             title=Title(self.title),
             content_id=self.content_id,
@@ -97,7 +98,7 @@ class TestFileSource:
     def test_create_file_source_success(self) -> None:
         # Act
         source = FileSource.create(
-            source_id=self.source_id,
+            id=self.source_id,
             owner_id=self.owner_id,
             title=self.title,
             file_id=self.file_id,
@@ -105,7 +106,7 @@ class TestFileSource:
         )
 
         # Assert
-        assert source.source_id == self.source_id
+        assert source.id == self.source_id
         assert source.owner_id == self.owner_id
         assert source.title.value == self.title
         assert source.type == SourceType.FILE
@@ -130,14 +131,14 @@ class TestFileSource:
 class TestLinkSource:
     @pytest.fixture(autouse=True)
     def setup(self) -> None:
-        self.source_id = uuid4()
-        self.owner_id = uuid4()
+        self.source_id = SourceId(uuid4())
+        self.owner_id = UserId(uuid4())
         self.title = "Test Link"
         self.url = "https://example.com"
         self.created_at = DateTime(datetime.now(UTC))
 
         self.link_source = LinkSource(
-            source_id=self.source_id,
+            id=self.source_id,
             owner_id=self.owner_id,
             title=Title(self.title),
             url=Url(self.url),
@@ -150,14 +151,14 @@ class TestLinkSource:
 
     def test_create_link_source_success(self) -> None:
         source = LinkSource.create(
-            source_id=self.source_id,
+            id=self.source_id,
             owner_id=self.owner_id,
             title=self.title,
             url=self.url,
             created_at=self.created_at,
         )
 
-        assert source.source_id == self.source_id
+        assert source.id == self.source_id
         assert source.owner_id == self.owner_id
         assert source.title.value == self.title
         assert source.type == SourceType.LINK
@@ -170,8 +171,8 @@ class TestLinkSource:
         # Arrange & Act & Assert
         with pytest.raises(InvariantViolationError):
             LinkSource.create(
-                source_id=uuid4(),
-                owner_id=uuid4(),
+                id=self.source_id,
+                owner_id=self.owner_id,
                 title="Test",
                 url="",
                 created_at=DateTime(datetime.now(UTC)),
@@ -205,13 +206,13 @@ class TestLinkSource:
 class TestPageSource:
     @pytest.fixture(autouse=True)
     def setup(self) -> None:
-        self.source_id = uuid4()
-        self.owner_id = uuid4()
+        self.source_id = SourceId(uuid4())
+        self.owner_id = UserId(uuid4())
         self.title = "Test Page"
         self.created_at = DateTime(datetime.now(UTC))
 
         self.base_page = PageSource(
-            source_id=self.source_id,
+            id=self.source_id,
             owner_id=self.owner_id,
             title=Title(self.title),
             content_id=None,
@@ -222,13 +223,13 @@ class TestPageSource:
 
     def test_create_page_source_success(self) -> None:
         source = PageSource.create(
-            source_id=self.source_id,
+            id=self.source_id,
             owner_id=self.owner_id,
             title=self.title,
             created_at=self.created_at,
         )
 
-        assert source.source_id == self.source_id
+        assert source.id == self.source_id
         assert source.owner_id == self.owner_id
         assert source.title.value == self.title
         assert source.type == SourceType.PAGE

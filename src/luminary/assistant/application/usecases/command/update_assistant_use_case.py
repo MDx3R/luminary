@@ -1,3 +1,5 @@
+from common.domain.value_objects.id import UserId
+
 from luminary.assistant.application.interfaces.policies.assistant_access_policy import (
     IAssistantAccessPolicy,
 )
@@ -8,7 +10,7 @@ from luminary.assistant.application.interfaces.usecases.command.update_assistant
     IUpdateAssistantUseCase,
     UpdateAssistantCommand,
 )
-from luminary.assistant.domain.entity.assisnant import Instructions
+from luminary.assistant.domain.entity.assisnant import AssistantId, Instructions
 
 
 class UpdateAssistantUseCase(IUpdateAssistantUseCase):
@@ -21,8 +23,12 @@ class UpdateAssistantUseCase(IUpdateAssistantUseCase):
         self.assistant_repository = assistant_repository
 
     async def execute(self, command: UpdateAssistantCommand) -> None:
-        assistant = await self.assistant_repository.get_by_id(command.assistant_id)
-        self.assistant_access_policy.assert_is_allowed(command.user_id, assistant)
+        assistant = await self.assistant_repository.get_by_id(
+            AssistantId(command.assistant_id)
+        )
+        self.assistant_access_policy.assert_is_allowed(
+            UserId(command.user_id), assistant
+        )
 
         assistant.change_name(command.name)
         assistant.change_description(command.description)

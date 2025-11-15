@@ -2,6 +2,7 @@ from unittest.mock import AsyncMock, Mock
 from uuid import uuid4
 
 import pytest
+from common.domain.value_objects.id import UserId
 from tests.unit.assistant.utils import make_assistant, make_instructions
 
 from luminary.assistant.application.exceptions import AssistantDuplicateNameError
@@ -14,6 +15,7 @@ from luminary.assistant.application.interfaces.usecases.command.create_assistant
 from luminary.assistant.application.usecases.command.create_assistant_use_case import (
     CreateAssistantUseCase,
 )
+from luminary.assistant.domain.entity.assisnant import AssistantId
 from luminary.assistant.domain.interfaces.assistant_factory import IAssistantFactory
 
 
@@ -21,9 +23,12 @@ from luminary.assistant.domain.interfaces.assistant_factory import IAssistantFac
 class TestCreateAssistantUseCase:
     @pytest.fixture(autouse=True)
     def setup(self):
-        self.assistant_id = uuid4()
+        self.user_id = UserId(uuid4())
+        self.assistant_id = AssistantId(uuid4())
 
-        self.assistant = make_assistant(assistant_id=self.assistant_id)
+        self.assistant = make_assistant(
+            assistant_id=self.assistant_id.value, user_id=self.user_id.value
+        )
 
         self.assistant_repository = AsyncMock(spec=IAssistantRepository)
 
@@ -31,7 +36,7 @@ class TestCreateAssistantUseCase:
         self.assistant_factory.create.return_value = self.assistant
 
         self.command = CreateAssistantCommand(
-            user_id=self.assistant.user_id,
+            user_id=self.user_id.value,
             name=self.assistant.info.name,
             description=self.assistant.info.description,
             prompt=None,
@@ -49,9 +54,9 @@ class TestCreateAssistantUseCase:
         result = await self.use_case.execute(self.command)
 
         # Assert
-        assert result == self.assistant_id
+        assert result == self.assistant_id.value
         self.assistant_repository.exists_by_name_for_user.assert_awaited_once_with(
-            self.command.name, self.command.user_id
+            self.command.name, self.user_id
         )
         self.assistant_repository.add.assert_awaited_once_with(self.assistant)
 
@@ -59,13 +64,14 @@ class TestCreateAssistantUseCase:
         # Arrange
         prompt = "Prompt"
         assistant = make_assistant(
-            assistant_id=self.assistant_id,
+            assistant_id=self.assistant_id.value,
+            user_id=self.user_id.value,
             instructions=make_instructions(prompt=prompt),
         )
         self.assistant_factory.create.return_value = assistant
 
         command = CreateAssistantCommand(
-            user_id=assistant.user_id,
+            user_id=assistant.owner_id.value,
             name=assistant.info.name,
             description=assistant.info.description,
             prompt=prompt,
@@ -77,9 +83,9 @@ class TestCreateAssistantUseCase:
         result = await self.use_case.execute(command)
 
         # Assert
-        assert result == self.assistant_id
+        assert result == self.assistant_id.value
         self.assistant_repository.exists_by_name_for_user.assert_awaited_once_with(
-            command.name, command.user_id
+            command.name, self.user_id
         )
         self.assistant_repository.add.assert_awaited_once_with(assistant)
 
@@ -92,6 +98,6 @@ class TestCreateAssistantUseCase:
             await self.use_case.execute(self.command)
 
         self.assistant_repository.exists_by_name_for_user.assert_awaited_once_with(
-            self.command.name, self.command.user_id
+            self.command.name, self.user_id
         )
         self.assistant_repository.add.assert_not_awaited()

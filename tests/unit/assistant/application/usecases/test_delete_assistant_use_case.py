@@ -51,11 +51,12 @@ class TestCreateAssistantUseCase:
         await self.use_case.execute(self.command)  # no error
 
         # Assert
+        assert self.assistant.is_deleted is True
         self.assistant_repository.get_by_id.assert_awaited_once_with(self.assistant_id)
         self.assistant_access_policy.assert_is_allowed.assert_called_once_with(
             self.user_id, self.assistant
         )
-        self.assistant_repository.remove.assert_awaited_once_with(self.assistant)
+        self.assistant_repository.save.assert_awaited_once_with(self.assistant)
 
     async def test_delete_assistant_not_found_raises(self):
         # Arrange
@@ -67,6 +68,7 @@ class TestCreateAssistantUseCase:
         with pytest.raises(NotFoundError):
             await self.use_case.execute(self.command)
 
+        assert self.assistant.is_deleted is False
         self.assistant_repository.get_by_id.assert_awaited_once_with(self.assistant_id)
         self.assistant_access_policy.assert_is_allowed.assert_not_called()
-        self.assistant_repository.remove.assert_not_awaited()
+        self.assistant_repository.save.assert_not_awaited()

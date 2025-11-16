@@ -20,13 +20,14 @@ def make_instructions(
 
 
 # Factory function to create an Assistant instance
-def make_assistant(
+def make_assistant(  # noqa: PLR0913
     *,
     assistant_id: UUID | None = None,
     user_id: UUID | None = None,
     name: str = "Test Assistant",
     description: str = "Test Description",
     instructions: Instructions | None = None,
+    is_deleted: bool = False,
 ) -> Assistant:
     """Create an Assistant instance with optional IDs, name, description, and instructions."""
     assistant_id = assistant_id or uuid4()
@@ -36,4 +37,5 @@ def make_assistant(
         owner_id=UserId(user_id),
         info=AssistantInfo(name=name, description=description),
         instructions=instructions or make_instructions(),
+        is_deleted=is_deleted,
     )

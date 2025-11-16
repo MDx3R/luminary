@@ -30,5 +30,7 @@ class DeleteAssistantUseCase(IDeleteAssistantUseCase):
             UserId(command.user_id), assistant
         )
 
-        # TODO: Soft delete, eventual consistency
-        await self.assistant_repository.remove(assistant)
+        assistant.delete()
+
+        # TODO: Eventual consistency
+        await self.assistant_repository.save(assistant)

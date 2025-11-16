@@ -22,6 +22,7 @@ class TestAssistantEntity:
             owner_id=self.user_id,
             info=AssistantInfo(name="Test Assistant", description="Test Description"),
             instructions=make_instructions(prompt="Test Prompt"),
+            is_deleted=False,
         )
 
     def test_create_assistant_success(self):
@@ -45,6 +46,7 @@ class TestAssistantEntity:
         assert assistant.info.name == name
         assert assistant.info.description == description
         assert assistant.instructions == instructions
+        assert assistant.is_deleted is False
 
     def test_create_assistant_invalid_name(self):
         # Arrange & Act & Assert
@@ -97,3 +99,10 @@ class TestAssistantEntity:
 
         # Assert
         assert self.assistant.instructions == new_instructions
+
+    def test_delete(self):
+        # Act
+        self.assistant.delete()
+
+        # Assert
+        assert self.assistant.is_deleted is True

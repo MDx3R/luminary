@@ -36,6 +36,7 @@ class Assistant:
     owner_id: UserId
     info: AssistantInfo
     instructions: Instructions
+    is_deleted: bool
 
     def is_owned_by(self, user_id: UserId) -> bool:
         return self.owner_id == user_id
@@ -48,6 +49,9 @@ class Assistant:
 
     def change_instructions(self, new_instructions: Instructions) -> None:
         self.instructions = new_instructions
+
+    def delete(self) -> None:
+        self.is_deleted = True
 
     @classmethod
     def create(
@@ -63,4 +67,5 @@ class Assistant:
             owner_id=owner_id,
             info=AssistantInfo(name, description),
             instructions=instructions,
+            is_deleted=False,
         )

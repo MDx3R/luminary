@@ -19,6 +19,7 @@ class AssistantMapper:
             owner_id=UserId(base.user_id),
             info=AssistantInfo(name=base.name, description=base.description),
             instructions=Instructions(base.prompt),
+            is_deleted=base.is_deleted,
         )
 
     @classmethod
@@ -29,4 +30,5 @@ class AssistantMapper:
             name=assistant.info.name,
             description=assistant.info.description,
             prompt=assistant.instructions.prompt,
+            is_deleted=assistant.is_deleted,
         )

@@ -4,7 +4,6 @@ from uuid import UUID, uuid4
 from common.domain.value_objects.datetime import DateTime
 from common.domain.value_objects.id import UserId
 
-
 from luminary.assistant.domain.entity.assisnant import AssistantId
 from luminary.chat.application.interfaces.usecases.query.get_chat_use_case import (
     ChatDTO,
@@ -12,7 +11,7 @@ from luminary.chat.application.interfaces.usecases.query.get_chat_use_case impor
 from luminary.chat.application.interfaces.usecases.query.get_user_chats_use_case import (
     ChatListItemDTO,
 )
-from luminary.chat.domain.entity.chat import Chat, ChatInfo, ChatSettings
+from luminary.chat.domain.entity.chat import Chat
 from luminary.chat.domain.entity.message import Message
 from luminary.chat.domain.enums import Author, MessageStatus
 from luminary.chat.domain.value_objects.chat_id import ChatId

@@ -67,7 +67,7 @@ class TestChatQueryController:
         chat_id = uuid4()
 
         get_chat_use_case = AsyncMock()
-        get_chat_use_case.execute.side_effect = NotFoundError(chat_id)
+        get_chat_use_case.execute.side_effect = NotFoundError(str(chat_id))
 
         get_user_chats_use_case = AsyncMock()
 

@@ -4,8 +4,15 @@ from uuid import UUID, uuid4
 from common.domain.value_objects.datetime import DateTime
 from common.domain.value_objects.id import UserId
 
+
 from luminary.assistant.domain.entity.assisnant import AssistantId
-from luminary.chat.domain.entity.chat import Chat
+from luminary.chat.application.interfaces.usecases.query.get_chat_use_case import (
+    ChatDTO,
+)
+from luminary.chat.application.interfaces.usecases.query.get_user_chats_use_case import (
+    ChatListItemDTO,
+)
+from luminary.chat.domain.entity.chat import Chat, ChatInfo, ChatSettings
 from luminary.chat.domain.entity.message import Message
 from luminary.chat.domain.enums import Author, MessageStatus
 from luminary.chat.domain.value_objects.chat_id import ChatId
@@ -69,4 +76,44 @@ def make_message(  # noqa: PLR0913
         status=status or MessageStatus.COMPLETED,
         created_at=DateTime(datetime.now(UTC)),
         edited_at=DateTime(datetime.now(UTC)),
+    )
+
+
+def make_chat_dto(  # noqa: PLR0913
+    *,
+    chat_id: UUID | None = None,
+    user_id: UUID | None = None,
+    folder_id: UUID | None = None,
+    name: str = "Test Chat",
+    model_id: UUID | None = None,
+    system_prompt: str = "Test prompt",
+    max_context_messages: int = 10,
+    created_at: datetime | None = None,
+    updated_at: datetime | None = None,
+) -> ChatDTO:
+    return ChatDTO(
+        chat_id=chat_id or uuid4(),
+        user_id=user_id or uuid4(),
+        folder_id=folder_id,
+        name=name,
+        model_id=model_id or uuid4(),
+        system_prompt=system_prompt,
+        max_context_messages=max_context_messages,
+        created_at=created_at or datetime.now(UTC),
+        updated_at=updated_at or datetime.now(UTC),
+    )
+
+
+def make_chat_list_item_dto(
+    *,
+    chat_id: UUID | None = None,
+    name: str = "Test Chat",
+    created_at: datetime | None = None,
+    updated_at: datetime | None = None,
+) -> ChatListItemDTO:
+    return ChatListItemDTO(
+        chat_id=chat_id or uuid4(),
+        name=name,
+        created_at=created_at or datetime.now(UTC),
+        updated_at=updated_at or datetime.now(UTC),
     )

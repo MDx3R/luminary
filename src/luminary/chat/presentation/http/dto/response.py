@@ -4,10 +4,6 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
-from luminary.chat.application.interfaces.usecases.command.get_message_response_use_case import (
-    StreamingMessageDTO,
-    StreamState,
-)
 from luminary.chat.application.interfaces.usecases.command.send_message_use_case import (
     MessageDTO,
 )
@@ -20,13 +16,15 @@ from luminary.chat.application.interfaces.usecases.query.get_user_chats_use_case
 from luminary.chat.domain.enums import Author, MessageStatus
 
 
+class CreateChatResponse(BaseModel):
+    chat_id: UUID
+
+
 class MessageResponse(BaseModel):
     message_id: UUID
     chat_id: UUID
     content: str
     author: Author
-    status: MessageStatus
-    tokens: int | None
     created_at: datetime
 
     @classmethod
@@ -36,24 +34,22 @@ class MessageResponse(BaseModel):
             chat_id=dto.chat_id,
             content=dto.content,
             author=dto.author,
-            status=dto.status,
-            tokens=dto.tokens,
-            created_at=dto.created_at.value,
+            created_at=dto.created_at,
         )
 
 
 class StreamingMessageResponse(BaseModel):
     message_id: UUID
-    state: StreamState
+    chat_id: UUID
     content: str
     author: Author
     status: MessageStatus
 
     @classmethod
-    def from_dto(cls, dto: StreamingMessageDTO) -> Self:
+    def from_dto(cls, dto: MessageDTO) -> Self:
         return cls(
             message_id=dto.message_id,
-            state=dto.state,
+            chat_id=dto.chat_id,
             content=dto.content,
             author=dto.author,
             status=dto.status,

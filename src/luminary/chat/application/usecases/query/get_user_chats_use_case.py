@@ -11,13 +11,14 @@ from luminary.chat.application.interfaces.usecases.query.get_user_chats_use_case
 
 
 class GetUserChatsUseCase(IGetUserChatsUseCase):
-
     def __init__(self, chat_read_repository: IChatReadRepository) -> None:
-
         self.chat_read_repository = chat_read_repository
 
     async def execute(self, query: GetUserChatsQuery) -> Sequence[ChatListItemDTO]:
         if query.folder_id is not None:
-            return await self.chat_read_repository.get_by_folder_id(query.folder_id)
+            return await self.chat_read_repository.get_by_folder_id_for_user(
+                query.folder_id,
+                query.user_id,
+            )
 
         return await self.chat_read_repository.get_by_user_id(query.user_id)

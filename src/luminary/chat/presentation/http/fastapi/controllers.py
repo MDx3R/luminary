@@ -87,7 +87,7 @@ class ChatCommandController:
 
         async def process_stream() -> AsyncGenerator[str]:
             async for chunk in stream:
-                yield StreamingMessageResponse.from_dto(chunk).model_dump_json()
+                yield StreamingMessageResponse.from_dto(chunk).model_dump_json() # type: ignore[arg-type]
 
         # TODO: Error handling
         return StreamingResponse(process_stream())
@@ -102,7 +102,6 @@ class ChatQueryController:
         "/{chat_id}",
         dependencies=[Depends(require_authenticated)],
         summary="Получить чат по ID",
-        description="Возвращает полную информацию o чате. Требует права доступа к чату.",
     )
     async def get_chat(
         self,
@@ -118,7 +117,6 @@ class ChatQueryController:
         "/",
         dependencies=[Depends(require_authenticated)],
         summary="Получить список чатов пользователя",
-        description="Возвращает список чатов. Опционально можно фильтровать по папке.",
     )
     async def get_user_chats(
         self,

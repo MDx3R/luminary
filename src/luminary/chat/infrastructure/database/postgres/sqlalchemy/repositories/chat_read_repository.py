@@ -16,15 +16,21 @@ from luminary.chat.application.interfaces.usecases.query.get_user_chats_use_case
 from luminary.chat.infrastructure.database.postgres.sqlalchemy.models.chat_base import (
     ChatBase,
 )
+from luminary.folder.infrastructure.database.postgres.sqlalchemy.models.folder_base import (
+    FolderBase,
+)
 
 
 class ChatReadRepository(IChatReadRepository):
-
     def __init__(self, executor: QueryExecutor) -> None:
         self.executor = executor
 
-    async def get_by_id(self, chat_id: UUID) -> ChatDTO | None:
-        query = select(ChatBase).where(ChatBase.chat_id == chat_id)
+    async def get_by_id_for_user(self, chat_id: UUID, user_id: UUID) -> ChatDTO | None:
+        query = select(ChatBase).where(
+            ChatBase.chat_id == chat_id,
+            ChatBase.user_id == user_id,
+        )
+
         try:
             result = await self.executor.execute_scalar_one(query)
         except Exception:
@@ -63,10 +69,16 @@ class ChatReadRepository(IChatReadRepository):
             for chat in results
         ]
 
-    async def get_by_folder_id(self, folder_id: UUID) -> Sequence[ChatListItemDTO]:
+    async def get_by_folder_id_for_user(
+        self, folder_id: UUID, user_id: UUID
+    ) -> Sequence[ChatListItemDTO]:
         query = (
             select(ChatBase)
-            .where(ChatBase.folder_id == folder_id)
+            .join(FolderBase, ChatBase.folder_id == FolderBase.folder_id)
+            .where(
+                ChatBase.folder_id == folder_id,
+                FolderBase.user_id == user_id,
+            )
             .order_by(ChatBase.updated_at.desc())
         )
         results = await self.executor.execute_scalar_many(query)
@@ -80,10 +92,3 @@ class ChatReadRepository(IChatReadRepository):
             )
             for chat in results
         ]
-
-    async def exists(self, chat_id: UUID) -> bool:
-        query = select(
-            select(ChatBase.chat_id).where(ChatBase.chat_id == chat_id).exists()
-        )
-        result = await self.executor.execute_scalar_one(query)
-        return bool(result) if result is not None else False

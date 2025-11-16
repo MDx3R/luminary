@@ -7,7 +7,7 @@ from common.domain.value_objects.id import UserId
 from common.domain.value_objects.title import Title
 
 from luminary.source.domain.entity.source import Source, SourceId
-from luminary.source.domain.enums import SourceType
+from luminary.source.domain.enums import FetchStatus, SourceType
 
 
 @dataclass
@@ -28,6 +28,8 @@ class FileSource(Source):
             owner_id=owner_id,
             title=Title(title),
             content_id=None,
+            fetched_at=None,
+            fetch_status=FetchStatus.NOT_FETCHED,
             type=SourceType.FILE,
             file_id=file_id,
             created_at=created_at,

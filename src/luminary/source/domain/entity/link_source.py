@@ -13,15 +13,6 @@ from luminary.source.domain.enums import FetchStatus, SourceType
 @dataclass
 class LinkSource(Source):
     url: Url
-    fetched_at: DateTime | None
-    fetch_status: FetchStatus
-
-    def fetch(self, fetched_at: DateTime) -> None:
-        self.fetched_at = fetched_at
-        self.fetch_status = FetchStatus.FETCHED
-
-    def fail(self) -> None:
-        self.fetch_status = FetchStatus.FAILED
 
     @classmethod
     def create(

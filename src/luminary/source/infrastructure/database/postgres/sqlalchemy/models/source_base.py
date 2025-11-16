@@ -16,6 +16,10 @@ class SourceBase(Base):
 
     type: Mapped[SourceType] = mapped_column(Enum(SourceType), nullable=False)
     title: Mapped[str] = mapped_column(String, nullable=False)
+    fetched_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    fetch_status: Mapped[FetchStatus] = mapped_column(Enum(FetchStatus), nullable=False)
 
     # TODO: Add FK
     owner_id: Mapped[UUID] = mapped_column(PGUUID, nullable=False)
@@ -44,10 +48,6 @@ class LinkSourceBase(SourceBase):
         PGUUID, ForeignKey("sources.source_id"), primary_key=True
     )
     url: Mapped[str] = mapped_column(String, nullable=False)
-    fetched_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
-    fetch_status: Mapped[FetchStatus] = mapped_column(Enum(FetchStatus), nullable=False)
 
     __mapper_args__ = {"polymorphic_identity": SourceType.LINK}  # noqa: RUF012
 

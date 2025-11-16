@@ -26,6 +26,7 @@ class LinkSourceFactoryDTO:
 class PageSourceFactoryDTO:
     owner_id: UserId
     title: str
+    content_id: UUID
 
 
 class ISourceFactory(ABC):

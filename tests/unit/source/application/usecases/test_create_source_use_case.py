@@ -147,6 +147,7 @@ class TestCreatePageSourceUseCase:
     def setup(self) -> None:
         self.user_id: UUID = uuid4()
         self.source_id: UUID = uuid4()
+        self.content_id: UUID = uuid4()
         self.title = "Test Page"
 
         self.source = make_page_source(
@@ -160,8 +161,7 @@ class TestCreatePageSourceUseCase:
         self.source_repository: AsyncMock = AsyncMock(spec=ISourceRepository)
 
         self.command = CreatePageSourceCommand(
-            user_id=self.user_id,
-            title=self.title,
+            user_id=self.user_id, title=self.title, content_id=self.content_id
         )
 
         self.use_case = CreatePageSourceUseCase(
@@ -175,8 +175,7 @@ class TestCreatePageSourceUseCase:
 
         # Assert
         expected_dto = PageSourceFactoryDTO(
-            owner_id=UserId(self.user_id),
-            title=self.title,
+            owner_id=UserId(self.user_id), title=self.title, content_id=self.content_id
         )
         self.source_factory.create.assert_called_once_with(expected_dto)
 

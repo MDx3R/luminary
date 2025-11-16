@@ -38,6 +38,8 @@ class TestSourceEntity:
             type=SourceType.FILE,
             content_id=None,
             created_at=self.created_at,
+            fetched_at=None,
+            fetch_status=FetchStatus.NOT_FETCHED,
         )
 
     def test_update_title(self) -> None:
@@ -93,6 +95,8 @@ class TestFileSource:
             type=SourceType.FILE,
             file_id=self.file_id,
             created_at=self.created_at,
+            fetched_at=None,
+            fetch_status=FetchStatus.NOT_FETCHED,
         )
 
     def test_create_file_source_success(self) -> None:
@@ -179,11 +183,12 @@ class TestLinkSource:
             )
 
     def test_fetch_success(self) -> None:
+        content_id = uuid4()
         source = replace(self.link_source)
         fetched_at = DateTime(datetime.now(UTC))
 
         # Act
-        source.fetch(fetched_at)
+        source.fetch(content_id, fetched_at)
 
         # Assert
         assert source.fetched_at == fetched_at
@@ -208,6 +213,7 @@ class TestPageSource:
     def setup(self) -> None:
         self.source_id = SourceId(uuid4())
         self.owner_id = UserId(uuid4())
+        self.content_id = uuid4()
         self.title = "Test Page"
         self.created_at = DateTime(datetime.now(UTC))
 
@@ -215,10 +221,12 @@ class TestPageSource:
             id=self.source_id,
             owner_id=self.owner_id,
             title=Title(self.title),
-            content_id=None,
+            content_id=self.content_id,
             type=SourceType.PAGE,
             editable=True,
             created_at=self.created_at,
+            fetched_at=None,
+            fetch_status=FetchStatus.FETCHED,
         )
 
     def test_create_page_source_success(self) -> None:
@@ -226,6 +234,7 @@ class TestPageSource:
             id=self.source_id,
             owner_id=self.owner_id,
             title=self.title,
+            content_id=self.content_id,
             created_at=self.created_at,
         )
 

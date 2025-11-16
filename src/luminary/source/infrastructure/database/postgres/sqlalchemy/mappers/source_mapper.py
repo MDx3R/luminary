@@ -28,6 +28,10 @@ class SourceMapper:
     @to_domain.register
     @classmethod
     def _(cls, base: FileSourceBase) -> FileSource:
+        fetched_at = None
+        if base.fetched_at:
+            fetched_at = DateTime(base.fetched_at)
+
         return FileSource(
             id=SourceId(base.source_id),
             owner_id=UserId(base.owner_id),
@@ -35,6 +39,8 @@ class SourceMapper:
             type=SourceType.FILE,
             content_id=base.content_id,
             file_id=base.file_id,
+            fetched_at=fetched_at,
+            fetch_status=base.fetch_status,
             created_at=DateTime(base.created_at),
         )
 
@@ -60,6 +66,10 @@ class SourceMapper:
     @to_domain.register
     @classmethod
     def _(cls, base: PageSourceBase) -> PageSource:
+        fetched_at = None
+        if base.fetched_at:
+            fetched_at = DateTime(base.fetched_at)
+
         return PageSource(
             id=SourceId(base.source_id),
             owner_id=UserId(base.owner_id),
@@ -67,6 +77,8 @@ class SourceMapper:
             type=SourceType.PAGE,
             content_id=base.content_id,
             editable=base.editable,
+            fetched_at=fetched_at,
+            fetch_status=base.fetch_status,
             created_at=DateTime(base.created_at),
         )
 
@@ -78,40 +90,56 @@ class SourceMapper:
     @to_persistence.register
     @classmethod
     def _(cls, source: FileSource) -> FileSourceBase:
+        fetched_at = None
+        if source.fetched_at:
+            fetched_at = source.fetched_at.value
+
         return FileSourceBase(
             source_id=source.id.value,
             owner_id=source.owner_id.value,
             title=source.title.value,
             type=source.type.value,
             content_id=source.content_id,
-            created_at=source.created_at.value,
             file_id=source.file_id,
+            fetched_at=fetched_at,
+            fetch_status=source.fetch_status,
+            created_at=source.created_at.value,
         )
 
     @to_persistence.register
     @classmethod
     def _(cls, source: LinkSource) -> LinkSourceBase:
+        fetched_at = None
+        if source.fetched_at:
+            fetched_at = source.fetched_at.value
+
         return LinkSourceBase(
             source_id=source.id.value,
             owner_id=source.owner_id.value,
             title=source.title.value,
             type=source.type.value,
             content_id=source.content_id,
-            created_at=source.created_at.value,
             url=source.url.value,
-            fetched_at=source.fetched_at.value if source.fetched_at else None,
+            fetched_at=fetched_at,
             fetch_status=source.fetch_status,
+            created_at=source.created_at.value,
         )
 
     @to_persistence.register
     @classmethod
     def _(cls, source: PageSource) -> PageSourceBase:
+        fetched_at = None
+        if source.fetched_at:
+            fetched_at = source.fetched_at.value
+
         return PageSourceBase(
             source_id=source.id.value,
             owner_id=source.owner_id.value,
             title=source.title.value,
             type=source.type.value,
             content_id=source.content_id,
-            created_at=source.created_at.value,
             editable=source.editable,
+            fetched_at=fetched_at,
+            fetch_status=source.fetch_status,
+            created_at=source.created_at.value,
         )

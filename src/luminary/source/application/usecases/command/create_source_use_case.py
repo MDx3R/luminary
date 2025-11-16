@@ -73,7 +73,11 @@ class CreatePageSourceUseCase(ICreatePageSourceUseCase):
 
     async def execute(self, command: CreatePageSourceCommand) -> UUID:
         source = self.source_factory.create(
-            PageSourceFactoryDTO(owner_id=UserId(command.user_id), title=command.title)
+            PageSourceFactoryDTO(
+                owner_id=UserId(command.user_id),
+                title=command.title,
+                content_id=command.content_id,
+            )
         )
         await self.source_repository.add(source)
         return source.id.value

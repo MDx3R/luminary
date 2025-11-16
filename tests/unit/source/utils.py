@@ -21,6 +21,8 @@ def make_source(  # noqa: PLR0913
     type: SourceType = SourceType.FILE,
     content_id: UUID | None = None,
     created_at: DateTime | None = None,
+    fetched_at: DateTime | None = None,
+    fetch_status: FetchStatus = FetchStatus.NOT_FETCHED,
 ) -> Source:
     source_id = source_id or uuid4()
     owner_id = owner_id or uuid4()
@@ -31,6 +33,8 @@ def make_source(  # noqa: PLR0913
         type=type,
         content_id=content_id,
         created_at=created_at or DateTime(datetime.now(UTC)),
+        fetched_at=fetched_at,
+        fetch_status=fetch_status,
     )
 
 
@@ -42,6 +46,8 @@ def make_file_source(  # noqa: PLR0913
     content_id: UUID | None = None,
     created_at: DateTime | None = None,
     file_id: UUID | None = None,
+    fetched_at: DateTime | None = None,
+    fetch_status: FetchStatus = FetchStatus.NOT_FETCHED,
 ) -> FileSource:
     source_id = source_id or uuid4()
     owner_id = owner_id or uuid4()
@@ -53,6 +59,8 @@ def make_file_source(  # noqa: PLR0913
         content_id=content_id,
         created_at=created_at or DateTime(datetime.now(UTC)),
         file_id=file_id or uuid4(),
+        fetched_at=fetched_at,
+        fetch_status=fetch_status,
     )
 
 
@@ -90,9 +98,13 @@ def make_page_source(  # noqa: PLR0913
     content_id: UUID | None = None,
     created_at: DateTime | None = None,
     editable: bool = True,
+    fetched_at: DateTime | None = None,
 ) -> PageSource:
     source_id = source_id or uuid4()
     owner_id = owner_id or uuid4()
+    # NOTE: Content ID cannot be None for PageSource
+    content_id = content_id or uuid4()
+
     return PageSource(
         id=SourceId(source_id),
         owner_id=UserId(owner_id),
@@ -101,4 +113,6 @@ def make_page_source(  # noqa: PLR0913
         content_id=content_id,
         created_at=created_at or DateTime(datetime.now(UTC)),
         editable=editable,
+        fetched_at=fetched_at,
+        fetch_status=FetchStatus.FETCHED,
     )

@@ -6,7 +6,7 @@ from common.domain.value_objects.datetime import DateTime
 from common.domain.value_objects.id import EntityId, UserId
 from common.domain.value_objects.title import Title
 
-from luminary.source.domain.enums import SourceType
+from luminary.source.domain.enums import FetchStatus, SourceType
 
 
 @dataclass(frozen=True)
@@ -20,6 +20,8 @@ class Source(ABC):
     title: Title
     type: SourceType
     content_id: UUID | None
+    fetched_at: DateTime | None
+    fetch_status: FetchStatus
     created_at: DateTime
 
     def is_owned_by(self, user_id: UserId) -> bool:
@@ -36,3 +38,11 @@ class Source(ABC):
 
     def set_content(self, content_id: UUID) -> None:
         self.content_id = content_id
+
+    def fetch(self, content_id: UUID, fetched_at: DateTime) -> None:
+        self.content_id = content_id
+        self.fetched_at = fetched_at
+        self.fetch_status = FetchStatus.FETCHED
+
+    def fail(self) -> None:
+        self.fetch_status = FetchStatus.FAILED

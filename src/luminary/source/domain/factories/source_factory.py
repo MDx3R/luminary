@@ -53,6 +53,7 @@ class SourceFactory(ISourceFactory):
                 id=SourceId(self.uuid_generator.create()),
                 owner_id=data.owner_id,
                 title=data.title,
+                content_id=data.content_id,
                 created_at=self.clock.now(),
             )
 

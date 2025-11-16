@@ -24,6 +24,7 @@ class TestSourceFactory:
     def setup(self) -> None:
         self.source_id = SourceId(uuid4())
         self.owner_id = UserId(uuid4())
+        self.content_id = uuid4()
         self.created_at = DateTime(datetime.now(UTC))
 
         self.factory = SourceFactory(
@@ -68,7 +69,9 @@ class TestSourceFactory:
 
     def test_create_page_source(self) -> None:
         # Arrange
-        dto = PageSourceFactoryDTO(owner_id=self.owner_id, title="Test Page")
+        dto = PageSourceFactoryDTO(
+            owner_id=self.owner_id, title="Test Page", content_id=self.content_id
+        )
 
         # Act
         source = self.factory.create(dto)
@@ -78,6 +81,7 @@ class TestSourceFactory:
         assert source.id == self.source_id
         assert source.owner_id == self.owner_id
         assert source.title.value == dto.title
+        assert source.content_id == self.content_id
         assert source.type == SourceType.PAGE
         assert source.editable is True
         assert source.created_at == self.created_at

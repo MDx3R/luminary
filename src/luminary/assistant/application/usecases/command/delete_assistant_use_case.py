@@ -29,4 +29,6 @@ class DeleteAssistantUseCase(IDeleteAssistantUseCase):
         self.assistant_access_policy.assert_is_allowed(
             UserId(command.user_id), assistant
         )
+
+        # TODO: Soft delete, eventual consistency
         await self.assistant_repository.remove(assistant)

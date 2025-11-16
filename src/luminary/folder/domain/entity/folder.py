@@ -29,7 +29,7 @@ class Folder:
     id: FolderId
     owner_id: UserId
     info: FolderInfo
-    assistant_id: AssistantId
+    assistant_id: AssistantId | None
     created_at: DateTime
     _chats: set[ChatId] = field(default_factory=set[ChatId])
     _sources: set[SourceId] = field(default_factory=set[SourceId])
@@ -51,8 +51,14 @@ class Folder:
     def change_description(self, description: str) -> None:
         self.info = FolderInfo(self.info.name, description)
 
+    def assistant_matches(self, assistant_id: AssistantId | None) -> bool:
+        return self.assistant_id == assistant_id
+
     def change_assistant(self, assistant_id: AssistantId) -> None:
         self.assistant_id = assistant_id
+
+    def remove_assistant(self) -> None:
+        self.assistant_id = None
 
     def add_chat(self, chat_id: ChatId) -> None:
         self._chats.add(chat_id)
@@ -79,7 +85,7 @@ class Folder:
         owner_id: UserId,
         name: str,
         description: str | None,
-        assistant_id: AssistantId,
+        assistant_id: AssistantId | None,
         created_at: DateTime,
     ) -> Self:
         return cls(

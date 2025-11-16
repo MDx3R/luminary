@@ -13,5 +13,5 @@ class IFolderFactory(ABC):
         name: str,
         description: str | None,
         user_id: UserId,
-        assistant_id: AssistantId,
+        assistant_id: AssistantId | None,
     ) -> Folder: ...

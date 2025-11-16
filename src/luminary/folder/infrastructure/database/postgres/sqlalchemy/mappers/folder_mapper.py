@@ -18,11 +18,15 @@ class FolderMapper:
         chats = {ChatId(c.chat_id) for c in base.chats}
         sources = {SourceId(s.source_id) for s in base.sources}
 
+        assistant_id = None
+        if base.assistant_id:
+            assistant_id = AssistantId(base.assistant_id)
+
         return Folder(
             id=FolderId(base.folder_id),
             owner_id=UserId(base.user_id),
             info=FolderInfo(base.name, base.description),
-            assistant_id=AssistantId(base.assistant_id),
+            assistant_id=assistant_id,
             created_at=DateTime(base.created_at),
             _chats=chats,
             _sources=sources,
@@ -41,12 +45,16 @@ class FolderMapper:
                 FolderSourceBase(folder_id=folder_id, source_id=source_id.value)
             )
 
+        assistant_id = None
+        if folder.assistant_id:
+            assistant_id = folder.assistant_id.value
+
         return FolderBase(
             folder_id=folder_id,
             user_id=folder.id.value,
             name=folder.info.name,
             description=folder.info.description,
-            assistant_id=folder.assistant_id.value,
+            assistant_id=assistant_id,
             created_at=folder.created_at.value,
             chats=chats,
             sources=sources,

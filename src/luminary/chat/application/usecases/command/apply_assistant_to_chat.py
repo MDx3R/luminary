@@ -6,16 +6,16 @@ from luminary.assistant.application.interfaces.policies.assistant_access_policy 
 from luminary.assistant.application.interfaces.repositories.assistant_repository import (
     IAssistantRepository,
 )
-from luminary.assistant.application.interfaces.usecases.command.apply_assistant_to_chat import (
-    ApplyAssistantToChatCommand,
-    IApplyAssistantToChatUseCase,
-)
 from luminary.assistant.domain.entity.assisnant import AssistantId
 from luminary.chat.application.interfaces.policies.chat_access_policy import (
     IChatAccessPolicy,
 )
 from luminary.chat.application.interfaces.repositories.chat_repository import (
     IChatRepository,
+)
+from luminary.chat.application.interfaces.usecases.command.apply_assistant_to_chat import (
+    ApplyAssistantToChatCommand,
+    IApplyAssistantToChatUseCase,
 )
 from luminary.chat.domain.value_objects.chat_id import ChatId
 
@@ -41,7 +41,6 @@ class ApplyAssistantToChatUseCase(IApplyAssistantToChatUseCase):
         self.chat_access_policy.assert_is_allowed(user_id, chat)
 
         if chat.assistant_matches(assistant_id):
-            print("whahaha")
             return
 
         assistant = await self.assistant_repository.get_by_id(assistant_id)

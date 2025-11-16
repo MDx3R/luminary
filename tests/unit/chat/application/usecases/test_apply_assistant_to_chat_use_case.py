@@ -13,18 +13,18 @@ from luminary.assistant.application.interfaces.policies.assistant_access_policy 
 from luminary.assistant.application.interfaces.repositories.assistant_repository import (
     IAssistantRepository,
 )
-from luminary.assistant.application.interfaces.usecases.command.apply_assistant_to_chat import (
-    ApplyAssistantToChatCommand,
-)
-from luminary.assistant.application.usecases.command.apply_assistant_to_chat import (
-    ApplyAssistantToChatUseCase,
-)
 from luminary.assistant.domain.entity.assisnant import Assistant, AssistantId
 from luminary.chat.application.interfaces.policies.chat_access_policy import (
     IChatAccessPolicy,
 )
 from luminary.chat.application.interfaces.repositories.chat_repository import (
     IChatRepository,
+)
+from luminary.chat.application.interfaces.usecases.command.apply_assistant_to_chat import (
+    ApplyAssistantToChatCommand,
+)
+from luminary.chat.application.usecases.command.apply_assistant_to_chat import (
+    ApplyAssistantToChatUseCase,
 )
 from luminary.chat.domain.entity.chat import Chat
 from luminary.chat.domain.value_objects.chat_id import ChatId

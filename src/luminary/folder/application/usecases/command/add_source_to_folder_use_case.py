@@ -48,6 +48,9 @@ class AddSourceToFolderUseCase(IAddSourceToFolderUseCase):
         folder = await self.folder_repository.get_by_id(FolderId(command.folder_id))
         self.folder_access_policy.assert_is_allowed(user_id, folder)
 
+        if folder.has_source(source_id):
+            return
+
         source = await self.source_repository.get_by_id(source_id)
         self.source_access_policy.assert_is_allowed(user_id, source)
 

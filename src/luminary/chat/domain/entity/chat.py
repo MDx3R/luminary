@@ -37,6 +37,9 @@ class Chat:
     def remove_source(self, source_id: SourceId) -> None:
         self._sources.remove(source_id)
 
+    def has_source(self, source_id: SourceId) -> bool:
+        return source_id in self._sources
+
     def change_name(self, new_name: str) -> None:
         self.info = ChatInfo(new_name)
 

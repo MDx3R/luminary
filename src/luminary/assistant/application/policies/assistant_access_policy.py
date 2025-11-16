@@ -1,6 +1,5 @@
-from uuid import UUID
-
 from common.application.exceptions import AccessPolicyError
+from common.domain.value_objects.id import UserId
 
 from luminary.assistant.application.interfaces.policies.assistant_access_policy import (
     IAssistantAccessPolicy,
@@ -9,12 +8,11 @@ from luminary.assistant.domain.entity.assisnant import Assistant
 
 
 class AssistantAccessPolicy(IAssistantAccessPolicy):
-    def is_allowed(self, user_id: UUID, assistant: Assistant) -> bool:
-        return assistant.user_id == user_id
+    def is_allowed(self, user_id: UserId, entity: Assistant) -> bool:
+        return entity.is_owned_by(user_id)
 
-    def assert_is_allowed(self, user_id: UUID, assistant: Assistant) -> None:
-        if not self.is_allowed(user_id, assistant):
+    def assert_is_allowed(self, user_id: UserId, entity: Assistant) -> None:
+        if not self.is_allowed(user_id, entity):
             raise AccessPolicyError(
-                assistant.assistant_id,
-                "assistant is accessable only to user who created it",
+                entity.id, "assistant is accessable only to user who created it"
             )

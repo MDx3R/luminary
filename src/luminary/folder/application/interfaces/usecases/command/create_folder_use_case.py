@@ -8,7 +8,6 @@ class CreateFolderCommand:
     user_id: UUID
     name: str
     description: str | None
-    model_id: UUID
     assistant_id: UUID
 
 

@@ -7,7 +7,7 @@ from common.domain.interfaces.uuid_generator import IUUIDGenerator
 from luminary.source.domain.entity.file_source import FileSource
 from luminary.source.domain.entity.link_source import LinkSource
 from luminary.source.domain.entity.page_source import PageSource
-from luminary.source.domain.entity.source import Source
+from luminary.source.domain.entity.source import Source, SourceId
 from luminary.source.domain.interfaces.source_factory import (
     FileSourceFactoryDTO,
     ISourceFactory,
@@ -30,7 +30,7 @@ class SourceFactory(ISourceFactory):
         @create.register
         def _(self, data: FileSourceFactoryDTO) -> FileSource:
             return FileSource.create(
-                source_id=self.uuid_generator.create(),
+                id=SourceId(self.uuid_generator.create()),
                 owner_id=data.owner_id,
                 title=data.title,
                 created_at=self.clock.now(),
@@ -40,7 +40,7 @@ class SourceFactory(ISourceFactory):
         @create.register
         def _(self, data: LinkSourceFactoryDTO) -> LinkSource:
             return LinkSource.create(
-                source_id=self.uuid_generator.create(),
+                id=SourceId(self.uuid_generator.create()),
                 owner_id=data.owner_id,
                 title=data.title,
                 created_at=self.clock.now(),
@@ -50,9 +50,10 @@ class SourceFactory(ISourceFactory):
         @create.register
         def _(self, data: PageSourceFactoryDTO) -> PageSource:
             return PageSource.create(
-                source_id=self.uuid_generator.create(),
+                id=SourceId(self.uuid_generator.create()),
                 owner_id=data.owner_id,
                 title=data.title,
+                content_id=data.content_id,
                 created_at=self.clock.now(),
             )
 

@@ -1,5 +1,7 @@
 from uuid import UUID
 
+from common.domain.value_objects.id import UserId
+
 from luminary.source.application.interfaces.repositories.source_repository import (
     ISourceRepository,
 )
@@ -32,11 +34,13 @@ class CreateFileSourceUseCase(ICreateFileSourceUseCase):
         # TODO: Consider different flow
         source = self.source_factory.create(
             FileSourceFactoryDTO(
-                owner_id=command.user_id, title=command.title, file_id=command.file_id
+                owner_id=UserId(command.user_id),
+                title=command.title,
+                file_id=command.file_id,
             )
         )
         await self.source_repository.add(source)
-        return source.source_id
+        return source.id.value
 
 
 class CreateLinkSourceUseCase(ICreateLinkSourceUseCase):
@@ -51,11 +55,11 @@ class CreateLinkSourceUseCase(ICreateLinkSourceUseCase):
     async def execute(self, command: CreateLinkSourceCommand) -> UUID:
         source = self.source_factory.create(
             LinkSourceFactoryDTO(
-                owner_id=command.user_id, title=command.title, url=command.url
+                owner_id=UserId(command.user_id), title=command.title, url=command.url
             )
         )
         await self.source_repository.add(source)
-        return source.source_id
+        return source.id.value
 
 
 class CreatePageSourceUseCase(ICreatePageSourceUseCase):
@@ -69,7 +73,11 @@ class CreatePageSourceUseCase(ICreatePageSourceUseCase):
 
     async def execute(self, command: CreatePageSourceCommand) -> UUID:
         source = self.source_factory.create(
-            PageSourceFactoryDTO(owner_id=command.user_id, title=command.title)
+            PageSourceFactoryDTO(
+                owner_id=UserId(command.user_id),
+                title=command.title,
+                content_id=command.content_id,
+            )
         )
         await self.source_repository.add(source)
-        return source.source_id
+        return source.id.value

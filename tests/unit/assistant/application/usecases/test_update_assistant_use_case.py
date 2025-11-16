@@ -3,6 +3,7 @@ from uuid import uuid4
 
 import pytest
 from common.application.exceptions import AccessPolicyError, NotFoundError
+from common.domain.value_objects.id import UserId
 from tests.unit.assistant.utils import make_assistant, make_instructions
 
 from luminary.assistant.application.interfaces.policies.assistant_access_policy import (
@@ -17,15 +18,19 @@ from luminary.assistant.application.interfaces.usecases.command.update_assistant
 from luminary.assistant.application.usecases.command.update_assistant_use_case import (
     UpdateAssistantUseCase,
 )
+from luminary.assistant.domain.entity.assisnant import AssistantId
 
 
 @pytest.mark.asyncio
 class TestUpdateAssistantUseCase:
     @pytest.fixture(autouse=True)
     def setup(self):
-        self.assistant_id = uuid4()
+        self.user_id = UserId(uuid4())
+        self.assistant_id = AssistantId(uuid4())
 
-        self.assistant = make_assistant(assistant_id=self.assistant_id)
+        self.assistant = make_assistant(
+            assistant_id=self.assistant_id.value, user_id=self.user_id.value
+        )
 
         self.assistant_access_policy = Mock(spec=IAssistantAccessPolicy)
         self.assistant_repository = AsyncMock(spec=IAssistantRepository)
@@ -33,8 +38,8 @@ class TestUpdateAssistantUseCase:
         self.assistant_repository.get_by_id.return_value = self.assistant
 
         self.command = UpdateAssistantCommand(
-            user_id=self.assistant.user_id,
-            assistant_id=self.assistant.assistant_id,
+            user_id=self.assistant.owner_id.value,
+            assistant_id=self.assistant.id.value,
             name="New Name",
             description="New Description",
             prompt=None,
@@ -54,11 +59,9 @@ class TestUpdateAssistantUseCase:
         assert self.assistant.info.description == self.command.description
         assert self.assistant.instructions is not None  # TODO: Check default prompt
 
-        self.assistant_repository.get_by_id.assert_awaited_once_with(
-            self.command.assistant_id
-        )
+        self.assistant_repository.get_by_id.assert_awaited_once_with(self.assistant_id)
         self.assistant_access_policy.assert_is_allowed.assert_called_once_with(
-            self.command.user_id, self.assistant
+            self.user_id, self.assistant
         )
         self.assistant_repository.save.assert_awaited_once_with(self.assistant)
 
@@ -66,8 +69,8 @@ class TestUpdateAssistantUseCase:
         # Arrange
         prompt = "New prompt"
         command = UpdateAssistantCommand(
-            user_id=self.assistant.user_id,
-            assistant_id=self.assistant.assistant_id,
+            user_id=self.user_id.value,
+            assistant_id=self.assistant_id.value,
             name=self.assistant.info.name,
             description=self.assistant.info.description,
             prompt=prompt,
@@ -83,21 +86,22 @@ class TestUpdateAssistantUseCase:
         # Assert
         self.assistant_repository.get_by_id.assert_awaited()
         self.assistant_access_policy.assert_is_allowed.assert_called_once_with(
-            command.user_id, self.assistant
+            self.user_id, self.assistant
         )
         self.assistant_repository.save.assert_awaited_once_with(self.assistant)
 
     async def test_update_assistant_reset_instructions(self):
         # Arrange
         assistant = make_assistant(
-            assistant_id=self.assistant_id,
+            assistant_id=self.assistant_id.value,
+            user_id=self.user_id.value,
             instructions=make_instructions(prompt="p"),  # NOTE: Add instructions
         )
         self.assistant_repository.get_by_id.return_value = assistant
 
         command = UpdateAssistantCommand(
-            user_id=assistant.user_id,
-            assistant_id=assistant.assistant_id,
+            user_id=self.assistant.owner_id.value,
+            assistant_id=self.assistant.id.value,
             name=assistant.info.name,
             description=assistant.info.description,
             prompt=None,
@@ -112,7 +116,7 @@ class TestUpdateAssistantUseCase:
         # Assert
         self.assistant_repository.get_by_id.assert_awaited()
         self.assistant_access_policy.assert_is_allowed.assert_called_once_with(
-            command.user_id, assistant
+            self.user_id, assistant
         )
         # NOTE: Changes applied on assistant object via reference
         self.assistant_repository.save.assert_awaited_once_with(assistant)
@@ -127,23 +131,19 @@ class TestUpdateAssistantUseCase:
         with pytest.raises(NotFoundError):
             await self.use_case.execute(self.command)
 
-        self.assistant_repository.get_by_id.assert_awaited_once_with(
-            self.assistant.assistant_id
-        )
+        self.assistant_repository.get_by_id.assert_awaited_once_with(self.assistant_id)
         self.assistant_access_policy.assert_is_allowed.assert_not_called()
         self.assistant_repository.save.assert_not_awaited()
 
     async def test_update_assistant_access_denied_raises(self):
         # Arrange
         self.assistant_access_policy.assert_is_allowed.side_effect = AccessPolicyError(
-            self.assistant.assistant_id, "denied"
+            self.assistant_id, "denied"
         )
 
         # Act & Assert
         with pytest.raises(AccessPolicyError):
             await self.use_case.execute(self.command)
 
-        self.assistant_repository.get_by_id.assert_awaited_once_with(
-            self.assistant.assistant_id
-        )
+        self.assistant_repository.get_by_id.assert_awaited_once_with(self.assistant_id)
         self.assistant_repository.save.assert_not_awaited()

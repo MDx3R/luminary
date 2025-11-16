@@ -1,4 +1,4 @@
-from uuid import UUID, uuid4
+from uuid import uuid4
 
 import pytest
 from common.application.exceptions import NotFoundError
@@ -11,6 +11,7 @@ from tests.unit.source.utils import make_file_source, make_link_source, make_pag
 from luminary.source.domain.entity.file_source import FileSource
 from luminary.source.domain.entity.link_source import LinkSource
 from luminary.source.domain.entity.page_source import PageSource
+from luminary.source.domain.entity.source import SourceId
 from luminary.source.infrastructure.database.postgres.sqlalchemy.mappers.source_mapper import (
     SourceMapper,
 )
@@ -33,38 +34,38 @@ class TestSourceRepository:
         self.maker = maker
         self.source_repository = SourceRepository(query_executor)
 
-    async def _exists(self, source_id: UUID) -> bool:
+    async def _exists(self, source_id: SourceId) -> bool:
         async with self.maker() as session:
-            result = await session.get(FileSourceBase, source_id)
+            result = await session.get(FileSourceBase, source_id.value)
             if result:
                 return True
-            result = await session.get(LinkSourceBase, source_id)  # type: ignore[arg-type]
+            result = await session.get(LinkSourceBase, source_id.value)  # type: ignore[arg-type]
             if result:
                 return True
-            result = await session.get(PageSourceBase, source_id)  # type: ignore[arg-type]
+            result = await session.get(PageSourceBase, source_id.value)  # type: ignore[arg-type]
             return result is not None
 
-    async def _get_file_source(self, source_id: UUID) -> FileSource | None:
+    async def _get_file_source(self, source_id: SourceId) -> FileSource | None:
         async with self.maker() as session:
-            result = await session.get(FileSourceBase, source_id)
+            result = await session.get(FileSourceBase, source_id.value)
             if not result:
                 return None
             source = SourceMapper.to_domain(result)
             assert isinstance(source, FileSource)
             return source
 
-    async def _get_link_source(self, source_id: UUID) -> LinkSource | None:
+    async def _get_link_source(self, source_id: SourceId) -> LinkSource | None:
         async with self.maker() as session:
-            result = await session.get(LinkSourceBase, source_id)
+            result = await session.get(LinkSourceBase, source_id.value)
             if not result:
                 return None
             source = SourceMapper.to_domain(result)
             assert isinstance(source, LinkSource)
             return source
 
-    async def _get_page_source(self, source_id: UUID) -> PageSource | None:
+    async def _get_page_source(self, source_id: SourceId) -> PageSource | None:
         async with self.maker() as session:
-            result = await session.get(PageSourceBase, source_id)
+            result = await session.get(PageSourceBase, source_id.value)
             if not result:
                 return None
             source = SourceMapper.to_domain(result)
@@ -97,7 +98,7 @@ class TestSourceRepository:
         source = await self._add_file_source()
 
         # Act
-        result = await self.source_repository.get_by_id(source.source_id)
+        result = await self.source_repository.get_by_id(source.id)
 
         # Assert
         assert result == source
@@ -107,7 +108,7 @@ class TestSourceRepository:
         source = await self._add_link_source()
 
         # Act
-        result = await self.source_repository.get_by_id(source.source_id)
+        result = await self.source_repository.get_by_id(source.id)
 
         # Assert
         assert result == source
@@ -117,7 +118,7 @@ class TestSourceRepository:
         source = await self._add_page_source()
 
         # Act
-        result = await self.source_repository.get_by_id(source.source_id)
+        result = await self.source_repository.get_by_id(source.id)
 
         # Assert
         assert result == source
@@ -125,7 +126,7 @@ class TestSourceRepository:
     async def test_get_source_not_found(self):
         # Act & Assert
         with pytest.raises(NotFoundError):
-            await self.source_repository.get_by_id(uuid4())
+            await self.source_repository.get_by_id(SourceId(uuid4()))
 
     async def test_add_file_source_success(self):
         # Arrange
@@ -135,7 +136,7 @@ class TestSourceRepository:
         await self.source_repository.add(source)
 
         # Assert
-        saved_source = await self._get_file_source(source.source_id)
+        saved_source = await self._get_file_source(source.id)
         assert saved_source == source
 
     async def test_add_link_source_success(self):
@@ -146,7 +147,7 @@ class TestSourceRepository:
         await self.source_repository.add(source)
 
         # Assert
-        saved_source = await self._get_link_source(source.source_id)
+        saved_source = await self._get_link_source(source.id)
         assert saved_source == source
 
     async def test_add_page_source_success(self):
@@ -157,7 +158,7 @@ class TestSourceRepository:
         await self.source_repository.add(source)
 
         # Assert
-        saved_source = await self._get_page_source(source.source_id)
+        saved_source = await self._get_page_source(source.id)
         assert saved_source == source
 
     async def test_save_file_source_success(self):
@@ -169,7 +170,7 @@ class TestSourceRepository:
         await self.source_repository.save(source)
 
         # Assert
-        updated_source = await self._get_file_source(source.source_id)
+        updated_source = await self._get_file_source(source.id)
         assert updated_source is not None
         assert updated_source.title == source.title
 
@@ -182,7 +183,7 @@ class TestSourceRepository:
         await self.source_repository.save(source)
 
         # Assert
-        updated_source = await self._get_link_source(source.source_id)
+        updated_source = await self._get_link_source(source.id)
         assert updated_source is not None
         assert updated_source.url == Url("https://updated-example.com")
 
@@ -195,7 +196,7 @@ class TestSourceRepository:
         await self.source_repository.save(source)
 
         # Assert
-        updated_source = await self._get_page_source(source.source_id)
+        updated_source = await self._get_page_source(source.id)
         assert updated_source is not None
         assert updated_source.editable is False
 
@@ -207,7 +208,7 @@ class TestSourceRepository:
         await self.source_repository.remove(source)
 
         # Assert
-        assert await self._exists(source.source_id) is False
+        assert await self._exists(source.id) is False
 
     async def test_remove_link_source_success(self):
         # Arrange
@@ -217,7 +218,7 @@ class TestSourceRepository:
         await self.source_repository.remove(source)
 
         # Assert
-        assert await self._exists(source.source_id) is False
+        assert await self._exists(source.id) is False
 
     async def test_remove_page_source_success(self):
         # Arrange
@@ -227,7 +228,7 @@ class TestSourceRepository:
         await self.source_repository.remove(source)
 
         # Assert
-        assert await self._exists(source.source_id) is False
+        assert await self._exists(source.id) is False
 
     async def test_remove_nonexistent_source_success(self):
         # Arrange

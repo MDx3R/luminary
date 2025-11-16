@@ -1,4 +1,5 @@
-from uuid import UUID
+from common.application.interfaces.transactions.unit_of_work import IUnitOfWork
+from common.domain.value_objects.id import UserId
 
 from luminary.chat.application.interfaces.repositories.chat_repository import (
     IChatRepository,
@@ -13,34 +14,44 @@ from luminary.folder.application.interfaces.usecases.command.remove_source_from_
     IRemoveSourceFromFolderUseCase,
     RemoveSourceFromFolderCommand,
 )
-from luminary.folder.domain.entity.folder import Folder
+from luminary.folder.domain.entity.folder import Folder, FolderId
+from luminary.source.domain.entity.source import SourceId
 
 
 class RemoveSourceFromFolderUseCase(IRemoveSourceFromFolderUseCase):
     def __init__(
         self,
+        uow: IUnitOfWork,
         folder_access_policy: IFolderAccessPolicy,
         chat_repository: IChatRepository,
         folder_repository: IFolderRepository,
     ) -> None:
+        self.uow = uow
         self.folder_access_policy = folder_access_policy
         self.chat_repository = chat_repository
         self.folder_repository = folder_repository
 
     async def execute(self, command: RemoveSourceFromFolderCommand) -> None:
-        folder = await self.folder_repository.get_by_id(command.folder_id)
-        self.folder_access_policy.assert_is_allowed(command.user_id, folder)
+        source_id = SourceId(command.source_id)
 
-        if not folder.has_source(command.source_id):
+        folder = await self.folder_repository.get_by_id(FolderId(command.folder_id))
+        self.folder_access_policy.assert_is_allowed(UserId(command.user_id), folder)
+
+        if not folder.has_source(source_id):
             return
 
-        folder.remove_source(command.source_id)
-        await self.folder_repository.save(folder)
+        folder.remove_source(source_id)
 
-    async def remove_source_from_chats(self, source_id: UUID, folder: Folder) -> None:
+        async with self.uow:
+            await self.folder_repository.save(folder)
+            await self.remove_source_from_chats(source_id, folder)
+
+    async def remove_source_from_chats(
+        self, source_id: SourceId, folder: Folder
+    ) -> None:
         # TODO: Add tests
         # TODO: Eventual consistency
-        chats = await self.chat_repository.get_by_folder_id(folder.folder_id)
+        chats = await self.chat_repository.get_by_folder_id(folder.id)
 
         for ch in chats:
             ch.remove_source(source_id)

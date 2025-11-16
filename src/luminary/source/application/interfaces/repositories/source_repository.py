@@ -1,12 +1,11 @@
 from abc import ABC, abstractmethod
-from uuid import UUID
 
-from luminary.source.domain.entity.source import Source
+from luminary.source.domain.entity.source import Source, SourceId
 
 
 class ISourceRepository(ABC):
     @abstractmethod
-    async def get_by_id(self, source_id: UUID) -> Source: ...
+    async def get_by_id(self, id: SourceId) -> Source: ...
     @abstractmethod
     async def add(self, entity: Source) -> None: ...
     @abstractmethod

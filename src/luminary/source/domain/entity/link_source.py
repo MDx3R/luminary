@@ -1,39 +1,30 @@
 from dataclasses import dataclass
 from typing import Self
-from uuid import UUID
 
 from common.domain.value_objects.datetime import DateTime
+from common.domain.value_objects.id import UserId
 from common.domain.value_objects.title import Title
 from common.domain.value_objects.url import Url
 
-from luminary.source.domain.entity.source import Source
+from luminary.source.domain.entity.source import Source, SourceId
 from luminary.source.domain.enums import FetchStatus, SourceType
 
 
 @dataclass
 class LinkSource(Source):
     url: Url
-    fetched_at: DateTime | None
-    fetch_status: FetchStatus
-
-    def fetch(self, fetched_at: DateTime) -> None:
-        self.fetched_at = fetched_at
-        self.fetch_status = FetchStatus.FETCHED
-
-    def fail(self) -> None:
-        self.fetch_status = FetchStatus.FAILED
 
     @classmethod
     def create(
         cls,
-        source_id: UUID,
-        owner_id: UUID,
+        id: SourceId,
+        owner_id: UserId,
         title: str,
         url: str,
         created_at: DateTime,
     ) -> Self:
         return cls(
-            source_id=source_id,
+            id=id,
             owner_id=owner_id,
             title=Title(title),
             type=SourceType.LINK,

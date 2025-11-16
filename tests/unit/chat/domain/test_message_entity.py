@@ -9,30 +9,36 @@ from common.domain.value_objects.datetime import DateTime
 from luminary.chat.domain.entity.attachment import Attachment
 from luminary.chat.domain.entity.message import Message
 from luminary.chat.domain.enums import Author, MessageStatus
+from luminary.chat.domain.value_objects.chat_id import ChatId
+from luminary.chat.domain.value_objects.message_id import MessageId
+from luminary.model.domain.entity.model import ModelId
+from luminary.source.domain.entity.source import SourceId
 
 
 class TestAttachment:
     def test_create_success(self):
-        att = Attachment(name="file.txt", content_id=uuid4(), source_id=uuid4())
+        att = Attachment(
+            name="file.txt", content_id=uuid4(), source_id=SourceId(uuid4())
+        )
         assert att.name == "file.txt"
 
     @pytest.mark.parametrize("name", ["", "   "])
     def test_invalid_name_raises(self, name: Literal[""] | Literal["   "]):
         with pytest.raises(InvariantViolationError):
-            Attachment(name=name, content_id=uuid4(), source_id=uuid4())
+            Attachment(name=name, content_id=uuid4(), source_id=SourceId(uuid4()))
 
 
 class TestMessage:
     @pytest.fixture(autouse=True)
     def setup(self):
-        self.message_id = uuid4()
-        self.chat_id = uuid4()
-        self.model_id = uuid4()
+        self.message_id = MessageId(uuid4())
+        self.chat_id = ChatId(uuid4())
+        self.model_id = ModelId(uuid4())
         self.content = "Hello, world!"
         self.created_at = DateTime(datetime.now(UTC))
 
         self.message = Message(
-            message_id=self.message_id,
+            id=self.message_id,
             chat_id=self.chat_id,
             model_id=self.model_id,
             content=self.content,
@@ -46,19 +52,23 @@ class TestMessage:
         assert self.message.attachments == []
 
     def test_add_attachment_success(self):
-        att = Attachment(name="file.txt", content_id=uuid4(), source_id=uuid4())
+        att = Attachment(
+            name="file.txt", content_id=uuid4(), source_id=SourceId(uuid4())
+        )
         self.message.add_attachment(att)
         assert att in self.message.attachments
 
     def test_add_attachment_non_user_raises(self):
         self.message.role = Author.SYSTEM
-        att = Attachment(name="file.txt", content_id=uuid4(), source_id=uuid4())
+        att = Attachment(
+            name="file.txt", content_id=uuid4(), source_id=SourceId(uuid4())
+        )
         with pytest.raises(InvariantViolationError):
             self.message.add_attachment(att)
 
     def test_create_message_success(self):
         message = Message.create(
-            message_id=self.message_id,
+            id=self.message_id,
             chat_id=self.chat_id,
             model_id=self.model_id,
             content=self.content,
@@ -71,9 +81,9 @@ class TestMessage:
     def test_message_naive_datetime_raises_error(self):
         with pytest.raises(InvariantViolationError):
             Message(
-                message_id=uuid4(),
-                chat_id=uuid4(),
-                model_id=uuid4(),
+                id=self.message_id,
+                chat_id=self.chat_id,
+                model_id=self.model_id,
                 content="Test message",
                 role=Author.USER,
                 status=MessageStatus.PENDING,

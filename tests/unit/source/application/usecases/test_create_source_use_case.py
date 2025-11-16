@@ -2,6 +2,7 @@ from unittest.mock import AsyncMock, Mock
 from uuid import UUID, uuid4
 
 import pytest
+from common.domain.value_objects.id import UserId
 from tests.unit.source.utils import (
     make_file_source,
     make_link_source,
@@ -33,10 +34,10 @@ from luminary.source.domain.interfaces.source_factory import (
 class TestCreateFileSourceUseCase:
     @pytest.fixture(autouse=True)
     def setup(self) -> None:
-        self.user_id: UUID = uuid4()
-        self.source_id: UUID = uuid4()
+        self.user_id = uuid4()
+        self.source_id = uuid4()
         self.title = "Test File"
-        self.file_id: UUID = uuid4()
+        self.file_id = uuid4()
 
         self.source = make_file_source(
             source_id=self.source_id,
@@ -63,7 +64,7 @@ class TestCreateFileSourceUseCase:
 
         # Assert
         expected_dto = FileSourceFactoryDTO(
-            owner_id=self.user_id, title=self.title, file_id=self.file_id
+            owner_id=UserId(self.user_id), title=self.title, file_id=self.file_id
         )
         self.source_factory.create.assert_called_once_with(expected_dto)
 
@@ -119,7 +120,7 @@ class TestCreateLinkSourceUseCase:
 
         # Assert
         expected_dto = LinkSourceFactoryDTO(
-            owner_id=self.user_id,
+            owner_id=UserId(self.user_id),
             title=self.title,
             url=self.url,
         )
@@ -146,6 +147,7 @@ class TestCreatePageSourceUseCase:
     def setup(self) -> None:
         self.user_id: UUID = uuid4()
         self.source_id: UUID = uuid4()
+        self.content_id: UUID = uuid4()
         self.title = "Test Page"
 
         self.source = make_page_source(
@@ -159,8 +161,7 @@ class TestCreatePageSourceUseCase:
         self.source_repository: AsyncMock = AsyncMock(spec=ISourceRepository)
 
         self.command = CreatePageSourceCommand(
-            user_id=self.user_id,
-            title=self.title,
+            user_id=self.user_id, title=self.title, content_id=self.content_id
         )
 
         self.use_case = CreatePageSourceUseCase(
@@ -174,8 +175,7 @@ class TestCreatePageSourceUseCase:
 
         # Assert
         expected_dto = PageSourceFactoryDTO(
-            owner_id=self.user_id,
-            title=self.title,
+            owner_id=UserId(self.user_id), title=self.title, content_id=self.content_id
         )
         self.source_factory.create.assert_called_once_with(expected_dto)
 

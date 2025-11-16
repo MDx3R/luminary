@@ -112,7 +112,7 @@ class TestGetStreamingMessageResponseUseCase:
         )
 
         async for chunk in self.use_case.execute(self.command):
-            assert chunk.message_id == response.message_id
+            assert chunk.message_id == response.id.value
 
     async def test_streaming_response_handles_not_found_error(self) -> None:
         chat = make_chat(chat_id=self.chat_id)

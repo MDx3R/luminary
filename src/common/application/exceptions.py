@@ -1,4 +1,4 @@
-from uuid import UUID
+from common.domain.value_objects.id import EntityId
 
 
 class ApplicationError(Exception):
@@ -15,13 +15,13 @@ class ApplicationError(Exception):
 
 
 class NotFoundError(ApplicationError):
-    def __init__(self, entity_id: UUID | str) -> None:
+    def __init__(self, entity_id: EntityId | str) -> None:
         super().__init__(f"Not found {entity_id}")
         self.entity_id = entity_id
 
 
 class AccessPolicyError(ApplicationError):
-    def __init__(self, entity_id: UUID, message: str) -> None:
+    def __init__(self, entity_id: EntityId, message: str) -> None:
         super().__init__(f"{message}: {entity_id}")
         self.entity_id = entity_id
 

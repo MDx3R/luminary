@@ -1,5 +1,4 @@
 from collections.abc import Iterable, Sequence
-from uuid import UUID
 
 from common.application.exceptions import NotFoundError
 from common.infrastructure.database.sqlalchemy.executor import QueryExecutor
@@ -10,6 +9,7 @@ from luminary.chat.application.interfaces.repositories.chat_repository import (
     IChatRepository,
 )
 from luminary.chat.domain.entity.chat import Chat
+from luminary.chat.domain.value_objects.chat_id import ChatId
 from luminary.chat.infrastructure.database.postgres.sqlalchemy.mappers.chat_mapper import (
     ChatMapper,
 )
@@ -17,28 +17,29 @@ from luminary.chat.infrastructure.database.postgres.sqlalchemy.models.chat_base 
     ChatBase,
     ChatSourceBase,
 )
+from luminary.folder.domain.entity.folder import FolderId
 
 
 class ChatRepository(IChatRepository):
     def __init__(self, executor: QueryExecutor) -> None:
         self.executor = executor
 
-    async def get_by_id(self, chat_id: UUID) -> Chat:
+    async def get_by_id(self, id: ChatId) -> Chat:
         stmt = (
             select(ChatBase)
-            .where(ChatBase.chat_id == chat_id)
+            .where(ChatBase.chat_id == id.value)
             .options(joinedload(ChatBase.sources))
         )
 
         result = await self.executor.execute_scalar_one(stmt)
         if not result:
-            raise NotFoundError(chat_id)
+            raise NotFoundError(id)
         return ChatMapper.to_domain(result)
 
-    async def get_by_folder_id(self, folder_id: UUID) -> Sequence[Chat]:
+    async def get_by_folder_id(self, folder_id: FolderId) -> Sequence[Chat]:
         stmt = (
             select(ChatBase)
-            .where(ChatBase.folder_id == folder_id)
+            .where(ChatBase.folder_id == folder_id.value)
             .options(joinedload(ChatBase.sources))
         )
 
@@ -54,7 +55,7 @@ class ChatRepository(IChatRepository):
         model = ChatMapper.to_persistence(entity)
         async with self.executor.uow:
             stmt = delete(ChatSourceBase).where(
-                ChatSourceBase.chat_id == entity.chat_id
+                ChatSourceBase.chat_id == entity.id.value
             )
             await self.executor.execute(stmt)
 
@@ -67,7 +68,7 @@ class ChatRepository(IChatRepository):
         # TODO: Remove this after refactor on entities for them to be eventual consistent
         models = [ChatMapper.to_persistence(e) for e in entities]
         async with self.executor.uow:
-            chat_ids = [e.chat_id for e in entities]
+            chat_ids = [e.id.value for e in entities]
             stmt = delete(ChatSourceBase).where(ChatSourceBase.chat_id.in_(chat_ids))
             await self.executor.execute(stmt)
 

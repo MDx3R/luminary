@@ -3,27 +3,30 @@ from dataclasses import dataclass
 from typing import overload
 from uuid import UUID
 
+from common.domain.value_objects.id import UserId
+
 from luminary.source.domain.entity.source import Source
 
 
 @dataclass(frozen=True)
 class FileSourceFactoryDTO:
-    owner_id: UUID
+    owner_id: UserId
     title: str
     file_id: UUID
 
 
 @dataclass(frozen=True)
 class LinkSourceFactoryDTO:
-    owner_id: UUID
+    owner_id: UserId
     title: str
     url: str
 
 
 @dataclass(frozen=True)
 class PageSourceFactoryDTO:
-    owner_id: UUID
+    owner_id: UserId
     title: str
+    content_id: UUID
 
 
 class ISourceFactory(ABC):

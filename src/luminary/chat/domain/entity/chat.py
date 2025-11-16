@@ -1,84 +1,77 @@
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 from typing import Self
-from uuid import UUID
 
-from common.domain.exceptions import InvariantViolationError
 from common.domain.value_objects.datetime import DateTime
+from common.domain.value_objects.id import UserId
 
-
-@dataclass(frozen=True)
-class ChatInfo:
-    name: str
-
-    def __post_init__(self) -> None:
-        if not self.name.strip():
-            raise InvariantViolationError("Chat name cannot be empty")
-
-
-@dataclass(frozen=True)
-class ChatSettings:
-    model_id: UUID
-    system_prompt: str
-    max_context_messages: int
-
-    def __post_init__(self) -> None:
-        if not self.system_prompt.strip():
-            raise InvariantViolationError("System prompt cannot be empty")
-        if self.max_context_messages <= 0:
-            raise InvariantViolationError(
-                "Number of context messages cannot be non-positive"
-            )
+from luminary.assistant.domain.entity.assisnant import AssistantId
+from luminary.chat.domain.value_objects.chat_id import ChatId
+from luminary.chat.domain.value_objects.chat_info import ChatInfo
+from luminary.chat.domain.value_objects.chat_settings import ChatSettings
+from luminary.folder.domain.entity.folder import FolderId
+from luminary.source.domain.entity.source import SourceId
 
 
 @dataclass
 class Chat:
-    chat_id: UUID
-    user_id: UUID
-    folder_id: UUID | None
+    id: ChatId
+    owner_id: UserId
+    folder_id: FolderId | None  # TODO: Consider removing
     info: ChatInfo
+    assistant_id: AssistantId | None
     settings: ChatSettings
     created_at: DateTime
-    _sources: set[UUID] = field(default_factory=set[UUID])
+    _sources: set[SourceId] = field(default_factory=set[SourceId])
 
     @property
-    def sources(self) -> Sequence[UUID]:
+    def sources(self) -> Sequence[SourceId]:
         return list(self._sources)
 
-    def add_source(self, source_id: UUID) -> None:
+    def is_owned_by(self, user_id: UserId) -> bool:
+        return self.owner_id == user_id
+
+    def add_source(self, source_id: SourceId) -> None:
         self._sources.add(source_id)
 
-    def remove_source(self, source_id: UUID) -> None:
+    def remove_source(self, source_id: SourceId) -> None:
         self._sources.remove(source_id)
+
+    def has_source(self, source_id: SourceId) -> bool:
+        return source_id in self._sources
 
     def change_name(self, new_name: str) -> None:
         self.info = ChatInfo(new_name)
 
-    def change_system_prompt(self, new_system_prompt: str) -> None:
-        self.settings = ChatSettings(
-            self.settings.model_id,
-            new_system_prompt,
-            self.settings.max_context_messages,
-        )
-
     def change_settings(self, new_settings: ChatSettings) -> None:
         self.settings = new_settings
+
+    def assistant_matches(self, assistant_id: AssistantId | None) -> bool:
+        return self.assistant_id == assistant_id
+
+    def apply_assistant(self, assistant_id: AssistantId) -> None:
+        self.assistant_id = assistant_id
+
+    def remove_assistant(self) -> None:
+        self.assistant_id = None
 
     @classmethod
     def create(  # noqa: PLR0913
         cls,
-        chat_id: UUID,
-        user_id: UUID,
-        folder_id: UUID | None,
+        id: ChatId,
+        owner_id: UserId,
+        folder_id: FolderId | None,
         name: str,
+        assistant_id: AssistantId | None,
         settings: ChatSettings,
         created_at: DateTime,
     ) -> Self:
         return cls(
-            chat_id=chat_id,
-            user_id=user_id,
+            id=id,
+            owner_id=owner_id,
             folder_id=folder_id,
             info=ChatInfo(name=name),
+            assistant_id=assistant_id,
             settings=settings,
             created_at=created_at,
         )

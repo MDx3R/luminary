@@ -5,9 +5,17 @@ from uuid import uuid4
 import pytest
 from common.domain.exceptions import InvariantViolationError
 from common.domain.value_objects.datetime import DateTime
+from common.domain.value_objects.id import UserId
 from tests.unit.chat.utils import make_chat_settings
 
-from luminary.chat.domain.entity.chat import Chat, ChatInfo, ChatSettings
+from luminary.assistant.domain.entity.assisnant import AssistantId
+from luminary.chat.domain.entity.chat import Chat
+from luminary.chat.domain.value_objects.chat_id import ChatId
+from luminary.chat.domain.value_objects.chat_info import ChatInfo
+from luminary.chat.domain.value_objects.chat_settings import ChatSettings
+from luminary.folder.domain.entity.folder import FolderId
+from luminary.model.domain.entity.model import ModelId
+from luminary.source.domain.entity.source import SourceId
 
 
 class TestChatInfo:
@@ -23,24 +31,16 @@ class TestChatInfo:
 
 class TestChatSettings:
     def test_init_success(self):
-        model_id = uuid4()
+        model_id = ModelId(uuid4())
         max_context_messages = 10
-        system_prompt = "Test prompt"
 
         settings = ChatSettings(
             model_id=model_id,
-            system_prompt=system_prompt,
             max_context_messages=max_context_messages,
         )
 
         assert settings.model_id == model_id
-        assert settings.system_prompt == system_prompt
         assert settings.max_context_messages == max_context_messages
-
-    @pytest.mark.parametrize("prompt", ["", "   "])
-    def test_empty_prompt_raises(self, prompt: Literal[""] | Literal["   "]):
-        with pytest.raises(InvariantViolationError):
-            make_chat_settings(system_prompt=prompt)
 
     @pytest.mark.parametrize("count", [-1, 0])
     def test_invalid_context_raises(self, count: Literal[-1] | Literal[0]):
@@ -51,17 +51,19 @@ class TestChatSettings:
 class TestChat:
     @pytest.fixture(autouse=True)
     def setup(self):
-        self.chat_id = uuid4()
-        self.user_id = uuid4()
-        self.folder_id = uuid4()
+        self.chat_id = ChatId(uuid4())
+        self.user_id = UserId(uuid4())
+        self.folder_id = FolderId(uuid4())
+        self.assistant_id = AssistantId(uuid4())
         self.name = "Name"
         self.settings = make_chat_settings()
         self.created_at = DateTime(datetime.now(UTC))
 
         self.chat = Chat(
-            chat_id=self.chat_id,
-            user_id=self.user_id,
+            id=self.chat_id,
+            owner_id=self.user_id,
             folder_id=self.folder_id,
+            assistant_id=self.assistant_id,
             created_at=self.created_at,
             info=ChatInfo(name=self.name),
             settings=self.settings,
@@ -69,9 +71,10 @@ class TestChat:
 
     def test_create_chat_success(self):
         chat = Chat.create(
-            chat_id=self.chat_id,
-            user_id=self.user_id,
+            id=self.chat_id,
+            owner_id=self.user_id,
             folder_id=self.folder_id,
+            assistant_id=self.assistant_id,
             name=self.name,
             settings=self.settings,
             created_at=self.created_at,
@@ -80,7 +83,7 @@ class TestChat:
         assert chat == self.chat
 
     def test_add_source_success(self):
-        source_id = uuid4()
+        source_id = SourceId(uuid4())
         self.chat.add_source(source_id)
         assert source_id in self.chat.sources
 
@@ -94,19 +97,30 @@ class TestChat:
             self.chat.change_name(name)
 
     def test_change_settings_success(self):
-        new_settings = make_chat_settings(
-            system_prompt="New prompt", max_context_messages=15
-        )
+        new_settings = make_chat_settings(max_context_messages=15)
         self.chat.change_settings(new_settings)
         assert self.chat.settings == new_settings
 
     def test_with_none_folder_id(self):
-        chat = Chat(
-            chat_id=uuid4(),
-            user_id=uuid4(),
+        chat = Chat.create(
+            id=self.chat_id,
+            owner_id=self.user_id,
             folder_id=None,
+            assistant_id=self.assistant_id,
             created_at=DateTime(datetime.now(UTC)),
-            info=ChatInfo(name="Test Chat"),
+            name="Test Chat",
             settings=make_chat_settings(),
         )
         assert chat.folder_id is None
+
+    def test_with_none_assistant_id(self):
+        chat = Chat.create(
+            id=self.chat_id,
+            owner_id=self.user_id,
+            folder_id=self.folder_id,
+            assistant_id=None,
+            created_at=DateTime(datetime.now(UTC)),
+            name="Test Chat",
+            settings=make_chat_settings(),
+        )
+        assert chat.assistant_id is None

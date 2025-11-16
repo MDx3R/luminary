@@ -2,14 +2,15 @@ from abc import ABC, abstractmethod
 from collections.abc import AsyncGenerator
 from dataclasses import dataclass
 from enum import Enum
+from typing import Final
 from uuid import UUID
 
 from luminary.chat.domain.enums import Author, MessageStatus
 
 
-EMPTY_CONTENT: str = ""
-STREAM_START_CONTENT: str = "start"
-STREAM_END_CONTENT: str = "end"
+EMPTY_CONTENT: Final[str] = ""
+STREAM_START_CONTENT: Final[str] = "start"
+STREAM_END_CONTENT: Final[str] = "end"
 
 
 @dataclass(frozen=True)

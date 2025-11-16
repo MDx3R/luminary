@@ -38,8 +38,7 @@ class FolderBase(Base):
 
     # TODO: Add FK
     user_id: Mapped[UUID] = mapped_column(PGUUID, nullable=False)
-    model_id: Mapped[UUID] = mapped_column(PGUUID, nullable=False)
-    assistant_id: Mapped[UUID] = mapped_column(PGUUID, nullable=False)
+    assistant_id: Mapped[UUID | None] = mapped_column(PGUUID, nullable=True)
 
     # TODO: Add relations
     sources: Mapped[list[FolderSourceBase]] = relationship(

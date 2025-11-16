@@ -14,6 +14,7 @@ repos:
           - pydantic>=2.11.0,<3.0.0
           - pydantic-settings>=2.11.0,<3.0.0
           - sqlalchemy[asyncio]>=2.0.43,<3.0.0
+          - minio>=7.2.18,<8.0.0
           - bcrypt>=4.3.0,<5.0.0
           - python-jose>=3.5.0,<4.0.0
           - types-python-jose>=3.5.0,<4.0.0

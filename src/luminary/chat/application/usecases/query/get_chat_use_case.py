@@ -24,6 +24,6 @@ class GetChatUseCase(IGetChatUseCase):
         )
 
         if chat_dto is None:
-            raise NotFoundError(query.chat_id)
+            raise NotFoundError(str(query.chat_id))
 
         return chat_dto

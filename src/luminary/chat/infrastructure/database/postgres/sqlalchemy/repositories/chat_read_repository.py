@@ -45,7 +45,7 @@ class ChatReadRepository(IChatReadRepository):
             folder_id=result.folder_id,
             name=result.name,
             model_id=result.model_id,
-            system_prompt=result.system_prompt,
+            system_prompt="",
             max_context_messages=result.max_context_messages,
             created_at=result.created_at,
             updated_at=result.updated_at,

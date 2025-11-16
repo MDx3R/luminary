@@ -48,7 +48,7 @@ class TestCreateChatUseCase:
         self.chat_factory = Mock(spec=IChatFactory)
         self.model_repository = AsyncMock(spec=IModelRepository)
 
-        self.command = CreateChatCommand(user_id=self.user_id.value)
+        self.command = CreateChatCommand(user_id=self.user_id.value, assistant_id=None)
 
         self.use_case = CreateChatUseCase(
             self.chat_factory, self.chat_repository, self.model_repository
@@ -83,11 +83,8 @@ class TestCreateChatUseCase:
             user_id=self.user_id,
             folder_id=None,
             name=None,
-            settings=ChatSettings(
-                model_id=self.model_id,
-                system_prompt="You are a helpful assistant",
-                max_context_messages=20,
-            ),
+            assisnant_id=None,
+            settings=ChatSettings(model_id=self.model_id, max_context_messages=20),
         )
 
         self.chat_factory.create.assert_called_once_with(expected_data)

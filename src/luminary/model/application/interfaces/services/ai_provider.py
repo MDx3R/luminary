@@ -24,5 +24,5 @@ class AIProvider(ABC):
 
     @abstractmethod
     def stream_completion(
-        self, messages: list[str], system_prompt: str, model_id: UUID
+        self, messages: list[str], model_id: UUID
     ) -> AsyncGenerator[ProviderStreamingResponse, None]: ...

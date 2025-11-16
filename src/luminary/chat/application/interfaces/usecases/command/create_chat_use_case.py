@@ -6,6 +6,7 @@ from uuid import UUID
 @dataclass(frozen=True)
 class CreateChatCommand:
     user_id: UUID
+    assistant_id: UUID | None
 
 
 class ICreateChatUseCase(ABC):

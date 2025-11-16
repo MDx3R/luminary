@@ -40,7 +40,9 @@ class ChatCommandController:
     async def create(
         self, descriptor: Annotated[UUID, Depends(get_descriptor)]
     ) -> IDResponse:
-        chat_id = await self.create_chat_use_case.execute(CreateChatCommand(descriptor))
+        chat_id = await self.create_chat_use_case.execute(
+            CreateChatCommand(descriptor, assistant_id=None)
+        )
         return IDResponse(id=chat_id)
 
     @chat_command_router.post(

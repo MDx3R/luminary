@@ -20,7 +20,6 @@ from luminary.assistant.application.usecases.command.apply_assistant_to_chat imp
     ApplyAssistantToChatUseCase,
 )
 from luminary.assistant.domain.entity.assisnant import Assistant, AssistantId
-from luminary.assistant.domain.interfaces.assistant_service import IAssistantService
 from luminary.chat.application.interfaces.policies.chat_access_policy import (
     IChatAccessPolicy,
 )
@@ -48,7 +47,6 @@ class TestApplyAssistantToChatUseCase:
 
         self.chat = make_chat(chat_id=self.chat_id.value)
 
-        self.assistant_service = Mock(spec=IAssistantService)
         self.assistant_access_policy = Mock(spec=IAssistantAccessPolicy)
 
         self.chat_access_policy = Mock(spec=IChatAccessPolicy)
@@ -63,7 +61,6 @@ class TestApplyAssistantToChatUseCase:
         )
 
         self.use_case = ApplyAssistantToChatUseCase(
-            self.assistant_service,
             self.assistant_access_policy,
             self.assistant_repository,
             self.chat_repository,
@@ -72,9 +69,7 @@ class TestApplyAssistantToChatUseCase:
 
     def mock_service_call(self, assistant: Assistant, chat: Chat) -> None:
         chat.settings = ChatSettings(
-            chat.settings.model_id,
-            assistant.instructions.prompt,
-            chat.settings.max_context_messages,
+            chat.settings.model_id, chat.settings.max_context_messages
         )
 
     async def test_apply_assistant_to_chat_success(self):
@@ -82,16 +77,12 @@ class TestApplyAssistantToChatUseCase:
         self.assistant_repository.get_by_id.return_value = self.assistant
         self.chat_repository.get_by_id.return_value = self.chat
 
-        self.assistant_service.apply_assistant_instructions_to_chat.side_effect = (
-            self.mock_service_call
-        )
-
         # Act
         await self.use_case.execute(self.command)
 
         # Assert
         # NOTE: Changes applied on self.chat object via reference
-        assert self.chat.settings.system_prompt == self.assistant.instructions.prompt
+        assert self.chat.assistant_id == self.assistant.id
 
         self.assistant_repository.get_by_id.assert_awaited_once_with(self.assistant_id)
         self.assistant_access_policy.assert_is_allowed.assert_called_once_with(
@@ -101,13 +92,11 @@ class TestApplyAssistantToChatUseCase:
         self.chat_access_policy.assert_is_allowed.assert_called_once_with(
             self.user_id, self.chat
         )
-        self.assistant_service.apply_assistant_instructions_to_chat.assert_called_once_with(
-            self.assistant, self.chat
-        )
         self.chat_repository.save.assert_awaited_once_with(self.chat)
 
     async def test_assistant_access_denied_raises(self):
         # Arrange
+        self.chat_repository.get_by_id.return_value = self.chat
         self.assistant_access_policy.assert_is_allowed.side_effect = AccessPolicyError(
             self.assistant.id, "denied"
         )

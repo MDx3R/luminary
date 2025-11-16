@@ -5,6 +5,7 @@ from typing import Self
 from common.domain.value_objects.datetime import DateTime
 from common.domain.value_objects.id import UserId
 
+from luminary.assistant.domain.entity.assisnant import AssistantId
 from luminary.chat.domain.value_objects.chat_id import ChatId
 from luminary.chat.domain.value_objects.chat_info import ChatInfo
 from luminary.chat.domain.value_objects.chat_settings import ChatSettings
@@ -18,6 +19,7 @@ class Chat:
     owner_id: UserId
     folder_id: FolderId | None  # TODO: Consider removing
     info: ChatInfo
+    assistant_id: AssistantId | None
     settings: ChatSettings
     created_at: DateTime
     _sources: set[SourceId] = field(default_factory=set[SourceId])
@@ -38,15 +40,17 @@ class Chat:
     def change_name(self, new_name: str) -> None:
         self.info = ChatInfo(new_name)
 
-    def change_system_prompt(self, new_system_prompt: str) -> None:
-        self.settings = ChatSettings(
-            self.settings.model_id,
-            new_system_prompt,
-            self.settings.max_context_messages,
-        )
-
     def change_settings(self, new_settings: ChatSettings) -> None:
         self.settings = new_settings
+
+    def assistant_matches(self, assistant_id: AssistantId | None) -> bool:
+        return self.assistant_id == assistant_id
+
+    def apply_assistant(self, assistant_id: AssistantId) -> None:
+        self.assistant_id = assistant_id
+
+    def remove_assistant(self) -> None:
+        self.assistant_id = None
 
     @classmethod
     def create(  # noqa: PLR0913
@@ -55,6 +59,7 @@ class Chat:
         owner_id: UserId,
         folder_id: FolderId | None,
         name: str,
+        assistant_id: AssistantId | None,
         settings: ChatSettings,
         created_at: DateTime,
     ) -> Self:
@@ -63,6 +68,7 @@ class Chat:
             owner_id=owner_id,
             folder_id=folder_id,
             info=ChatInfo(name=name),
+            assistant_id=assistant_id,
             settings=settings,
             created_at=created_at,
         )

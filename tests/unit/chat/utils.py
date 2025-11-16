@@ -4,6 +4,7 @@ from uuid import UUID, uuid4
 from common.domain.value_objects.datetime import DateTime
 from common.domain.value_objects.id import UserId
 
+from luminary.assistant.domain.entity.assisnant import AssistantId
 from luminary.chat.domain.entity.chat import Chat
 from luminary.chat.domain.entity.message import Message
 from luminary.chat.domain.enums import Author, MessageStatus
@@ -21,16 +22,17 @@ def make_chat(  # noqa: PLR0913
     user_id: UUID | None = None,
     folder_id: UUID | None = None,
     model_id: UUID | None = None,
+    assistant_id: UUID | None = None,
     settings: ChatSettings | None = None,
     name: str = "Test Chat",
 ) -> Chat:
     chat_id = chat_id or uuid4()
     user_id = user_id or uuid4()
-    folder_id = folder_id or uuid4()
     return Chat(
         id=ChatId(chat_id),
         owner_id=UserId(user_id),
-        folder_id=FolderId(folder_id),
+        folder_id=FolderId(folder_id) if folder_id else None,
+        assistant_id=AssistantId(assistant_id) if assistant_id else None,
         created_at=DateTime(datetime.now(UTC)),
         info=ChatInfo(name=name),
         settings=settings or make_chat_settings(model_id=model_id),
@@ -38,14 +40,10 @@ def make_chat(  # noqa: PLR0913
 
 
 def make_chat_settings(
-    *,
-    model_id: UUID | None = None,
-    system_prompt: str = "Test prompt",
-    max_context_messages: int = 10,
+    *, model_id: UUID | None = None, max_context_messages: int = 10
 ) -> ChatSettings:
     return ChatSettings(
         model_id=ModelId(model_id or uuid4()),
-        system_prompt=system_prompt,
         max_context_messages=max_context_messages,
     )
 

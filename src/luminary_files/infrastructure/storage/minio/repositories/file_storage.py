@@ -4,8 +4,8 @@ from datetime import timedelta
 from typing import BinaryIO
 
 from common.application.exceptions import RepositoryError
+from common.domain.value_objects.object_key import ObjectKey
 from luminary_files.application.interfaces.repositories.file_storage import IFileStorage
-from luminary_files.domain.entity.file import ObjectKey
 from minio import Minio, S3Error
 
 

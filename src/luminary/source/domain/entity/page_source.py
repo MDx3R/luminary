@@ -1,12 +1,12 @@
 from dataclasses import dataclass
 from typing import Self
-from uuid import UUID
 
 from common.domain.exceptions import InvariantViolationError
 from common.domain.value_objects.datetime import DateTime
 from common.domain.value_objects.id import UserId
 from common.domain.value_objects.title import Title
 
+from luminary.content.domain.entity.content import ContentId
 from luminary.source.domain.entity.source import Source, SourceId
 from luminary.source.domain.enums import FetchStatus, SourceType
 
@@ -36,7 +36,7 @@ class PageSource(Source):
         id: SourceId,
         owner_id: UserId,
         title: str,
-        content_id: UUID,
+        content_id: ContentId,
         created_at: DateTime,
     ) -> Self:
         return cls(

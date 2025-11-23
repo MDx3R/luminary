@@ -33,7 +33,7 @@ class ICreateLinkSourceUseCase(ABC):
 class CreatePageSourceCommand:
     user_id: UUID
     title: str
-    content_id: UUID
+    data: BinaryIO
 
 
 class ICreatePageSourceUseCase(ABC):

@@ -5,10 +5,12 @@ from uuid import uuid4
 import pytest
 from common.domain.value_objects.datetime import DateTime
 from common.domain.value_objects.id import UserId
-from luminary_files.domain.entity.file import File, FileId, ObjectKey
+from common.domain.value_objects.object_key import ObjectKey
+from luminary_files.domain.entity.file import File, FileId
 from luminary_files.domain.exceptions import InvalidMIMETypeError
 from luminary_files.domain.factories.file_factory import FileFactory
 from luminary_files.domain.interfaces.extenstion_policy import IMIMEPolicy
+from luminary_files.domain.value_objects.file_meta import FileMeta
 from tests.unit.utils import MockClock, MockUUIDGenerator
 
 
@@ -45,11 +47,9 @@ class TestPhotoFactory:
         assert result == File(
             id=FileId(self.file_id),
             owner_id=UserId(self.user_id),
-            filename=filename,
+            meta=FileMeta(filename=filename, mime_type=self.mime, filesize=None),
             bucket=self.bucket,
             object_key=ObjectKey(str(self.file_id)),
-            mime=self.mime,
-            size=None,
             uploaded_at=self.now,
         )
 

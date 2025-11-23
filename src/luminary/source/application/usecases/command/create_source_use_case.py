@@ -3,11 +3,13 @@ from uuid import UUID
 
 from common.domain.interfaces.clock import IClock
 from common.domain.value_objects.id import UserId
+from luminary_files.domain.entity.file import FileId
 
 from luminary.content.application.interfaces.services.content_service import (
     IContentService,
     ProcessFileCommand,
 )
+from luminary.content.domain.entity.content import ContentId
 from luminary.source.application.interfaces.repositories.source_repository import (
     ISourceRepository,
 )
@@ -42,7 +44,7 @@ class CreateFileSourceUseCase(ICreateFileSourceUseCase):
             FileSourceFactoryDTO(
                 owner_id=UserId(command.user_id),
                 title=command.title,
-                file_id=command.file_id,
+                file_id=FileId(command.file_id),
             )
         )
         await self.source_repository.add(source)
@@ -73,16 +75,22 @@ class CreatePageSourceUseCase(ICreatePageSourceUseCase):
         self,
         source_repository: ISourceRepository,
         source_factory: ISourceFactory,
+        content_service: IContentService,
     ) -> None:
         self.source_repository = source_repository
         self.source_factory = source_factory
+        self.content_service = content_service
 
     async def execute(self, command: CreatePageSourceCommand) -> UUID:
+        user_id = command.user_id
+        content_id = await self.content_service.process_file(
+            ProcessFileCommand(user_id=user_id, data=command.data)
+        )
         source = self.source_factory.create(
             PageSourceFactoryDTO(
-                owner_id=UserId(command.user_id),
+                owner_id=UserId(user_id),
                 title=command.title,
-                content_id=command.content_id,
+                content_id=ContentId(content_id),
             )
         )
         await self.source_repository.add(source)
@@ -112,14 +120,14 @@ class SyncCreateFileSourceUseCase(ICreateFileSourceUseCase):
             FileSourceFactoryDTO(
                 owner_id=UserId(command.user_id),
                 title=command.title,
-                file_id=command.file_id,
+                file_id=FileId(command.file_id),
             )
         )
         try:
             content_id = await self.content_service.process_file(
                 ProcessFileCommand(user_id=user_id, data=command.data)
             )
-            source.fetch(content_id, self.clock.now())
+            source.fetch(ContentId(content_id), self.clock.now())
         except ParsingError:
             source.fail()
 

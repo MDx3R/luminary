@@ -1,10 +1,11 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import overload
-from uuid import UUID
 
 from common.domain.value_objects.id import UserId
+from luminary_files.domain.entity.file import FileId
 
+from luminary.content.domain.entity.content import ContentId
 from luminary.source.domain.entity.source import Source
 
 
@@ -12,7 +13,7 @@ from luminary.source.domain.entity.source import Source
 class FileSourceFactoryDTO:
     owner_id: UserId
     title: str
-    file_id: UUID
+    file_id: FileId
 
 
 @dataclass(frozen=True)
@@ -26,7 +27,7 @@ class LinkSourceFactoryDTO:
 class PageSourceFactoryDTO:
     owner_id: UserId
     title: str
-    content_id: UUID
+    content_id: ContentId
 
 
 class ISourceFactory(ABC):

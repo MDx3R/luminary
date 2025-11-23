@@ -1,7 +1,7 @@
 from typing import BinaryIO
 
-import filetype  # pyright: ignore[reportMissingTypeStubs]
-from filetype.types import Type  # pyright: ignore[reportMissingTypeStubs]
+import filetype
+from filetype.types import Type
 from luminary_files.application.dtos.dtos import FileType
 from luminary_files.application.exceptions import InvalidFileTypeError
 from luminary_files.application.interfaces.services.file_type_introspector import (

@@ -4,8 +4,10 @@ from uuid import uuid4
 import pytest
 from common.domain.value_objects.datetime import DateTime
 from common.domain.value_objects.id import UserId
+from luminary_files.domain.entity.file import FileId
 from tests.unit.utils import MockClock, MockUUIDGenerator
 
+from luminary.content.domain.entity.content import ContentId
 from luminary.source.domain.entity.file_source import FileSource
 from luminary.source.domain.entity.link_source import LinkSource
 from luminary.source.domain.entity.page_source import PageSource
@@ -24,7 +26,7 @@ class TestSourceFactory:
     def setup(self) -> None:
         self.source_id = SourceId(uuid4())
         self.owner_id = UserId(uuid4())
-        self.content_id = uuid4()
+        self.content_id = ContentId(uuid4())
         self.created_at = DateTime(datetime.now(UTC))
 
         self.factory = SourceFactory(
@@ -34,7 +36,7 @@ class TestSourceFactory:
 
     def test_create_file_source(self) -> None:
         # Arrange
-        file_id = uuid4()
+        file_id = FileId(uuid4())
         dto = FileSourceFactoryDTO(
             owner_id=self.owner_id, title="Test File", file_id=file_id
         )

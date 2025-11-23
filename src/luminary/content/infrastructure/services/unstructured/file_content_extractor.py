@@ -8,7 +8,7 @@ from luminary.content.application.interfaces.services.content_extractor import (
 
 
 class UnstructuredFileContentExtractor(IFileContentExtractor):
-    def extract(self, data: BinaryIO) -> bytes:
+    async def extract(self, data: BinaryIO) -> bytes:
         loader = UnstructuredFileIOLoader(file=data)
         docs = loader.load()
 

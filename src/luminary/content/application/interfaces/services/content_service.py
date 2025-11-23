@@ -8,6 +8,7 @@ from uuid import UUID
 class ProcessFileCommand:
     user_id: UUID
     data: BinaryIO
+    # file_id: UUID
 
 
 @dataclass(frozen=True)

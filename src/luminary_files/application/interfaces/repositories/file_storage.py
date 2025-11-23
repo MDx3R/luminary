@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from collections.abc import Sequence
+from collections.abc import Iterable, Sequence
 from datetime import timedelta
 from typing import BinaryIO
 
@@ -17,5 +17,5 @@ class IFileStorage(ABC):
     ) -> str: ...
     @abstractmethod
     async def get_presigned_get_urls(
-        self, object_keys: Sequence[ObjectKey], expires_in: timedelta
-    ) -> list[str]: ...
+        self, object_keys: Iterable[ObjectKey], expires_in: timedelta
+    ) -> Sequence[str]: ...

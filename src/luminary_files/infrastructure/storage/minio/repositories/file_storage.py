@@ -1,5 +1,5 @@
 import asyncio
-from collections.abc import Sequence
+from collections.abc import Iterable, Sequence
 from datetime import timedelta
 from typing import BinaryIO
 
@@ -14,9 +14,7 @@ class MinioFileStorage(IFileStorage):
         self.client = client
         self.bucket_name = bucket_name
 
-    async def upload_photo(
-        self, object_key: ObjectKey, mime: str, data: BinaryIO
-    ) -> None:
+    async def upload(self, object_key: ObjectKey, mime: str, data: BinaryIO) -> None:
         loop = asyncio.get_running_loop()
         try:
             await loop.run_in_executor(
@@ -54,8 +52,8 @@ class MinioFileStorage(IFileStorage):
             ) from e
 
     async def get_presigned_get_urls(
-        self, object_keys: Sequence[ObjectKey], expires_in: timedelta
-    ) -> list[str]:
+        self, object_keys: Iterable[ObjectKey], expires_in: timedelta
+    ) -> Sequence[str]:
         tasks = [self.get_presigned_get_url(key, expires_in) for key in object_keys]
         urls = await asyncio.gather(*tasks)
         return urls

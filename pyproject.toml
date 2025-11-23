@@ -24,10 +24,11 @@ dependencies = [
     "uvicorn (>=0.37.0,<0.38.0)",
     "minio (>=7.2.18,<8.0.0)",
     "filetype (>=1.2.0,<2.0.0)",
-    "unstructured (>=0.18.20,<0.19.0)",
+    "unstructured[docx,md] (>=0.18.20,<0.19.0)",
     "langchain (>=1.0.8,<2.0.0)",
     "langchain-community (>=0.4.1,<0.5.0)",
     "llama-index (>=0.14.8,<0.15.0)",
+    "python-magic-bin (>=0.4.14,<0.5.0)",
 ]
 
 [tool.poetry]
@@ -119,7 +120,7 @@ module = "tests.*"
 disable_error_code = ["no-untyped-def", "misc", "no-any-unimported"]
 
 [[tool.mypy.overrides]]
-module = ["psycopg2.*", "testcontainers.postgres.*", "testcontainers.minio.*", "jose.*", "yaml.*", "filetype.*"]
+module = ["psycopg2.*", "testcontainers.postgres.*", "testcontainers.minio.*", "jose.*", "yaml.*", "filetype.*", "llama_index.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]

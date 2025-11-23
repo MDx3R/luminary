@@ -3,11 +3,11 @@ from luminary_files.application.dtos.query.get_presigned_url_query import (
 )
 from luminary_files.application.interfaces.services.file_service import IFileService
 from luminary_files.application.interfaces.usecases.query.get_presigned_url_use_case import (
-    IGetPresignedUrlUseCase,
+    IGetFilePresignedUrlUseCase,
 )
 
 
-class GetPresignedUrlUseCase(IGetPresignedUrlUseCase):
+class GetFilePresignedUrlUseCase(IGetFilePresignedUrlUseCase):
     def __init__(self, file_service: IFileService) -> None:
         self.file_service = file_service
 

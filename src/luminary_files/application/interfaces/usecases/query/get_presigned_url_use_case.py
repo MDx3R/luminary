@@ -5,6 +5,6 @@ from luminary_files.application.dtos.query.get_presigned_url_query import (
 )
 
 
-class IGetPresignedUrlUseCase(ABC):
+class IGetFilePresignedUrlUseCase(ABC):
     @abstractmethod
     async def execute(self, query: GetPresignedUrlQuery) -> str: ...

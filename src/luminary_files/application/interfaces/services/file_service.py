@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
 from typing import BinaryIO
 from uuid import UUID
 
@@ -7,12 +8,14 @@ from luminary_files.application.dtos.query.get_presigned_url_query import (
 )
 
 
+@dataclass(frozen=True)
 class UploadFileCommand:
     user_id: UUID
     filename: str
     content: BinaryIO
 
 
+@dataclass(frozen=True)
 class DeleteFileCommand:
     user_id: UUID
     object_key: str

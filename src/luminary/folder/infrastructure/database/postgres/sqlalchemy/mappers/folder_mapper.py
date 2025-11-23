@@ -51,7 +51,7 @@ class FolderMapper:
 
         return FolderBase(
             folder_id=folder_id,
-            user_id=folder.id.value,
+            user_id=folder.owner_id.value,
             name=folder.info.name,
             description=folder.info.description,
             assistant_id=assistant_id,

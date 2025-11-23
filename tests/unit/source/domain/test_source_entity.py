@@ -8,7 +8,9 @@ from common.domain.value_objects.datetime import DateTime
 from common.domain.value_objects.id import UserId
 from common.domain.value_objects.title import Title
 from common.domain.value_objects.url import Url
+from luminary_files.domain.entity.file import FileId
 
+from luminary.content.domain.entity.content import ContentId
 from luminary.source.domain.entity.file_source import FileSource
 from luminary.source.domain.entity.link_source import LinkSource
 from luminary.source.domain.entity.page_source import PageSource
@@ -51,16 +53,6 @@ class TestSourceEntity:
         # Assert
         assert self.source.title.value == new_title
 
-    def test_set_content(self) -> None:
-        # Arrange
-        content_id = uuid4()
-
-        # Act
-        self.source.set_content(content_id)
-
-        # Assert
-        assert self.source.content_id == content_id
-
     def test_title_matches(self) -> None:
         # Act & Assert
         assert self.source.title_matches(self.source.title.value)
@@ -81,8 +73,8 @@ class TestFileSource:
     def setup(self) -> None:
         self.source_id = SourceId(uuid4())
         self.owner_id = UserId(uuid4())
-        self.content_id = uuid4()
-        self.file_id = uuid4()
+        self.content_id = ContentId(uuid4())
+        self.file_id = FileId(uuid4())
         self.title = "Test File"
         self.created_at = DateTime(datetime.now(UTC))
 
@@ -172,7 +164,7 @@ class TestLinkSource:
             )
 
     def test_fetch_success(self) -> None:
-        content_id = uuid4()
+        content_id = ContentId(uuid4())
         source = replace(self.link_source)
         fetched_at = DateTime(datetime.now(UTC))
 
@@ -202,7 +194,7 @@ class TestPageSource:
     def setup(self) -> None:
         self.source_id = SourceId(uuid4())
         self.owner_id = UserId(uuid4())
-        self.content_id = uuid4()
+        self.content_id = ContentId(uuid4())
         self.title = "Test Page"
         self.created_at = DateTime(datetime.now(UTC))
 

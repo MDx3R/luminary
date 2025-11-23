@@ -5,6 +5,7 @@ from uuid import uuid4
 
 import pytest
 from common.domain.value_objects.id import UserId
+from common.domain.value_objects.object_key import ObjectKey
 from luminary_files.application.dtos.dtos import FileType
 from luminary_files.application.dtos.query.get_presigned_url_query import (
     GetPresignedUrlQuery,
@@ -20,8 +21,9 @@ from luminary_files.application.interfaces.services.file_type_introspector impor
     IFileTypeIntrospector,
 )
 from luminary_files.application.services.file_service import FileService
-from luminary_files.domain.entity.file import File, FileId, ObjectKey
+from luminary_files.domain.entity.file import File, FileId
 from luminary_files.domain.interfaces.file_factory import IFileFactory
+from luminary_files.domain.value_objects.file_meta import FileMeta
 
 
 @pytest.mark.asyncio
@@ -50,8 +52,8 @@ class TestFileService:
 
         self.file = Mock(spec=File)
         self.file.id = FileId(self.file_id)
+        self.file.meta = FileMeta(self.filename, self.mime, None)
         self.file.object_key = self.object_key
-        self.file.mime = self.mime
         self.file.specify_size = Mock()
         self.file_factory.create.return_value = self.file
 

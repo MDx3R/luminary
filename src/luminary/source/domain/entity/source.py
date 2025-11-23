@@ -44,5 +44,8 @@ class Source(ABC):
         self.fetched_at = fetched_at
         self.fetch_status = FetchStatus.FETCHED
 
+    def embed(self) -> None:
+        self.fetch_status = FetchStatus.EMBEDDED
+
     def fail(self) -> None:
         self.fetch_status = FetchStatus.FAILED

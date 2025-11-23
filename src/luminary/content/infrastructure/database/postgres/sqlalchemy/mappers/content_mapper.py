@@ -1,6 +1,6 @@
 from common.domain.value_objects.datetime import DateTime
 from common.domain.value_objects.id import UserId
-from luminary_files.domain.entity.file import ObjectKey
+from common.domain.value_objects.object_key import ObjectKey
 
 from luminary.content.domain.entity.content import Content, ContentId
 from luminary.content.infrastructure.database.postgres.sqlalchemy.models.content_base import (

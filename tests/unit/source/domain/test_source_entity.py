@@ -14,7 +14,6 @@ from luminary.source.domain.entity.link_source import LinkSource
 from luminary.source.domain.entity.page_source import PageSource
 from luminary.source.domain.entity.source import Source, SourceId
 from luminary.source.domain.enums import FetchStatus, SourceType
-from luminary.source.domain.value_objects.file_meta import FileMeta
 
 
 class _TestSource(Source):
@@ -120,16 +119,6 @@ class TestFileSource:
     def test_is_content_editable(self) -> None:
         # Act & Assert
         assert not self.source.is_content_editable()
-
-    def test_create_file_source_invalid_meta(self) -> None:
-        # Arrange & Act & Assert
-        with pytest.raises(InvariantViolationError):
-            FileMeta(
-                filename="",  # invalid empty filename
-                mime_type="text/plain",
-                filesize=100,
-                checksum="abc123",
-            )
 
 
 class TestLinkSource:

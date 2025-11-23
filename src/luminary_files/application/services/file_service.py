@@ -4,6 +4,7 @@ from typing import ClassVar
 from uuid import UUID
 
 from common.domain.value_objects.id import UserId
+from common.domain.value_objects.object_key import ObjectKey
 from luminary_files.application.dtos.query.get_presigned_url_query import (
     GetPresignedUrlQuery,
 )
@@ -18,7 +19,6 @@ from luminary_files.application.interfaces.services.file_service import (
 from luminary_files.application.interfaces.services.file_type_introspector import (
     IFileTypeIntrospector,
 )
-from luminary_files.domain.entity.file import ObjectKey
 from luminary_files.domain.interfaces.file_factory import IFileFactory
 
 
@@ -49,7 +49,7 @@ class FileService(IFileService):
             mime=file_type.mime,
         )
 
-        await self.file_storage.upload(file.object_key, file.mime, content)
+        await self.file_storage.upload(file.object_key, file.meta.mime_type, content)
 
         # NOTE: File should be completely uploaded here
         # so we can safely extract file size
@@ -61,6 +61,7 @@ class FileService(IFileService):
         return file.id.value
 
     async def get_file_presigned_url(self, query: GetPresignedUrlQuery) -> str:
+        # TODO: Check user access
         return await self.file_storage.get_presigned_get_url(
             ObjectKey(query.object_key), self.EXPIRATION_DELTA
         )

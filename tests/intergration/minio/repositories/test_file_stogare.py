@@ -6,7 +6,7 @@ from uuid import uuid4
 import httpx
 import pytest
 import pytest_asyncio
-from luminary_files.domain.entity.file import ObjectKey
+from common.domain.value_objects.object_key import ObjectKey
 from luminary_files.infrastructure.storage.minio.repositories.file_storage import (
     MinioFileStorage,
 )

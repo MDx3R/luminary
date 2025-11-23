@@ -3,7 +3,7 @@ from collections.abc import Iterable, Sequence
 from datetime import timedelta
 from typing import BinaryIO
 
-from luminary_files.domain.entity.file import ObjectKey
+from common.domain.value_objects.object_key import ObjectKey
 
 
 class IFileStorage(ABC):

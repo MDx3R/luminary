@@ -3,7 +3,7 @@ from typing import Self
 
 from common.domain.value_objects.datetime import DateTime
 from common.domain.value_objects.id import EntityId, UserId
-from luminary_files.domain.entity.file import ObjectKey
+from common.domain.value_objects.object_key import ObjectKey
 
 
 @dataclass(frozen=True)

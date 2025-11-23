@@ -16,7 +16,7 @@ class FileBase(Base):
     bucket: Mapped[str] = mapped_column(String, nullable=False)
     object_key: Mapped[str] = mapped_column(String, nullable=False)
     mime: Mapped[str] = mapped_column(String, nullable=False)
-    size: Mapped[int] = mapped_column(Integer, nullable=False)
+    size: Mapped[int | None] = mapped_column(Integer, nullable=True)
     uploaded_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False
     )

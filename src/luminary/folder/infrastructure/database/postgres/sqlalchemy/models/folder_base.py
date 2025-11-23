@@ -18,7 +18,7 @@ class FolderSourceBase(Base):
 
 
 class FolderChatBase(Base):
-    __tablename__ = "folder_sources"
+    __tablename__ = "folder_chats"
 
     folder_id: Mapped[UUID] = mapped_column(
         PGUUID, ForeignKey("folders.folder_id"), primary_key=True

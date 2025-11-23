@@ -3,15 +3,22 @@ from uuid import uuid4
 import pytest
 from common.application.exceptions import NotFoundError
 from common.infrastructure.database.sqlalchemy.executor import QueryExecutor
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
-
-from luminary.chat.domain.value_objects.chat_id import ChatId
-from luminary.folder.domain.entity.folder import FolderId, Folder
-from luminary.folder.infrastructure.database.postgres.sqlalchemy.mappers.folder_mapper import FolderMapper
-from luminary.folder.infrastructure.database.postgres.sqlalchemy.models.folder_base import FolderBase
-from luminary.folder.infrastructure.database.postgres.sqlalchemy.repositories.folder_repository import FolderRepository
+from sqlalchemy.orm import joinedload
 from tests.unit.folder.utils import make_folder
 
+from luminary.chat.domain.value_objects.chat_id import ChatId
+from luminary.folder.domain.entity.folder import Folder, FolderId
+from luminary.folder.infrastructure.database.postgres.sqlalchemy.mappers.folder_mapper import (
+    FolderMapper,
+)
+from luminary.folder.infrastructure.database.postgres.sqlalchemy.models.folder_base import (
+    FolderBase,
+)
+from luminary.folder.infrastructure.database.postgres.sqlalchemy.repositories.folder_repository import (
+    FolderRepository,
+)
 from luminary.source.domain.entity.source import SourceId
 
 
@@ -30,7 +37,18 @@ class TestFolderRepository:
 
     async def _get_folder(self, folder_id: FolderId) -> Folder | None:
         async with self.maker() as session:
-            result = await session.get(FolderBase, folder_id.value)
+            result = (
+                (
+                    await session.execute(
+                        select(FolderBase)
+                        .where(FolderBase.folder_id == folder_id.value)
+                        .options(joinedload(FolderBase.chats))
+                        .options(joinedload(FolderBase.sources))
+                    )
+                )
+                .unique()
+                .scalar_one_or_none()
+            )
             if not result:
                 return None
             folder = FolderMapper.to_domain(result)
@@ -98,7 +116,6 @@ class TestFolderRepository:
         updated_folder = await self._get_folder(folder.id)
         assert updated_folder is not None
         assert updated_folder.sources == folder.sources
-
 
     async def test_remove_folder_success(self):
         # TODO: remove not yet supported

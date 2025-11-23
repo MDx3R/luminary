@@ -20,7 +20,7 @@ from luminary_files.application.interfaces.services.file_type_introspector impor
     IFileTypeIntrospector,
 )
 from luminary_files.application.services.file_service import FileService
-from luminary_files.domain.entity.file import File, ObjectKey
+from luminary_files.domain.entity.file import File, FileId, ObjectKey
 from luminary_files.domain.interfaces.file_factory import IFileFactory
 
 
@@ -29,6 +29,7 @@ class TestFileService:
     @pytest.fixture(autouse=True)
     def setup(self) -> None:
         self.user_id = uuid4()
+        self.file_id = uuid4()
         self.filename = "test.txt"
         self.content = BytesIO(b"test data")
         self.mime = "text/plain"
@@ -48,6 +49,7 @@ class TestFileService:
         self.file_type_introspector.extract.return_value = self.file_type
 
         self.file = Mock(spec=File)
+        self.file.id = FileId(self.file_id)
         self.file.object_key = self.object_key
         self.file.mime = self.mime
         self.file.specify_size = Mock()
@@ -74,7 +76,7 @@ class TestFileService:
         result = await self.service.upload_file(command)
 
         # Assert
-        assert result == self.object_key_value
+        assert result == self.file_id
 
         self.file_type_introspector.extract.assert_called_once_with(self.content)
         self.file_factory.create.assert_called_once_with(
@@ -112,7 +114,7 @@ class TestFileService:
         result = await self.service.upload_file(command)
 
         # Assert
-        assert result == self.object_key_value
+        assert result == self.file_id
         self.file.specify_size.assert_called_once_with(0)
         assert empty_content.tell() == 0
 

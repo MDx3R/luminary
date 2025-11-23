@@ -1,6 +1,7 @@
 from datetime import timedelta
 from os import SEEK_END, SEEK_SET
 from typing import ClassVar
+from uuid import UUID
 
 from common.domain.value_objects.id import UserId
 from luminary_files.application.dtos.query.get_presigned_url_query import (
@@ -37,7 +38,7 @@ class FileService(IFileService):
         self.file_repository = file_repository
         self.file_storage = file_storage
 
-    async def upload_file(self, command: UploadFileCommand) -> str:
+    async def upload_file(self, command: UploadFileCommand) -> UUID:
         content = command.content
         file_type = self.file_type_instorspector.extract(content)
 
@@ -57,7 +58,7 @@ class FileService(IFileService):
         size = content.seek(0, SEEK_SET)
         await self.file_repository.add(file)
 
-        return file.object_key.value
+        return file.id.value
 
     async def get_file_presigned_url(self, query: GetPresignedUrlQuery) -> str:
         return await self.file_storage.get_presigned_get_url(

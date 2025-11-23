@@ -1,6 +1,7 @@
 from common.application.exceptions import NotFoundError
 from common.infrastructure.database.sqlalchemy.executor import QueryExecutor
 from sqlalchemy import delete, select
+from sqlalchemy.orm import joinedload
 
 from luminary.folder.application.interfaces.repositories.folder_repository import (
     IFolderRepository,
@@ -21,7 +22,12 @@ class FolderRepository(IFolderRepository):
         self.executor = executor
 
     async def get_by_id(self, id: FolderId) -> Folder:
-        stmt = select(FolderBase).where(FolderBase.folder_id == id.value)
+        stmt = (
+            select(FolderBase)
+            .where(FolderBase.folder_id == id.value)
+            .options(joinedload(FolderBase.chats))
+            .options(joinedload(FolderBase.sources))
+        )
 
         result = await self.executor.execute_scalar_one(stmt)
         if not result:

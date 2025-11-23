@@ -22,9 +22,7 @@ class FileFactory(IFileFactory):
         self.uuid_generator = uuid_generator
         self.mime_policy = mime_policy
 
-    def create(
-        self, user_id: UserId, filename: str, bucket: str, mime: str, size: int
-    ) -> File:
+    def create(self, user_id: UserId, filename: str, bucket: str, mime: str) -> File:
         if not self.mime_policy.is_allowed(mime):
             raise InvalidMIMETypeError(mime)
 
@@ -33,7 +31,6 @@ class FileFactory(IFileFactory):
             owner_id=user_id,
             filename=filename,
             bucket=bucket,
-            size=size,
             mime=mime,
             uploaded_at=self.clock.now(),
         )

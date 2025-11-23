@@ -27,8 +27,11 @@ class File:
     bucket: str
     object_key: ObjectKey
     mime: str
-    size: int
+    size: int | None
     uploaded_at: DateTime
+
+    def specify_size(self, size: int) -> None:
+        self.size = size
 
     @classmethod
     def create(  # noqa: PLR0913
@@ -38,7 +41,6 @@ class File:
         filename: str,
         bucket: str,
         mime: str,
-        size: int,
         uploaded_at: DateTime,
     ) -> Self:
         return cls(
@@ -48,6 +50,6 @@ class File:
             bucket=bucket,
             object_key=ObjectKey(str(id.value)),
             mime=mime,
-            size=size,
+            size=None,
             uploaded_at=uploaded_at,
         )

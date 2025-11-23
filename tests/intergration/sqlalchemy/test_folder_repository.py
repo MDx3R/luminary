@@ -75,7 +75,8 @@ class TestFolderRepository:
     async def test_add_chat_success(self):
         # Arrange
         folder = await self._add_folder()
-        folder.add_chat(ChatId(uuid4()))
+        chat_id = ChatId(uuid4())
+        folder.add_chat(chat_id)
 
         # Act
         await self.folder_repository.save(folder)
@@ -88,8 +89,8 @@ class TestFolderRepository:
     async def test_add_source_success(self):
         # Arrange
         folder = await self._add_folder()
-        folder.add_source(SourceId(uuid4()))
-
+        source_id = SourceId(uuid4())
+        folder.add_source(source_id)
         # Act
         await self.folder_repository.save(folder)
 

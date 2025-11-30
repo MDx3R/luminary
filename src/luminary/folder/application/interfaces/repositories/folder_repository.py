@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 
-from luminary.folder.domain.entity.folder import Folder, FolderId
+from luminary.folder.domain.entity.folder import Folder
+from luminary.folder.domain.value_objects.folder_id import FolderId
 
 
 class IFolderRepository(ABC):

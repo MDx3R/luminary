@@ -6,7 +6,8 @@ from sqlalchemy.orm import joinedload
 from luminary.folder.application.interfaces.repositories.folder_repository import (
     IFolderRepository,
 )
-from luminary.folder.domain.entity.folder import Folder, FolderId
+from luminary.folder.domain.entity.folder import Folder
+from luminary.folder.domain.value_objects.folder_id import FolderId
 from luminary.folder.infrastructure.database.postgres.sqlalchemy.mappers.folder_mapper import (
     FolderMapper,
 )

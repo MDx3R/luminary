@@ -1,27 +1,14 @@
 from dataclasses import dataclass, field
 from typing import Self
 
-from common.domain.exceptions import InvariantViolationError
 from common.domain.value_objects.datetime import DateTime
-from common.domain.value_objects.id import EntityId, UserId
+from common.domain.value_objects.id import UserId
 
 from luminary.assistant.domain.entity.assisnant import AssistantId
 from luminary.chat.domain.value_objects.chat_id import ChatId
+from luminary.folder.domain.value_objects.folder_id import FolderId
+from luminary.folder.domain.value_objects.folder_info import FolderInfo
 from luminary.source.domain.entity.source import SourceId
-
-
-@dataclass(frozen=True)
-class FolderInfo:
-    name: str
-    description: str | None
-
-    def __post_init__(self) -> None:
-        if not self.name.strip():
-            raise InvariantViolationError("Folder name cannot be empty")
-
-
-@dataclass(frozen=True)
-class FolderId(EntityId): ...
 
 
 @dataclass

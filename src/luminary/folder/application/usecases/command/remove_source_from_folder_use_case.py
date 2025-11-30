@@ -14,7 +14,8 @@ from luminary.folder.application.interfaces.usecases.command.remove_source_from_
     IRemoveSourceFromFolderUseCase,
     RemoveSourceFromFolderCommand,
 )
-from luminary.folder.domain.entity.folder import Folder, FolderId
+from luminary.folder.domain.entity.folder import Folder
+from luminary.folder.domain.value_objects.folder_id import FolderId
 from luminary.source.domain.entity.source import SourceId
 
 

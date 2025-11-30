@@ -14,7 +14,8 @@ from luminary.folder.application.interfaces.usecases.command.add_source_to_folde
     AddSourceToFolderCommand,
     IAddSourceToFolderUseCase,
 )
-from luminary.folder.domain.entity.folder import Folder, FolderId
+from luminary.folder.domain.entity.folder import Folder
+from luminary.folder.domain.value_objects.folder_id import FolderId
 from luminary.source.application.interfaces.policies.source_access_policy import (
     ISourceAccessPolicy,
 )

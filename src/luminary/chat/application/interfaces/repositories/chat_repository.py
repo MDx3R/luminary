@@ -3,7 +3,7 @@ from collections.abc import Iterable, Sequence
 
 from luminary.chat.domain.entity.chat import Chat
 from luminary.chat.domain.value_objects.chat_id import ChatId
-from luminary.folder.domain.entity.folder import FolderId
+from luminary.folder.domain.value_objects.folder_id import FolderId
 
 
 class IChatRepository(ABC):

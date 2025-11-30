@@ -18,7 +18,7 @@ from luminary.folder.application.interfaces.usecases.command.create_folder_chat_
     CreateFolderChatCommand,
     ICreateFolderChatUseCase,
 )
-from luminary.folder.domain.entity.folder import FolderId
+from luminary.folder.domain.value_objects.folder_id import FolderId
 from luminary.model.application.interfaces.repositories.model_repository import (
     IModelRepository,
 )
@@ -53,6 +53,8 @@ class CreateFolderChatUseCase(ICreateFolderChatUseCase):
         model = await self.model_repository.get_by_name(self.DEFAULT_MODEL_NAME)
 
         # TODO: Define chat service
+        # NOTE: Chat must be accessed right away
+        # so eventual consistency doesn't work here
         chat = self.chat_factory.create(
             ChatFactoryDTO(
                 user_id,

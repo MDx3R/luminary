@@ -10,7 +10,7 @@ from luminary.chat.infrastructure.database.postgres.sqlalchemy.models.chat_base 
     ChatBase,
     ChatSourceBase,
 )
-from luminary.folder.domain.entity.folder import FolderId
+from luminary.folder.domain.value_objects.folder_id import FolderId
 from luminary.model.domain.entity.model import ModelId
 from luminary.source.domain.entity.source import SourceId
 

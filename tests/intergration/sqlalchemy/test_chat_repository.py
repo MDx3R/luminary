@@ -19,7 +19,7 @@ from luminary.chat.infrastructure.database.postgres.sqlalchemy.models.chat_base 
 from luminary.chat.infrastructure.database.postgres.sqlalchemy.repositories.chat_repository import (
     ChatRepository,
 )
-from luminary.folder.domain.entity.folder import FolderId
+from luminary.folder.domain.value_objects.folder_id import FolderId
 from luminary.source.domain.entity.source import SourceId
 
 

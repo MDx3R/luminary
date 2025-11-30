@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from typing import BinaryIO
 from uuid import UUID
 
 
@@ -8,6 +9,7 @@ class CreateFileSourceCommand:
     user_id: UUID
     title: str
     file_id: UUID
+    data: BinaryIO | None = None  # TODO: Remove after implementing events
 
 
 class ICreateFileSourceUseCase(ABC):
@@ -31,7 +33,7 @@ class ICreateLinkSourceUseCase(ABC):
 class CreatePageSourceCommand:
     user_id: UUID
     title: str
-    content_id: UUID
+    data: BinaryIO
 
 
 class ICreatePageSourceUseCase(ABC):

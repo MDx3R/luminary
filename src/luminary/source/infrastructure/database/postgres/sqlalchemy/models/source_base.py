@@ -23,7 +23,7 @@ class SourceBase(Base):
 
     # TODO: Add FK
     owner_id: Mapped[UUID] = mapped_column(PGUUID, nullable=False)
-    content_id: Mapped[UUID] = mapped_column(PGUUID, nullable=True)
+    content_id: Mapped[UUID | None] = mapped_column(PGUUID, nullable=True)
 
     __mapper_args__ = {"polymorphic_on": "type"}  # noqa: RUF012
 

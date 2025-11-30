@@ -10,4 +10,5 @@ class SourceType(str, Enum):
 class FetchStatus(str, Enum):
     NOT_FETCHED = "not_fetched"
     FETCHED = "fetched"
+    EMBEDDED = "embedded"
     FAILED = "failed"

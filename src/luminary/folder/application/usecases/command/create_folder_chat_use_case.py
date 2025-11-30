@@ -53,6 +53,8 @@ class CreateFolderChatUseCase(ICreateFolderChatUseCase):
         model = await self.model_repository.get_by_name(self.DEFAULT_MODEL_NAME)
 
         # TODO: Define chat service
+        # NOTE: Chat must be accessed right away
+        # so eventual consistency doesn't work here
         chat = self.chat_factory.create(
             ChatFactoryDTO(
                 user_id,

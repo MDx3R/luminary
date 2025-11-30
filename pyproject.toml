@@ -118,7 +118,7 @@ module = "tests.*"
 disable_error_code = ["no-untyped-def", "misc", "no-any-unimported"]
 
 [[tool.mypy.overrides]]
-module = ["psycopg2.*", "testcontainers.postgres.*", "testcontainers.minio.*", "jose.*", "yaml.*", "filetype.*", "llama_index.*"]
+module = ["psycopg2.*", "testcontainers.postgres.*", "testcontainers.minio.*", "jose.*", "yaml.*", "filetype.*", "llama_index.*", "llama_cloud.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]

@@ -1,18 +1,27 @@
 from dataclasses import dataclass, field
 from typing import Self
 
+from common.domain.interfaces.entity import IEntity
 from common.domain.value_objects.datetime import DateTime
 from common.domain.value_objects.id import UserId
 
 from luminary.assistant.domain.entity.assisnant import AssistantId
 from luminary.chat.domain.value_objects.chat_id import ChatId
+from luminary.folder.domain.events.events import (
+    FolderAssistantChangedEvent,
+    FolderChatAddedEvent,
+    FolderChatRemovedEvent,
+    FolderInfoChangedEvent,
+    FolderSourceAddedEvent,
+    FolderSourceRemovedEvent,
+)
 from luminary.folder.domain.value_objects.folder_id import FolderId
 from luminary.folder.domain.value_objects.folder_info import FolderInfo
 from luminary.source.domain.entity.source import SourceId
 
 
 @dataclass
-class Folder:
+class Folder(IEntity):
     id: FolderId
     owner_id: UserId
     info: FolderInfo
@@ -33,37 +42,89 @@ class Folder:
         return self.owner_id == user_id
 
     def change_name(self, name: str) -> None:
-        self.info = FolderInfo(name, self.info.description)
+        self.change_info(FolderInfo(name, self.info.description))
 
-    def change_description(self, description: str) -> None:
-        self.info = FolderInfo(self.info.name, description)
+    def change_description(self, description: str | None) -> None:
+        self.change_info(FolderInfo(self.info.name, description))
+
+    def change_info(self, info: FolderInfo) -> None:
+        if self.info_matches(info):
+            return
+
+        self.info = info
+        self._record_event(
+            FolderInfoChangedEvent(
+                folder_id=self.id.value, name=info.name, description=info.description
+            )
+        )
+
+    def info_matches(self, info: FolderInfo) -> bool:
+        return self.info == info
+
+    def change_assistant(self, assistant_id: AssistantId) -> None:
+        if self.assistant_matches(assistant_id):
+            return
+
+        self.assistant_id = assistant_id
+        self._record_event(
+            FolderAssistantChangedEvent(
+                folder_id=self.id.value, assistant_id=assistant_id.value
+            )
+        )
+
+    def remove_assistant(self) -> None:
+        if not self.assistant_matches(None):
+            return
+
+        self.assistant_id = None
+        self._record_event(
+            FolderAssistantChangedEvent(folder_id=self.id.value, assistant_id=None)
+        )
 
     def assistant_matches(self, assistant_id: AssistantId | None) -> bool:
         return self.assistant_id == assistant_id
 
-    def change_assistant(self, assistant_id: AssistantId) -> None:
-        self.assistant_id = assistant_id
-
-    def remove_assistant(self) -> None:
-        self.assistant_id = None
-
     def add_chat(self, chat_id: ChatId) -> None:
+        if self.has_chat(chat_id):
+            return
+
         self._chats.add(chat_id)
+        self._record_event(
+            FolderChatAddedEvent(folder_id=self.id.value, chat_id=chat_id.value)
+        )
 
     def remove_chat(self, chat_id: ChatId) -> None:
+        if not self.has_chat(chat_id):
+            return
+
         self._chats.remove(chat_id)
-
-    def add_source(self, source_id: SourceId) -> None:
-        self._sources.add(source_id)
-
-    def remove_source(self, source_id: SourceId) -> None:
-        self._sources.remove(source_id)
-
-    def has_source(self, source_id: SourceId) -> bool:
-        return source_id in self._sources
+        self._record_event(
+            FolderChatRemovedEvent(folder_id=self.id.value, chat_id=chat_id.value)
+        )
 
     def has_chat(self, chat_id: ChatId) -> bool:
         return chat_id in self.chats
+
+    def add_source(self, source_id: SourceId) -> None:
+        if self.has_source(source_id):
+            return
+
+        self._sources.add(source_id)
+        self._record_event(
+            FolderSourceAddedEvent(folder_id=self.id.value, source_id=source_id.value)
+        )
+
+    def remove_source(self, source_id: SourceId) -> None:
+        if not self.has_source(source_id):
+            return
+
+        self._sources.remove(source_id)
+        self._record_event(
+            FolderSourceRemovedEvent(folder_id=self.id.value, source_id=source_id.value)
+        )
+
+    def has_source(self, source_id: SourceId) -> bool:
+        return source_id in self._sources
 
     @classmethod
     def create(  # noqa: PLR0913

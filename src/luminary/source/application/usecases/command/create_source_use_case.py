@@ -1,15 +1,23 @@
-from configparser import ParsingError
 from uuid import UUID
 
 from common.domain.interfaces.clock import IClock
 from common.domain.value_objects.id import UserId
 from luminary_files.domain.entity.file import FileId
 
+from luminary.content.application.exceptions import ParsingError
 from luminary.content.application.interfaces.services.content_service import (
     IContentService,
     ProcessFileCommand,
 )
 from luminary.content.domain.entity.content import ContentId
+from luminary.model.application.exceptions import EmbeddingError
+from luminary.model.application.interfaces.repositories.vector_store import (
+    VectorStoreMetadata,
+)
+from luminary.model.application.interfaces.services.embedding_service import (
+    EmbedContentCommand,
+    IEmbeddingService,
+)
 from luminary.source.application.interfaces.repositories.source_repository import (
     ISourceRepository,
 )
@@ -104,11 +112,13 @@ class SyncCreateFileSourceUseCase(ICreateFileSourceUseCase):
         source_repository: ISourceRepository,
         source_factory: ISourceFactory,
         content_service: IContentService,
+        embedding_service: IEmbeddingService,
     ) -> None:
         self.clock = clock
         self.source_repository = source_repository
         self.source_factory = source_factory
         self.content_service = content_service
+        self.embedding_service = embedding_service
 
     async def execute(self, command: CreateFileSourceCommand) -> UUID:
         if not command.data:
@@ -123,12 +133,25 @@ class SyncCreateFileSourceUseCase(ICreateFileSourceUseCase):
                 file_id=FileId(command.file_id),
             )
         )
+        content_id = None
         try:
             content_id = await self.content_service.process_file(
                 ProcessFileCommand(user_id=user_id, data=command.data)
             )
             source.fetch(ContentId(content_id), self.clock.now())
         except ParsingError:
+            source.fail()
+
+        try:
+            if content_id:
+                await self.embedding_service.embed_content(
+                    EmbedContentCommand(
+                        content_id=content_id,
+                        metadata=VectorStoreMetadata(source_id=source.id.value),
+                    )
+                )
+                source.embed()
+        except EmbeddingError:
             source.fail()
 
         await self.source_repository.add(source)

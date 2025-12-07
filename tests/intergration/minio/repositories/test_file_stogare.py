@@ -110,3 +110,17 @@ class TestMinioFileStorage:
             assert response.status_code == HTTPStatus.OK
             assert response.headers["Content-Type"] == mime
             assert response.content == self._get_file_data().getbuffer()
+
+    async def test_get_success(self):
+        # Arrange
+        object_key = self._get_object_key()
+        mime = "text/plain"
+
+        await self._add_file(object_key, mime)
+
+        # Act
+        result = await self.repository.get(object_key)
+
+        # Assert
+        content = result.read()
+        assert content == self._get_file_data().getbuffer()

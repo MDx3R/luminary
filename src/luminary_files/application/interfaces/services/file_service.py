@@ -16,12 +16,14 @@ class UploadFileCommand:
 
 
 @dataclass(frozen=True)
-class DeleteFileCommand:
+class GetFileQuery:
     user_id: UUID
     object_key: str
 
 
 class IFileService(ABC):
+    @abstractmethod
+    async def get_file(self, query: GetFileQuery) -> BinaryIO: ...
     @abstractmethod
     async def upload_file(self, command: UploadFileCommand) -> UUID: ...
     @abstractmethod

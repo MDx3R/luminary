@@ -4,6 +4,7 @@ from typing import BinaryIO
 from uuid import UUID
 
 
+# TODO: Use file object key instead of data
 @dataclass(frozen=True)
 class ProcessFileCommand:
     user_id: UUID

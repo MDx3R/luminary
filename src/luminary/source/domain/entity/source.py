@@ -48,6 +48,12 @@ class Source(IEntity):
     def title_matches(self, title: str) -> bool:
         return self.title.value == title
 
+    def can_be_fetched(self) -> bool:
+        return self.fetch_status == FetchStatus.NOT_FETCHED
+
+    def can_be_embedded(self) -> bool:
+        return self.fetch_status == FetchStatus.FETCHED
+
     def fetch(self, content_id: ContentId, fetched_at: DateTime) -> None:
         self.content_id = content_id
         self.fetched_at = fetched_at

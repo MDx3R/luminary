@@ -13,6 +13,7 @@ from luminary.source.domain.events.events import SourceCreatedEvent
 
 @dataclass
 class FileSource(Source):
+    # TODO: Use object key
     file_id: FileId
 
     @classmethod

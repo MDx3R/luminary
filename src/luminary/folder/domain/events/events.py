@@ -1,7 +1,7 @@
+from dataclasses import dataclass
 from uuid import UUID
 
 from common.domain.events.domain_event import DomainEvent
-from pydantic.dataclasses import dataclass
 
 
 @dataclass(frozen=True)

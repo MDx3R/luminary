@@ -4,6 +4,8 @@ from uuid import UUID
 
 from common.domain.events.domain_event import DomainEvent
 
+from luminary.source.domain.enums import FetchStatus
+
 
 @dataclass(frozen=True)
 class SourceEvent(DomainEvent):
@@ -16,6 +18,11 @@ class SourceEvent(DomainEvent):
     @classmethod
     def aggregate_type(cls) -> str:
         return "source"
+
+
+@dataclass(frozen=True)
+class SourceCreatedEvent(SourceEvent):
+    fetch_status: FetchStatus
 
 
 @dataclass(frozen=True)

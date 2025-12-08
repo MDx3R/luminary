@@ -8,6 +8,7 @@ from common.domain.value_objects.url import Url
 
 from luminary.source.domain.entity.source import Source, SourceId
 from luminary.source.domain.enums import FetchStatus, SourceType
+from luminary.source.domain.events.events import SourceCreatedEvent
 
 
 @dataclass
@@ -23,7 +24,7 @@ class LinkSource(Source):
         url: str,
         created_at: DateTime,
     ) -> Self:
-        return cls(
+        page = cls(
             id=id,
             owner_id=owner_id,
             title=Title(title),
@@ -34,3 +35,8 @@ class LinkSource(Source):
             fetch_status=FetchStatus.NOT_FETCHED,
             created_at=created_at,
         )
+        page._record_event(
+            SourceCreatedEvent(source_id=id.value, fetch_status=page.fetch_status)
+        )
+
+        return page

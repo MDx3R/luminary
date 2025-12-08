@@ -12,6 +12,8 @@ from luminary.source.domain.enums import FetchStatus, SourceType
 from luminary.source.domain.events.events import (
     PageSourceLockedEvent,
     PageSourceUnlockedEvent,
+    SourceCreatedEvent,
+    SourceFetchedEvent,
 )
 
 
@@ -51,7 +53,7 @@ class PageSource(Source):
         content_id: ContentId,
         created_at: DateTime,
     ) -> Self:
-        return cls(
+        page = cls(
             id=id,
             owner_id=owner_id,
             title=Title(title),
@@ -62,3 +64,15 @@ class PageSource(Source):
             fetched_at=created_at,
             created_at=created_at,
         )
+        page._record_event(
+            SourceCreatedEvent(source_id=id.value, fetch_status=page.fetch_status)
+        )
+        page._record_event(
+            SourceFetchedEvent(
+                source_id=id.value,
+                content_id=content_id.value,
+                fetched_at=created_at.value,
+            )
+        )
+
+        return page

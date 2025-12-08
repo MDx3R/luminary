@@ -1,114 +1,139 @@
 from unittest.mock import AsyncMock, Mock
 from uuid import uuid4
+
 import pytest
 from common.application.exceptions import AccessPolicyError
+from common.domain.value_objects.id import UserId
+from tests.unit.folder.utils import make_folder
+from tests.unit.source.utils import make_source
 
-from luminary.folder.application.usecases.command.add_source_to_folder_use_case import AddSourceToFolderUseCase
-from luminary.folder.application.interfaces.usecases.command.add_source_to_folder_use_case import AddSourceToFolderCommand
-from luminary.folder.application.interfaces.policies.folder_access_policy import IFolderAccessPolicy
-from luminary.source.application.interfaces.policies.source_access_policy import ISourceAccessPolicy
+from luminary.folder.application.interfaces.policies.folder_access_policy import (
+    IFolderAccessPolicy,
+)
+from luminary.folder.application.interfaces.repositories.folder_repository import (
+    IFolderRepository,
+)
+from luminary.folder.application.interfaces.usecases.command.add_source_to_folder_use_case import (
+    AddSourceToFolderCommand,
+)
+from luminary.folder.application.usecases.command.add_source_to_folder_use_case import (
+    AddSourceToFolderUseCase,
+)
+from luminary.folder.domain.entity.folder import Folder
+from luminary.folder.domain.value_objects.folder_id import FolderId
+from luminary.source.application.interfaces.policies.source_access_policy import (
+    ISourceAccessPolicy,
+)
+from luminary.source.application.interfaces.repositories.source_repository import (
+    ISourceRepository,
+)
+from luminary.source.domain.entity.source import SourceId
 
 
 class TestAddSourceToFolderUseCase:
-    @pytest.fixture
+    @pytest.fixture(autouse=True)
     def setup(self):
+        self.user_id = UserId(uuid4())
+        self.folder_id = FolderId(uuid4())
+        self.source_id = SourceId(uuid4())
+
         # Используем spec для правильных моков
         self.folder_access_policy = Mock(spec=IFolderAccessPolicy)
-        self.folder_repository = AsyncMock()
+        self.folder_repository = AsyncMock(spec=IFolderRepository)
         self.source_access_policy = Mock(spec=ISourceAccessPolicy)
-        self.source_repository = AsyncMock()
-        
+        self.source_repository = AsyncMock(spec=ISourceRepository)
+
+        self.command = AddSourceToFolderCommand(
+            user_id=self.user_id.value,
+            folder_id=self.folder_id.value,
+            source_id=self.source_id.value,
+        )
+
         self.use_case = AddSourceToFolderUseCase(
             self.folder_access_policy,
             self.folder_repository,
             self.source_access_policy,
-            self.source_repository
+            self.source_repository,
         )
-        
-        self.command = AddSourceToFolderCommand(
-            user_id=uuid4(),
-            folder_id=uuid4(),
-            source_id=uuid4()
-        )
-        
-        return self
 
     @pytest.mark.asyncio
-    async def test_add_source_to_folder_success(self, setup):
+    async def test_add_source_to_folder_success(self):
         # Arrange
-        folder = Mock()
-        folder.has_source.return_value = False
-        
-        source = Mock()
-        
-        setup.folder_repository.get_by_id.return_value = folder
-        setup.source_repository.get_by_id.return_value = source
+        folder = make_folder(
+            folder_id=self.folder_id.value, owner_id=self.user_id.value
+        )
+        source = make_source(source_id=self.source_id.value)
+
+        self.folder_repository.get_by_id.return_value = folder
+        self.source_repository.get_by_id.return_value = source
 
         # Act
-        await setup.use_case.execute(setup.command)
+        await self.use_case.execute(self.command)
 
         # Assert
-        setup.folder_repository.get_by_id.assert_awaited_once_with(setup.command.folder_id)
-        setup.folder_access_policy.assert_is_allowed.assert_called_once_with(
-            setup.command.user_id, folder
+        self.folder_repository.get_by_id.assert_awaited_once_with(self.folder_id)
+        self.folder_access_policy.assert_is_allowed.assert_called_once_with(
+            self.user_id, folder
         )
-        setup.source_repository.get_by_id.assert_awaited_once_with(setup.command.source_id)
-        setup.source_access_policy.assert_is_allowed.assert_called_once_with(
-            setup.command.user_id, source
+        self.source_repository.get_by_id.assert_awaited_once_with(self.source_id)
+        self.source_access_policy.assert_is_allowed.assert_called_once_with(
+            self.user_id, source
         )
-        folder.add_source.assert_called_once_with(setup.command.source_id)
-        setup.folder_repository.save.assert_awaited_once_with(folder)
+        assert self.source_id in folder.sources
+        self.folder_repository.save.assert_awaited_once_with(folder)
 
     @pytest.mark.asyncio
-    async def test_add_source_to_folder_already_exists(self, setup):
+    async def test_add_source_to_folder_already_exists(self):
         # Arrange
-        folder = Mock()
-        folder.has_source.return_value = True  # Source already exists
-        
-        source = Mock()
-        
-        setup.folder_repository.get_by_id.return_value = folder
-        setup.source_repository.get_by_id.return_value = source
+        folder = make_folder(
+            folder_id=self.folder_id.value, owner_id=self.user_id.value
+        )
+        source = make_source(source_id=self.source_id.value)
+        folder.add_source(source_id=self.source_id)
+
+        self.folder_repository.get_by_id.return_value = folder
+        self.source_repository.get_by_id.return_value = source
 
         # Act
-        await setup.use_case.execute(setup.command)
+        await self.use_case.execute(self.command)
 
         # Assert
-        folder.add_source.assert_called_once_with(setup.command.source_id)  # Still called
-        setup.folder_repository.save.assert_awaited_once_with(folder)
+        self.folder_repository.save.assert_not_awaited()
 
     @pytest.mark.asyncio
-    async def test_add_source_folder_access_denied_raises(self, setup):
+    async def test_add_source_folder_access_denied_raises(self):
         # Arrange
-        folder = Mock()
-        setup.folder_repository.get_by_id.return_value = folder
-        setup.folder_access_policy.assert_is_allowed.side_effect = AccessPolicyError(
-            setup.command.folder_id, "denied"
+        folder = Mock(spec=Folder)
+        self.folder_repository.get_by_id.return_value = folder
+        self.folder_access_policy.assert_is_allowed.side_effect = AccessPolicyError(
+            self.folder_id, "denied"
         )
 
         # Act & Assert
         with pytest.raises(AccessPolicyError):
-            await setup.use_case.execute(setup.command)
+            await self.use_case.execute(self.command)
 
-        setup.folder_repository.get_by_id.assert_awaited_once_with(setup.command.folder_id)
-        setup.source_repository.get_by_id.assert_not_awaited()
-        setup.folder_repository.save.assert_not_awaited()
+        self.folder_repository.get_by_id.assert_awaited_once_with(self.folder_id)
+        self.source_repository.get_by_id.assert_not_awaited()
+        self.folder_repository.save.assert_not_awaited()
 
     @pytest.mark.asyncio
     async def test_add_source_source_access_denied_raises(self, setup):
         # Arrange
         folder = Mock()
         source = Mock()
-        
-        setup.folder_repository.get_by_id.return_value = folder
-        setup.source_repository.get_by_id.return_value = source
-        setup.source_access_policy.assert_is_allowed.side_effect = AccessPolicyError(
-            setup.command.source_id, "denied"
+
+        self.folder_repository.get_by_id.return_value = folder
+        self.source_repository.get_by_id.return_value = source
+        self.source_access_policy.assert_is_allowed.side_effect = AccessPolicyError(
+            self.source_id, "denied"
         )
 
         # Act & Assert
         with pytest.raises(AccessPolicyError):
-            await setup.use_case.execute(setup.command)
+            await self.use_case.execute(self.command)
 
-        setup.source_repository.get_by_id.assert_awaited_once_with(setup.command.source_id)
-        setup.folder_repository.save.assert_not_awaited()
+        self.source_repository.get_by_id.assert_awaited_once_with(
+            self.command.source_id
+        )
+        self.folder_repository.save.assert_not_awaited()

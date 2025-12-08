@@ -1,5 +1,8 @@
 from uuid import UUID
 
+from common.domain.value_objects.id import UserId
+
+from luminary.assistant.domain.entity.assisnant import AssistantId
 from luminary.folder.application.interfaces.repositories.folder_repository import (
     IFolderRepository,
 )
@@ -20,14 +23,15 @@ class CreateFolderUseCase(ICreateFolderUseCase):
         self.folder_repository = folder_repository
 
     async def execute(self, command: CreateFolderCommand) -> UUID:
+        # TODO: Check user rights for assistant_id
+
         folder = self.folder_factory.create(
             command.name,
             command.description,
-            command.user_id,
-            command.model_id,
-            command.assistant_id,
+            UserId(command.user_id),
+            AssistantId(command.assistant_id),
         )
 
         await self.folder_repository.add(folder)
 
-        return folder.folder_id
+        return folder.id.value

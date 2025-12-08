@@ -1,3 +1,5 @@
+from common.domain.value_objects.id import UserId
+
 from luminary.folder.application.interfaces.policies.folder_access_policy import (
     IFolderAccessPolicy,
 )
@@ -8,12 +10,14 @@ from luminary.folder.application.interfaces.usecases.command.add_source_to_folde
     AddSourceToFolderCommand,
     IAddSourceToFolderUseCase,
 )
+from luminary.folder.domain.value_objects.folder_id import FolderId
 from luminary.source.application.interfaces.policies.source_access_policy import (
     ISourceAccessPolicy,
 )
-from luminary.source.application.interfaces.respositories.source_repository import (
+from luminary.source.application.interfaces.repositories.source_repository import (
     ISourceRepository,
 )
+from luminary.source.domain.entity.source import SourceId
 
 
 class AddSourceToFolderUseCase(IAddSourceToFolderUseCase):
@@ -30,12 +34,18 @@ class AddSourceToFolderUseCase(IAddSourceToFolderUseCase):
         self.source_repository = source_repository
 
     async def execute(self, command: AddSourceToFolderCommand) -> None:
-        folder = await self.folder_repository.get_by_id(command.folder_id)
-        self.folder_access_policy.assert_is_allowed(command.user_id, folder)
+        user_id = UserId(command.user_id)
+        source_id = SourceId(command.source_id)
 
-        source = await self.source_repository.get_by_id(command.source_id)
-        self.source_access_policy.assert_is_allowed(command.user_id, source)
+        folder = await self.folder_repository.get_by_id(FolderId(command.folder_id))
+        self.folder_access_policy.assert_is_allowed(user_id, folder)
 
-        folder.add_source(command.source_id)
+        if folder.has_source(source_id):
+            return
+
+        source = await self.source_repository.get_by_id(source_id)
+        self.source_access_policy.assert_is_allowed(user_id, source)
+
+        folder.add_source(source_id)
 
         await self.folder_repository.save(folder)

@@ -1,12 +1,6 @@
-from abc import ABC, abstractmethod
-from uuid import UUID
+from common.application.interfaces.policies.access_policy import IAccessPolicy
 
 from luminary.source.domain.entity.source import Source
 
 
-class ISourceAccessPolicy(ABC):
-    @abstractmethod
-    def is_allowed(self, user_id: UUID, source: Source) -> bool: ...
-
-    @abstractmethod
-    def assert_is_allowed(self, user_id: UUID, source: Source) -> None: ...
+class ISourceAccessPolicy(IAccessPolicy[Source]): ...

@@ -1,5 +1,8 @@
 from uuid import UUID
 
+from common.domain.value_objects.id import UserId
+
+from luminary.assistant.domain.entity.assisnant import AssistantId
 from luminary.chat.application.interfaces.repositories.chat_repository import (
     IChatRepository,
 )
@@ -7,8 +10,8 @@ from luminary.chat.application.interfaces.usecases.command.create_chat_use_case 
     CreateChatCommand,
     ICreateChatUseCase,
 )
-from luminary.chat.domain.entity.chat import ChatSettings
 from luminary.chat.domain.interfaces.chat_factory import ChatFactoryDTO, IChatFactory
+from luminary.chat.domain.value_objects.chat_settings import ChatSettings
 from luminary.model.application.interfaces.repositories.model_repository import (
     IModelRepository,
 )
@@ -34,14 +37,20 @@ class CreateChatUseCase(ICreateChatUseCase):
 
         # TODO: Fetch default settings from repo
 
+        assisnant_id = None
+        if command.assistant_id:
+            assisnant_id = AssistantId(command.assistant_id)
+
+        # TODO: Assistant access policy
+
         chat = self.chat_factory.create(
             ChatFactoryDTO(
-                user_id=command.user_id,
+                user_id=UserId(command.user_id),
                 folder_id=None,
                 name=None,
+                assisnant_id=assisnant_id,  # TODO
                 settings=ChatSettings(
-                    model_id=model.model_id,
-                    system_prompt=self.DEFAULT_PROMPT,
+                    model_id=model.id,
                     max_context_messages=self.MAX_CONTEXT_MESSAGES,
                 ),
             )
@@ -49,4 +58,4 @@ class CreateChatUseCase(ICreateChatUseCase):
 
         await self.chat_repository.add(chat)
 
-        return chat.chat_id
+        return chat.id.value

@@ -52,7 +52,7 @@ class TestChatCommandController:
         self.send_message_use_case.execute.return_value = self.message_dto
 
     async def test_create_chat_returns_chat_id(self) -> None:
-        command: CreateChatCommand = CreateChatCommand(self.user_id)
+        command: CreateChatCommand = CreateChatCommand(self.user_id, None)
         result: UUID = await self.create_chat_use_case.execute(command)
 
         assert result == self.chat_id

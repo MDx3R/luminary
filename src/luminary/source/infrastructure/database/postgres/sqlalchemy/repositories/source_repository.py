@@ -1,13 +1,12 @@
-from uuid import UUID
-
 from common.application.exceptions import NotFoundError
 from common.infrastructure.database.sqlalchemy.executor import QueryExecutor
 from sqlalchemy import select
+from sqlalchemy.orm import with_polymorphic
 
-from luminary.source.application.interfaces.respositories.source_repository import (
+from luminary.source.application.interfaces.repositories.source_repository import (
     ISourceRepository,
 )
-from luminary.source.domain.entity.source import Source
+from luminary.source.domain.entity.source import Source, SourceId
 from luminary.source.infrastructure.database.postgres.sqlalchemy.mappers.source_mapper import (
     SourceMapper,
 )
@@ -20,12 +19,14 @@ class SourceRepository(ISourceRepository):
     def __init__(self, executor: QueryExecutor) -> None:
         self.executor = executor
 
-    async def get_by_id(self, source_id: UUID) -> Source:
-        stmt = select(SourceBase).where(SourceBase.source_id == source_id)
+    async def get_by_id(self, id: SourceId) -> Source:
+        stmt = select(with_polymorphic(SourceBase, "*")).where(
+            SourceBase.source_id == id.value
+        )
 
         result = await self.executor.execute_scalar_one(stmt)
         if not result:
-            raise NotFoundError(source_id)
+            raise NotFoundError(id)
         return SourceMapper.to_domain(result)
 
     async def add(self, entity: Source) -> None:
@@ -35,3 +36,11 @@ class SourceRepository(ISourceRepository):
     async def save(self, entity: Source) -> None:
         model = SourceMapper.to_persistence(entity)
         await self.executor.save(model)
+
+    async def remove(self, entity: Source) -> None:
+        # NOTE: Select is needed for proper delete
+        stmt = select(SourceBase).where(SourceBase.source_id == entity.id.value)
+        result = await self.executor.execute_scalar_one(stmt)
+        if not result:
+            return
+        await self.executor.delete(result)

@@ -1,5 +1,7 @@
 from uuid import UUID
 
+from common.domain.value_objects.id import UserId
+
 from luminary.assistant.application.exceptions import AssistantDuplicateNameError
 from luminary.assistant.application.interfaces.repositories.assistant_repository import (
     IAssistantRepository,
@@ -21,15 +23,17 @@ class CreateAssistantUseCase(ICreateAssistantUseCase):
         self.assistant_repository = assistant_repository
 
     async def execute(self, command: CreateAssistantCommand) -> UUID:
+        user_id = UserId(command.user_id)
+
         exists = await self.assistant_repository.exists_by_name_for_user(
-            command.name, command.user_id
+            command.name, user_id
         )
         if exists:
             raise AssistantDuplicateNameError(command.user_id, command.name)
 
         assisnant = self.assistant_factory.create(
-            command.user_id, command.name, command.description, command.prompt
+            user_id, command.name, command.description, command.prompt
         )
 
         await self.assistant_repository.add(assisnant)
-        return assisnant.assistant_id
+        return assisnant.id.value

@@ -1,3 +1,5 @@
+from common.domain.value_objects.id import UserId
+
 from luminary.folder.application.interfaces.policies.folder_access_policy import (
     IFolderAccessPolicy,
 )
@@ -8,6 +10,8 @@ from luminary.folder.application.interfaces.usecases.command.remove_source_from_
     IRemoveSourceFromFolderUseCase,
     RemoveSourceFromFolderCommand,
 )
+from luminary.folder.domain.value_objects.folder_id import FolderId
+from luminary.source.domain.entity.source import SourceId
 
 
 class RemoveSourceFromFolderUseCase(IRemoveSourceFromFolderUseCase):
@@ -20,11 +24,14 @@ class RemoveSourceFromFolderUseCase(IRemoveSourceFromFolderUseCase):
         self.folder_repository = folder_repository
 
     async def execute(self, command: RemoveSourceFromFolderCommand) -> None:
-        folder = await self.folder_repository.get_by_id(command.folder_id)
-        self.folder_access_policy.assert_is_allowed(command.user_id, folder)
+        source_id = SourceId(command.source_id)
 
-        if not folder.has_source(command.source_id):
+        folder = await self.folder_repository.get_by_id(FolderId(command.folder_id))
+        self.folder_access_policy.assert_is_allowed(UserId(command.user_id), folder)
+
+        if not folder.has_source(source_id):
             return
 
-        folder.remove_source(command.source_id)
+        folder.remove_source(source_id)
+
         await self.folder_repository.save(folder)

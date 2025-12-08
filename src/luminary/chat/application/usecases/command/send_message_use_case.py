@@ -1,4 +1,5 @@
 from common.application.interfaces.transactions.unit_of_work import IUnitOfWork
+from common.domain.value_objects.id import UserId
 
 from luminary.chat.application.interfaces.policies.chat_access_policy import (
     IChatAccessPolicy,
@@ -19,6 +20,7 @@ from luminary.chat.domain.interfaces.message_factory import (
     IMessageFactory,
     MessageFactoryDTO,
 )
+from luminary.chat.domain.value_objects.chat_id import ChatId
 
 
 class SendMessageUseCase(ISendMessageUseCase):
@@ -37,13 +39,15 @@ class SendMessageUseCase(ISendMessageUseCase):
         self.chat_access_policy = chat_access_policy
 
     async def execute(self, command: SendMessageCommand) -> MessageDTO:
-        chat = await self.chat_repository.get_by_id(command.chat_id)
+        chat_id = ChatId(command.chat_id)
 
-        self.chat_access_policy.assert_is_allowed(command.user_id, chat)
+        chat = await self.chat_repository.get_by_id(chat_id)
+
+        self.chat_access_policy.assert_is_allowed(UserId(command.user_id), chat)
 
         message = self.message_factory.create(
             MessageFactoryDTO(
-                chat_id=chat.chat_id,
+                chat_id=chat_id,
                 model_id=chat.settings.model_id,
                 role=Author.USER,
                 content=command.message,
@@ -53,8 +57,8 @@ class SendMessageUseCase(ISendMessageUseCase):
         await self.message_repository.add(message)
 
         return MessageDTO(
-            message_id=message.message_id,
-            chat_id=message.chat_id,
+            message_id=message.id.value,
+            chat_id=message.chat_id.value,
             author=message.role,
             status=message.status,
             content=message.content,

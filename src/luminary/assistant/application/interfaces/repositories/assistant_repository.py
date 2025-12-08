@@ -1,14 +1,15 @@
 from abc import ABC, abstractmethod
-from uuid import UUID
 
-from luminary.assistant.domain.entity.assisnant import Assistant
+from common.domain.value_objects.id import UserId
+
+from luminary.assistant.domain.entity.assisnant import Assistant, AssistantId
 
 
 class IAssistantRepository(ABC):
     @abstractmethod
-    async def get_by_id(self, assistant_id: UUID) -> Assistant: ...
+    async def get_by_id(self, id: AssistantId) -> Assistant: ...
     @abstractmethod
-    async def exists_by_name_for_user(self, name: str, user_id: UUID) -> bool: ...
+    async def exists_by_name_for_user(self, name: str, user_id: UserId) -> bool: ...
     @abstractmethod
     async def add(self, entity: Assistant) -> None: ...
     @abstractmethod

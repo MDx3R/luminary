@@ -1,12 +1,6 @@
-from abc import ABC, abstractmethod
-from uuid import UUID
+from common.application.interfaces.policies.access_policy import IAccessPolicy
 
 from luminary.folder.domain.entity.folder import Folder
 
 
-class IFolderAccessPolicy(ABC):
-    @abstractmethod
-    def is_allowed(self, user_id: UUID, folder: Folder) -> bool: ...
-
-    @abstractmethod
-    def assert_is_allowed(self, user_id: UUID, folder: Folder) -> None: ...
+class IFolderAccessPolicy(IAccessPolicy[Folder]): ...

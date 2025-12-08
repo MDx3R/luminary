@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
-from uuid import UUID
 
+from common.domain.value_objects.id import UserId
+
+from luminary.assistant.domain.entity.assisnant import AssistantId
 from luminary.folder.domain.entity.folder import Folder
 
 
@@ -10,7 +12,6 @@ class IFolderFactory(ABC):
         self,
         name: str,
         description: str | None,
-        user_id: UUID,
-        model_id: UUID,
-        assistant_id: UUID,
+        user_id: UserId,
+        assistant_id: AssistantId | None,
     ) -> Folder: ...

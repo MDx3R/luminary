@@ -2,11 +2,16 @@ from uuid import uuid4
 
 import pytest
 from common.application.exceptions import NotFoundError
+from common.domain.value_objects.id import UserId
 from common.infrastructure.database.sqlalchemy.executor import QueryExecutor
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from tests.unit.assistant.utils import make_assistant
 
-from luminary.assistant.domain.entity.assisnant import Assistant, AssistantInfo
+from luminary.assistant.domain.entity.assisnant import (
+    Assistant,
+    AssistantId,
+    AssistantInfo,
+)
 from luminary.assistant.infrasturcture.database.postgres.sqlalchemy.mappers.assistant_mapper import (
     AssistantMapper,
 )
@@ -29,12 +34,12 @@ class TestAssistantRepository:
 
     async def _exists(self, assistant: Assistant) -> bool:
         async with self.maker() as session:
-            result = await session.get(AssistantBase, assistant.assistant_id)
+            result = await session.get(AssistantBase, assistant.id.value)
             return result is not None
 
     async def _get(self, assistant: Assistant) -> Assistant | None:
         async with self.maker() as session:
-            result = await session.get(AssistantBase, assistant.assistant_id)
+            result = await session.get(AssistantBase, assistant.id.value)
             if not result:
                 return None
             return AssistantMapper.to_domain(result)
@@ -51,7 +56,7 @@ class TestAssistantRepository:
         assistant = await self._add_assistant()
 
         # Act
-        result = await self.assistant_repository.get_by_id(assistant.assistant_id)
+        result = await self.assistant_repository.get_by_id(assistant.id)
 
         # Assert
         assert result == assistant
@@ -59,7 +64,7 @@ class TestAssistantRepository:
     async def test_get_assistant_not_found(self):
         # Act & Assert
         with pytest.raises(NotFoundError):
-            await self.assistant_repository.get_by_id(uuid4())
+            await self.assistant_repository.get_by_id(AssistantId(uuid4()))
 
     async def test_get_assistant_exists_by_name_for_user_true(self):
         # Arrange
@@ -67,7 +72,7 @@ class TestAssistantRepository:
 
         # Act
         result = await self.assistant_repository.exists_by_name_for_user(
-            assistant.info.name, assistant.user_id
+            assistant.info.name, assistant.owner_id
         )
 
         # Assert
@@ -79,7 +84,7 @@ class TestAssistantRepository:
 
         # Act
         result = await self.assistant_repository.exists_by_name_for_user(
-            "Random Name", assistant.user_id
+            "Random Name", assistant.owner_id
         )
 
         # Assert
@@ -91,7 +96,7 @@ class TestAssistantRepository:
 
         # Act
         result = await self.assistant_repository.exists_by_name_for_user(
-            assistant.info.name, uuid4()
+            assistant.info.name, UserId(uuid4())
         )
 
         # Assert

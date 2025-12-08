@@ -2,6 +2,7 @@ from collections.abc import AsyncGenerator
 
 from common.application.exceptions import NotFoundError
 from common.application.interfaces.transactions.unit_of_work import IUnitOfWork
+from common.domain.value_objects.id import UserId
 
 from luminary.chat.application.interfaces.policies.chat_access_policy import (
     IChatAccessPolicy,
@@ -26,6 +27,7 @@ from luminary.chat.domain.interfaces.message_factory import (
     IMessageFactory,
     MessageFactoryDTO,
 )
+from luminary.chat.domain.value_objects.chat_id import ChatId
 from luminary.model.application.interfaces.services.ai_provider import AIProvider
 
 
@@ -49,16 +51,19 @@ class GetStreamingMessageResponseUseCase(IGetStreamingMessageResponseUseCase):
     async def execute(
         self, command: GetMessageResponseCommand
     ) -> AsyncGenerator[StreamingMessageDTO]:
-        chat = await self.chat_repository.get_by_id(command.chat_id)
-        request = await self.message_repository.get_by_id(command.message_id)
-        if chat.chat_id != request.chat_id:
-            raise NotFoundError(request.message_id)
+        user_id = UserId(command.user_id)
+        chat_id = ChatId(command.chat_id)
 
-        self.chat_access_policy.assert_is_allowed(command.user_id, chat)
+        chat = await self.chat_repository.get_by_id(chat_id)
+        request = await self.message_repository.get_by_id(command.message_id)
+        if chat.id != request.chat_id:
+            raise NotFoundError(request.id)
+
+        self.chat_access_policy.assert_is_allowed(user_id, chat)
 
         response = self.message_factory.create(
             MessageFactoryDTO(
-                chat_id=chat.chat_id,
+                chat_id=chat_id,
                 model_id=chat.settings.model_id,
                 role=Author.ASSISTANT,
                 content=EMPTY_CONTENT,
@@ -67,26 +72,28 @@ class GetStreamingMessageResponseUseCase(IGetStreamingMessageResponseUseCase):
         response.start_streaming()
 
         messages = [request.content]
+        response_id = response.id.value
 
         yield StreamingMessageDTO(
             state=StreamState.START,
             content=STREAM_START_CONTENT,
-            message_id=response.message_id,
+            message_id=response_id,
             author=response.role,
             status=response.status,
         )
 
         request_tokens = 0
         response_tokens = 0  # TODO: How and when assign tokens
+
         async for chunk in self.ai_provider.stream_completion(
-            messages, chat.settings.system_prompt, chat.settings.model_id
+            messages, chat.settings.model_id.value
         ):
             response.add_chunk(chunk.content)
 
             yield StreamingMessageDTO(
                 state=StreamState.DELTA,
                 content=chunk.content,
-                message_id=response.message_id,
+                message_id=response_id,
                 author=response.role,
                 status=response.status,
             )
@@ -101,7 +108,7 @@ class GetStreamingMessageResponseUseCase(IGetStreamingMessageResponseUseCase):
         yield StreamingMessageDTO(
             state=StreamState.END,
             content=STREAM_END_CONTENT,
-            message_id=response.message_id,
+            message_id=response_id,
             author=response.role,
             status=response.status,
         )

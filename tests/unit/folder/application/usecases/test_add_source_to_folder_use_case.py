@@ -27,7 +27,7 @@ from luminary.source.application.interfaces.policies.source_access_policy import
 from luminary.source.application.interfaces.repositories.source_repository import (
     ISourceRepository,
 )
-from luminary.source.domain.entity.source import SourceId
+from luminary.source.domain.entity.source import Source, SourceId
 
 
 class TestAddSourceToFolderUseCase:
@@ -120,8 +120,9 @@ class TestAddSourceToFolderUseCase:
     @pytest.mark.asyncio
     async def test_add_source_source_access_denied_raises(self, setup):
         # Arrange
-        folder = Mock()
-        source = Mock()
+        folder = Mock(spec=Folder)
+        folder.has_source.return_value = False
+        source = Mock(spec=Source)
 
         self.folder_repository.get_by_id.return_value = folder
         self.source_repository.get_by_id.return_value = source
@@ -133,7 +134,5 @@ class TestAddSourceToFolderUseCase:
         with pytest.raises(AccessPolicyError):
             await self.use_case.execute(self.command)
 
-        self.source_repository.get_by_id.assert_awaited_once_with(
-            self.command.source_id
-        )
+        self.source_repository.get_by_id.assert_awaited_once_with(self.source_id)
         self.folder_repository.save.assert_not_awaited()

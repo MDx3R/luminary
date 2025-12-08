@@ -1,39 +1,30 @@
-from datetime import UTC, datetime
 from uuid import uuid4
 
 import pytest
 from common.application.exceptions import AccessPolicyError
-from common.domain.value_objects.datetime import DateTime
+from common.domain.value_objects.id import UserId
+from tests.unit.folder.utils import make_folder
 
 from luminary.folder.application.policies.folder_access_policy import FolderAccessPolicy
-from luminary.folder.domain.entity.folder import Folder, FolderInfo
 
 
 class TestFolderAccessPolicy:
-    @pytest.fixture
+    @pytest.fixture(autouse=True)
     def setup(self):
         self.policy = FolderAccessPolicy()
-        self.user_id = uuid4()
-        self.folder = Folder(
-            folder_id=uuid4(),
-            user_id=self.user_id,
-            info=FolderInfo("Test", "Description"),
-            model_id=uuid4(),
-            assistant_id=uuid4(),
-            created_at=DateTime(datetime.now(UTC))
-        )
-        return self
+        self.folder = make_folder()
+        self.user_id = self.folder.owner_id
 
-    def test_is_allowed_same_user(self, setup):
-        assert setup.policy.is_allowed(setup.user_id, setup.folder) is True
+    def test_is_allowed_same_user(self):
+        assert self.policy.is_allowed(self.user_id, self.folder) is True
 
-    def test_is_allowed_different_user(self, setup):
-        assert setup.policy.is_allowed(uuid4(), setup.folder) is False
+    def test_is_allowed_different_user(self):
+        assert self.policy.is_allowed(UserId(uuid4()), self.folder) is False
 
-    def test_assert_is_allowed_same_user(self, setup):
+    def test_assert_is_allowed_same_user(self):
         # Should not raise
-        setup.policy.assert_is_allowed(setup.user_id, setup.folder)
+        self.policy.assert_is_allowed(self.user_id, self.folder)
 
-    def test_assert_is_allowed_different_user_raises(self, setup):
+    def test_assert_is_allowed_different_user_raises(self):
         with pytest.raises(AccessPolicyError):
-            setup.policy.assert_is_allowed(uuid4(), setup.folder)
+            self.policy.assert_is_allowed(UserId(uuid4()), self.folder)

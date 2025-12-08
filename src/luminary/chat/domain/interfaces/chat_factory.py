@@ -6,7 +6,7 @@ from common.domain.value_objects.id import UserId
 from luminary.assistant.domain.entity.assisnant import AssistantId
 from luminary.chat.domain.entity.chat import Chat
 from luminary.chat.domain.value_objects.chat_settings import ChatSettings
-from luminary.folder.domain.entity.folder import FolderId
+from luminary.folder.domain.value_objects.folder_id import FolderId
 
 
 @dataclass(frozen=True)

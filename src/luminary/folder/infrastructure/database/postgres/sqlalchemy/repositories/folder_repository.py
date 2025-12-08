@@ -3,10 +3,12 @@ from common.infrastructure.database.sqlalchemy.executor import QueryExecutor
 from sqlalchemy import delete, select
 from sqlalchemy.orm import joinedload
 
+from luminary.chat.domain.value_objects.chat_id import ChatId
 from luminary.folder.application.interfaces.repositories.folder_repository import (
     IFolderRepository,
 )
-from luminary.folder.domain.entity.folder import Folder, FolderId
+from luminary.folder.domain.entity.folder import Folder
+from luminary.folder.domain.value_objects.folder_id import FolderId
 from luminary.folder.infrastructure.database.postgres.sqlalchemy.mappers.folder_mapper import (
     FolderMapper,
 )
@@ -15,6 +17,7 @@ from luminary.folder.infrastructure.database.postgres.sqlalchemy.models.folder_b
     FolderChatBase,
     FolderSourceBase,
 )
+from luminary.source.domain.entity.source import SourceId
 
 
 class FolderRepository(IFolderRepository):
@@ -39,21 +42,20 @@ class FolderRepository(IFolderRepository):
         await self.executor.add(model)
 
     async def save(self, entity: Folder) -> None:
-        # TODO: Remove this after refactor on entities for them to be eventual consistent
         model = FolderMapper.to_persistence(entity)
         async with self.executor.uow:
-            stmt = delete(FolderChatBase).where(
-                FolderChatBase.folder_id == entity.id.value
-            )
-            await self.executor.execute(stmt)
-            stmt = delete(FolderSourceBase).where(
-                FolderSourceBase.folder_id == entity.id.value
-            )
-            await self.executor.execute(stmt)
-
-            await self.executor.add_all(model.chats)
-            model.chats = []
-            await self.executor.add_all(model.sources)
-            model.sources = []
-
             await self.executor.save(model)
+
+    async def remove_chat(self, folder_id: FolderId, chat_id: ChatId) -> None:
+        stmt = delete(FolderChatBase).where(
+            FolderChatBase.folder_id == folder_id.value,
+            FolderChatBase.chat_id == chat_id.value,
+        )
+        await self.executor.execute(stmt)
+
+    async def remove_source(self, folder_id: FolderId, source_id: SourceId) -> None:
+        stmt = delete(FolderSourceBase).where(
+            FolderSourceBase.folder_id == folder_id.value,
+            FolderSourceBase.source_id == source_id.value,
+        )
+        await self.executor.execute(stmt)

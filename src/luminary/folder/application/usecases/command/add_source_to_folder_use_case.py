@@ -1,9 +1,5 @@
-from common.application.interfaces.transactions.unit_of_work import IUnitOfWork
 from common.domain.value_objects.id import UserId
 
-from luminary.chat.application.interfaces.repositories.chat_repository import (
-    IChatRepository,
-)
 from luminary.folder.application.interfaces.policies.folder_access_policy import (
     IFolderAccessPolicy,
 )
@@ -14,30 +10,26 @@ from luminary.folder.application.interfaces.usecases.command.add_source_to_folde
     AddSourceToFolderCommand,
     IAddSourceToFolderUseCase,
 )
-from luminary.folder.domain.entity.folder import Folder, FolderId
+from luminary.folder.domain.value_objects.folder_id import FolderId
 from luminary.source.application.interfaces.policies.source_access_policy import (
     ISourceAccessPolicy,
 )
 from luminary.source.application.interfaces.repositories.source_repository import (
     ISourceRepository,
 )
-from luminary.source.domain.entity.source import Source, SourceId
+from luminary.source.domain.entity.source import SourceId
 
 
 class AddSourceToFolderUseCase(IAddSourceToFolderUseCase):
-    def __init__(  # noqa: PLR0913
+    def __init__(
         self,
-        uow: IUnitOfWork,
         folder_access_policy: IFolderAccessPolicy,
         folder_repository: IFolderRepository,
-        chat_repository: IChatRepository,
         source_access_policy: ISourceAccessPolicy,
         source_repository: ISourceRepository,
     ) -> None:
-        self.uow = uow
         self.folder_access_policy = folder_access_policy
         self.folder_repository = folder_repository
-        self.chat_repository = chat_repository
         self.source_access_policy = source_access_policy
         self.source_repository = source_repository
 
@@ -56,16 +48,4 @@ class AddSourceToFolderUseCase(IAddSourceToFolderUseCase):
 
         folder.add_source(source_id)
 
-        async with self.uow:
-            await self.folder_repository.save(folder)
-            await self.add_source_to_chats(source, folder)
-
-    async def add_source_to_chats(self, source: Source, folder: Folder) -> None:
-        # TODO: Add tests
-        # TODO: Eventual consistency
-        chats = await self.chat_repository.get_by_folder_id(folder.id)
-
-        for ch in chats:
-            ch.add_source(source.id)
-
-        await self.chat_repository.save_all(chats)
+        await self.folder_repository.save(folder)

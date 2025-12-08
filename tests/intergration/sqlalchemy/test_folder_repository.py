@@ -9,7 +9,8 @@ from sqlalchemy.orm import joinedload
 from tests.unit.folder.utils import make_folder
 
 from luminary.chat.domain.value_objects.chat_id import ChatId
-from luminary.folder.domain.entity.folder import Folder, FolderId
+from luminary.folder.domain.entity.folder import Folder
+from luminary.folder.domain.value_objects.folder_id import FolderId
 from luminary.folder.infrastructure.database.postgres.sqlalchemy.mappers.folder_mapper import (
     FolderMapper,
 )

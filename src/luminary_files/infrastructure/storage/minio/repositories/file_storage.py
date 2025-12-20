@@ -1,4 +1,5 @@
 import asyncio
+import io
 from collections.abc import Iterable, Sequence
 from datetime import timedelta
 from typing import BinaryIO
@@ -57,3 +58,29 @@ class MinioFileStorage(IFileStorage):
         tasks = [self.get_presigned_get_url(key, expires_in) for key in object_keys]
         urls = await asyncio.gather(*tasks)
         return urls
+
+    async def get(self, object_key: ObjectKey) -> BinaryIO:
+        pass
+        loop = asyncio.get_running_loop()
+
+        def fetch() -> bytes:
+            resp = self.client.get_object(
+                bucket_name=self.bucket_name, object_name=object_key.value
+            )
+            try:
+                return resp.read()
+            finally:
+                try:
+                    resp.close()
+                except Exception:
+                    pass
+                try:
+                    resp.release_conn()
+                except Exception:
+                    pass
+
+        try:
+            data = await loop.run_in_executor(None, fetch)
+            return io.BytesIO(data)
+        except S3Error as e:
+            raise RepositoryError(f"Failed to get file '{object_key}'") from e

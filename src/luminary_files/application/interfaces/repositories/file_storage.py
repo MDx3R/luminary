@@ -8,6 +8,8 @@ from common.domain.value_objects.object_key import ObjectKey
 
 class IFileStorage(ABC):
     @abstractmethod
+    async def get(self, object_key: ObjectKey) -> BinaryIO: ...
+    @abstractmethod
     async def upload(
         self, object_key: ObjectKey, mime: str, data: BinaryIO
     ) -> None: ...

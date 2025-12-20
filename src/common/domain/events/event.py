@@ -1,9 +1,7 @@
 from abc import ABC, abstractmethod
-from dataclasses import replace
+from dataclasses import dataclass, replace
 from typing import Self
 from uuid import UUID
-
-from pydantic.dataclasses import dataclass
 
 
 @dataclass(frozen=True, kw_only=True)

@@ -1,6 +1,6 @@
 from datetime import timedelta
 from os import SEEK_END, SEEK_SET
-from typing import ClassVar
+from typing import BinaryIO, ClassVar
 from uuid import UUID
 
 from common.domain.value_objects.id import UserId
@@ -13,6 +13,7 @@ from luminary_files.application.interfaces.repositories.file_repository import (
 )
 from luminary_files.application.interfaces.repositories.file_storage import IFileStorage
 from luminary_files.application.interfaces.services.file_service import (
+    GetFileQuery,
     IFileService,
     UploadFileCommand,
 )
@@ -65,3 +66,6 @@ class FileService(IFileService):
         return await self.file_storage.get_presigned_get_url(
             ObjectKey(query.object_key), self.EXPIRATION_DELTA
         )
+
+    async def get_file(self, query: GetFileQuery) -> BinaryIO:
+        return await self.file_storage.get(ObjectKey(query.object_key))

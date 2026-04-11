@@ -36,8 +36,9 @@ class TestUpdateSourceUseCase:
         )
 
         self.access_policy: Mock = Mock(spec=ISourceAccessPolicy)
-        self.repository: AsyncMock = AsyncMock(spec=ISourceRepository)
-        self.repository.get_by_id.return_value = self.source
+        self.repository: AsyncMock = AsyncMock(
+            spec=ISourceRepository, get_by_id=AsyncMock(return_value=self.source)
+        )
 
         self.command = UpdateSourceCommand(
             user_id=self.user_id.value,

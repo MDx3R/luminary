@@ -41,6 +41,7 @@ class TestSourceEntity:
             created_at=self.created_at,
             fetched_at=None,
             fetch_status=FetchStatus.NOT_FETCHED,
+            is_deleted=False,
         )
 
     def test_update_title(self) -> None:
@@ -88,6 +89,7 @@ class TestFileSource:
             created_at=self.created_at,
             fetched_at=None,
             fetch_status=FetchStatus.NOT_FETCHED,
+            is_deleted=False,
         )
 
     def test_create_file_source_success(self) -> None:
@@ -132,6 +134,7 @@ class TestLinkSource:
             fetched_at=None,
             fetch_status=FetchStatus.NOT_FETCHED,
             created_at=self.created_at,
+            is_deleted=False,
         )
 
     def test_create_link_source_success(self) -> None:
@@ -208,6 +211,7 @@ class TestPageSource:
             created_at=self.created_at,
             fetched_at=None,
             fetch_status=FetchStatus.FETCHED,
+            is_deleted=False,
         )
 
     def test_create_page_source_success(self) -> None:

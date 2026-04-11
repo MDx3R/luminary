@@ -20,6 +20,9 @@ class File:
     object_key: ObjectKey
     uploaded_at: DateTime
 
+    def is_owned_by(self, user_id: UserId) -> bool:
+        return self.owner_id == user_id
+
     def specify_size(self, size: int) -> None:
         self.meta = FileMeta(
             filename=self.meta.filename, mime_type=self.meta.mime_type, filesize=size

@@ -9,6 +9,11 @@ from common.domain.value_objects.datetime import DateTime
 from luminary.chat.domain.entity.attachment import Attachment
 from luminary.chat.domain.entity.message import Message
 from luminary.chat.domain.enums import Author, MessageStatus
+from luminary.chat.domain.events.events import (
+    MessageCancelledEvent,
+    MessageCompletedEvent,
+    MessageFailedEvent,
+)
 from luminary.chat.domain.value_objects.chat_id import ChatId
 from luminary.chat.domain.value_objects.message_id import MessageId
 from luminary.model.domain.entity.model import ModelId
@@ -108,11 +113,15 @@ class TestMessage:
         self.message.status = MessageStatus.PROCESSING
         self.message.cancel()
         assert self.message.status == MessageStatus.CANCELLED
+        assert len(self.message.events) == 1
+        assert isinstance(self.message.events[0], MessageCancelledEvent)
 
     def test_fail_changes_status(self):
         self.message.status = MessageStatus.PROCESSING
         self.message.fail()
         assert self.message.status == MessageStatus.FAILED
+        assert len(self.message.events) == 1
+        assert isinstance(self.message.events[0], MessageFailedEvent)
 
     def test_complete_changes_status_and_sets_tokens(self):
         self.message.status = MessageStatus.STREAMING
@@ -121,3 +130,6 @@ class TestMessage:
         self.message.complete(tokens)
         assert self.message.status == MessageStatus.COMPLETED
         assert self.message.tokens == tokens
+        assert len(self.message.events) == 1
+        assert isinstance(self.message.events[0], MessageCompletedEvent)
+        assert self.message.events[0].tokens == tokens

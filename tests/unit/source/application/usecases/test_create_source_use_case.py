@@ -52,8 +52,9 @@ class TestCreateFileSourceUseCase:
             title=self.title,
         )
 
-        self.source_factory: Mock = Mock(spec=ISourceFactory)
-        self.source_factory.create.return_value = self.source
+        self.source_factory: Mock = Mock(
+            spec=ISourceFactory, create=Mock(return_value=self.source)
+        )
         self.source_repository: AsyncMock = AsyncMock(spec=ISourceRepository)
 
         self.command = CreateFileSourceCommand(
@@ -108,8 +109,9 @@ class TestCreateLinkSourceUseCase:
             url=self.url,
         )
 
-        self.source_factory: Mock = Mock(spec=ISourceFactory)
-        self.source_factory.create.return_value = self.source
+        self.source_factory: Mock = Mock(
+            spec=ISourceFactory, create=Mock(return_value=self.source)
+        )
         self.source_repository: AsyncMock = AsyncMock(spec=ISourceRepository)
 
         self.command = CreateLinkSourceCommand(
@@ -165,11 +167,13 @@ class TestCreatePageSourceUseCase:
             title=self.title,
         )
 
-        self.source_factory: Mock = Mock(spec=ISourceFactory)
-        self.source_factory.create.return_value = self.source
+        self.source_factory: Mock = Mock(
+            spec=ISourceFactory, create=Mock(return_value=self.source)
+        )
         self.source_repository: AsyncMock = AsyncMock(spec=ISourceRepository)
-        self.content_service = AsyncMock(spec=IContentService)
-        self.content_service.process_file.return_value = self.content_id
+        self.content_service = AsyncMock(
+            spec=IContentService, process_file=AsyncMock(return_value=self.content_id)
+        )
 
         self.command = CreatePageSourceCommand(
             user_id=self.user_id, title=self.title, data=BytesIO(b"content")
@@ -199,7 +203,9 @@ class TestCreatePageSourceUseCase:
 
         # Assert
         self.content_service.process_file.assert_awaited_once_with(
-            ProcessFileCommand(user_id=self.user_id, data=self.command.data)
+            ProcessFileCommand(
+                user_id=self.user_id, data=self.command.data, filename=self.title
+            )
         )
 
     async def test_calls_repository_add_with_created_source(self) -> None:

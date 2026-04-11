@@ -7,7 +7,10 @@ from uuid import UUID
 class CreateFolderChatCommand:
     user_id: UUID
     folder_id: UUID
-    # TODO: Add name field
+    name: str | None
+    assistant_id: UUID | None
+    model_id: UUID
+    max_context_messages: int
 
 
 class ICreateFolderChatUseCase(ABC):

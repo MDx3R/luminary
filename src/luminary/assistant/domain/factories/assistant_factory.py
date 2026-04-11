@@ -2,11 +2,12 @@ from common.domain.interfaces.clock import IClock
 from common.domain.interfaces.uuid_generator import IUUIDGenerator
 from common.domain.value_objects.id import UserId
 
-from luminary.assistant.domain.entity.assisnant import (
+from luminary.assistant.domain.entity.assistant import (
     Assistant,
     AssistantId,
     Instructions,
 )
+from luminary.assistant.domain.enums import AssistantType
 from luminary.assistant.domain.interfaces.assistant_factory import IAssistantFactory
 
 
@@ -19,11 +20,17 @@ class AssistantFactory(IAssistantFactory):
         self.uuid_generator = uuid_generator
 
     def create(
-        self, user_id: UserId, name: str, description: str, prompt: str | None
+        self,
+        user_id: UserId,
+        name: str,
+        description: str,
+        prompt: str | None,
+        type: AssistantType = AssistantType.PERSONAL,
     ) -> Assistant:
         return Assistant.create(
             id=AssistantId(self.uuid_generator.create()),
             owner_id=user_id,
+            type=type,
             name=name,
             description=description,
             instructions=Instructions(prompt or self.DEFAULT_PROMPT),

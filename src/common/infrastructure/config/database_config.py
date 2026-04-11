@@ -34,22 +34,10 @@ class DatabaseConfig(BaseModel):
         )
 
 
-class MongoConfig(BaseModel):
-    mongo_db: str
-    mongo_user: str | None = None
-    mongo_pass: str | None = None
-    mongo_host: str
-    mongo_port: int
-    use_srv: bool = False
-
-    @property
-    def database_url(self) -> str:
-        return DatabaseConfig(
-            db_name=self.mongo_db,
-            db_user=self.mongo_user,
-            db_pass=self.mongo_pass,
-            db_host=self.mongo_host,
-            db_port=self.mongo_port,
-            db_driver=DatabaseDriverEnum.MONGODB,
-            db_extension=DatabaseExtensionEnum.SRV if self.use_srv else None,
-        ).database_url
+class S3Config(BaseModel):
+    endpoint_url: str
+    access_key: str
+    secret_key: str
+    bucket_name: str
+    region: str | None = None
+    secure: bool = False

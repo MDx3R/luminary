@@ -46,3 +46,13 @@ class FolderAssistantChangedEvent(FolderEvent):
 class FolderInfoChangedEvent(FolderEvent):
     name: str
     description: str | None
+
+
+@dataclass(frozen=True)
+class FolderEditorContentUpdatedEvent(FolderEvent):
+    pass
+
+
+@dataclass(frozen=True)
+class FolderDeletedEvent(FolderEvent):
+    pass

@@ -37,6 +37,7 @@ def make_source(  # noqa: PLR0913
         created_at=created_at or DateTime(datetime.now(UTC)),
         fetched_at=fetched_at,
         fetch_status=fetch_status,
+        is_deleted=False,
     )
 
 
@@ -63,6 +64,7 @@ def make_file_source(  # noqa: PLR0913
         file_id=FileId(file_id or uuid4()),
         fetched_at=fetched_at,
         fetch_status=fetch_status,
+        is_deleted=False,
     )
 
 
@@ -89,6 +91,7 @@ def make_link_source(  # noqa: PLR0913
         url=Url(url),
         fetched_at=fetched_at,
         fetch_status=fetch_status,
+        is_deleted=False,
     )
 
 
@@ -117,4 +120,5 @@ def make_page_source(  # noqa: PLR0913
         editable=editable,
         fetched_at=fetched_at,
         fetch_status=FetchStatus.FETCHED,
+        is_deleted=False,
     )

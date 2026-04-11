@@ -63,6 +63,7 @@ class PageSource(Source):
             editable=True,
             fetched_at=created_at,
             created_at=created_at,
+            is_deleted=False,
         )
         page._record_event(
             SourceCreatedEvent(source_id=id.value, fetch_status=page.fetch_status)

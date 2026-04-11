@@ -4,10 +4,13 @@ from pydantic import BaseModel
 class CreateAssistantRequest(BaseModel):
     name: str
     description: str
-    prompt: str | None
+    prompt: str | None = None
 
 
-class UpdateAssistantRequest(BaseModel):
+class UpdateAssistantInfoRequest(BaseModel):
     name: str
     description: str
-    prompt: str | None
+
+
+class UpdateAssistantInstructionsRequest(BaseModel):
+    prompt: str

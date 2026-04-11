@@ -1,34 +1,39 @@
 from dataclasses import dataclass, field
 from typing import Self
 
-from common.domain.interfaces.entity import IEntity
+from common.domain.interfaces.entity import Entity
 from common.domain.value_objects.datetime import DateTime
 from common.domain.value_objects.id import UserId
 
-from luminary.assistant.domain.entity.assisnant import AssistantId
+from luminary.assistant.domain.entity.assistant import AssistantId
 from luminary.chat.domain.value_objects.chat_id import ChatId
 from luminary.folder.domain.events.events import (
     FolderAssistantChangedEvent,
     FolderChatAddedEvent,
     FolderChatRemovedEvent,
+    FolderDeletedEvent,
+    FolderEditorContentUpdatedEvent,
     FolderInfoChangedEvent,
     FolderSourceAddedEvent,
     FolderSourceRemovedEvent,
 )
+from luminary.folder.domain.value_objects.editor_content import EditorContent
 from luminary.folder.domain.value_objects.folder_id import FolderId
 from luminary.folder.domain.value_objects.folder_info import FolderInfo
 from luminary.source.domain.entity.source import SourceId
 
 
 @dataclass
-class Folder(IEntity):
+class Folder(Entity):
     id: FolderId
     owner_id: UserId
     info: FolderInfo
     assistant_id: AssistantId | None
     created_at: DateTime
+    is_deleted: bool
     _chats: set[ChatId] = field(default_factory=set[ChatId])
     _sources: set[SourceId] = field(default_factory=set[SourceId])
+    editor_content: EditorContent | None = None
 
     @property
     def chats(self) -> frozenset[ChatId]:
@@ -73,7 +78,7 @@ class Folder(IEntity):
         )
 
     def remove_assistant(self) -> None:
-        if not self.assistant_matches(None):
+        if self.assistant_matches(None):
             return
 
         self.assistant_id = None
@@ -126,6 +131,30 @@ class Folder(IEntity):
     def has_source(self, source_id: SourceId) -> bool:
         return source_id in self._sources
 
+    def editor_text_matches(self, text: str) -> bool:
+        if not text.strip() and self.editor_content is None:
+            return True
+        if self.editor_content is None:
+            return False
+        return self.editor_content.text == text
+
+    def update_editor_content(self, text: str, updated_at: DateTime) -> None:
+        self.editor_content = EditorContent(text=text, updated_at=updated_at)
+        self._record_event(FolderEditorContentUpdatedEvent(folder_id=self.id.value))
+
+    def clear_editor_content(self) -> None:
+        if self.editor_content is None:
+            return
+
+        self.editor_content = None
+        self._record_event(FolderEditorContentUpdatedEvent(folder_id=self.id.value))
+
+    def delete(self) -> None:
+        if self.is_deleted:
+            return
+        self.is_deleted = True
+        self._record_event(FolderDeletedEvent(folder_id=self.id.value))
+
     @classmethod
     def create(  # noqa: PLR0913
         cls,
@@ -142,4 +171,5 @@ class Folder(IEntity):
             owner_id=owner_id,
             assistant_id=assistant_id,
             created_at=created_at,
+            is_deleted=False,
         )

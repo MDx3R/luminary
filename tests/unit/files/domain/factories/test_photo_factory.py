@@ -26,8 +26,7 @@ class TestPhotoFactory:
         self.clock = MockClock(self.now)
         self.uuid_generator = MockUUIDGenerator(self.file_id)
 
-        self.ext_policy = Mock(spec=IMIMEPolicy)
-        self.ext_policy.is_allowed.return_value = True
+        self.ext_policy = Mock(spec=IMIMEPolicy, is_allowed=Mock(return_value=True))
 
         self.factory = FileFactory(self.clock, self.uuid_generator, self.ext_policy)
 

@@ -1,0 +1,42 @@
+env: local
+
+logger:
+  level: "INFO"
+  format: "json"
+
+db:
+  db_name: "luminary"
+  db_user: "postgres"
+  db_pass: "password"
+  db_host: "localhost"
+  db_port: 5433
+  db_driver: "postgresql"
+  db_extension: "asyncpg"
+
+llm:
+  base_url: "https://api.vsegpt.ru/v1"
+  model: "gpt-5-nano"
+  provider_model: "openai/gpt-5-nano"
+  embed_model: "text-embedding-3-small"
+  provider_embed_model: "emb-openai/text-embedding-3-small"
+
+deploy:
+  external_url: "http://localhost"
+
+s3:
+  endpoint_url: "localhost:9000"
+  access_key: "minioadmin"
+  secret_key: "minioadmin"
+  bucket_name: "luminary"
+
+rabbit:
+  rabbit_host: "rabbitmq"
+  rabbit_port: 5672
+  rabbit_user: "admin"
+  rabbit_pass: "password"
+
+qdrant:
+  collection_name: "luminary_sources"
+  endpoint_url: "http://qdrant:6333"
+  secret_key: null
+  vector_size: 1536

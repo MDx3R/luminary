@@ -17,21 +17,18 @@ from luminary.source.domain.entity.source import SourceId
 class RemoveSourceFromFolderUseCase(IRemoveSourceFromFolderUseCase):
     def __init__(
         self,
-        folder_access_policy: IFolderAccessPolicy,
-        folder_repository: IFolderRepository,
+        repository: IFolderRepository,
+        access_policy: IFolderAccessPolicy,
     ) -> None:
-        self.folder_access_policy = folder_access_policy
-        self.folder_repository = folder_repository
+        self.repository = repository
+        self.access_policy = access_policy
 
     async def execute(self, command: RemoveSourceFromFolderCommand) -> None:
-        source_id = SourceId(command.source_id)
+        folder = await self.repository.get_by_id(FolderId(command.folder_id))
+        self.access_policy.assert_is_allowed(UserId(command.user_id), folder)
 
-        folder = await self.folder_repository.get_by_id(FolderId(command.folder_id))
-        self.folder_access_policy.assert_is_allowed(UserId(command.user_id), folder)
-
-        if not folder.has_source(source_id):
+        if not folder.has_source(SourceId(command.source_id)):
             return
 
-        folder.remove_source(source_id)
-
-        await self.folder_repository.save(folder)
+        folder.remove_source(SourceId(command.source_id))
+        await self.repository.save(folder)

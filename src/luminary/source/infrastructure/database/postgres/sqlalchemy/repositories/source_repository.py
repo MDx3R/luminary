@@ -21,7 +21,7 @@ class SourceRepository(ISourceRepository):
 
     async def get_by_id(self, id: SourceId) -> Source:
         stmt = select(with_polymorphic(SourceBase, "*")).where(
-            SourceBase.source_id == id.value
+            SourceBase.source_id == id.value, SourceBase.is_active
         )
 
         result = await self.executor.execute_scalar_one(stmt)
@@ -36,11 +36,3 @@ class SourceRepository(ISourceRepository):
     async def save(self, entity: Source) -> None:
         model = SourceMapper.to_persistence(entity)
         await self.executor.save(model)
-
-    async def remove(self, entity: Source) -> None:
-        # NOTE: Select is needed for proper delete
-        stmt = select(SourceBase).where(SourceBase.source_id == entity.id.value)
-        result = await self.executor.execute_scalar_one(stmt)
-        if not result:
-            return
-        await self.executor.delete(result)

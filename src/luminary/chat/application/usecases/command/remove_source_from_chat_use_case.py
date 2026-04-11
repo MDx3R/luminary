@@ -16,20 +16,19 @@ from luminary.source.domain.entity.source import SourceId
 
 class RemoveSourceFromChatUseCase(IRemoveSourceFromChatUseCase):
     def __init__(
-        self, chat_access_policy: IChatAccessPolicy, chat_repository: IChatRepository
+        self,
+        repository: IChatRepository,
+        access_policy: IChatAccessPolicy,
     ) -> None:
-        self.chat_access_policy = chat_access_policy
-        self.chat_repository = chat_repository
+        self.repository = repository
+        self.access_policy = access_policy
 
     async def execute(self, command: RemoveSourceFromChatCommand) -> None:
-        source_id = SourceId(command.source_id)
+        chat = await self.repository.get_by_id(ChatId(command.chat_id))
+        self.access_policy.assert_is_allowed(UserId(command.user_id), chat)
 
-        chat = await self.chat_repository.get_by_id(ChatId(command.chat_id))
-        self.chat_access_policy.assert_is_allowed(UserId(command.user_id), chat)
-
-        if not chat.has_source(source_id):
+        if not chat.has_source(SourceId(command.source_id)):
             return
 
-        chat.remove_source(source_id)
-
-        await self.chat_repository.save(chat)
+        chat.remove_source(SourceId(command.source_id))
+        await self.repository.save(chat)

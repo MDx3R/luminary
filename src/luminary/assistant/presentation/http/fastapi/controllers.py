@@ -1,13 +1,12 @@
 from typing import Annotated
 from uuid import UUID
 
-from common.application.exceptions import NotFoundError
 from common.presentation.http.dto.response import IDResponse
-from common.presentation.http.fastapi.auth import get_descriptor, require_authenticated
-from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi_utils.cbv import cbv
+from common.presentation.http.fastapi.cbv import cbv
+from fastapi import APIRouter, Depends, status
+from idp.identity.domain.value_objects.descriptor import IdentityDescriptor
+from idp.identity.presentation.http.fastapi.auth import get_descriptor
 
-from luminary.assistant.application.exceptions import AssistantDuplicateNameError
 from luminary.assistant.application.interfaces.usecases.command.create_assistant_use_case import (
     CreateAssistantCommand,
     ICreateAssistantUseCase,
@@ -16,88 +15,142 @@ from luminary.assistant.application.interfaces.usecases.command.delete_assistant
     DeleteAssistantCommand,
     IDeleteAssistantUseCase,
 )
-from luminary.assistant.application.interfaces.usecases.command.update_assistant_use_case import (
-    IUpdateAssistantUseCase,
-    UpdateAssistantCommand,
+from luminary.assistant.application.interfaces.usecases.command.update_assistant_info_use_case import (
+    IUpdateAssistantInfoUseCase,
+    UpdateAssistantInfoCommand,
+)
+from luminary.assistant.application.interfaces.usecases.command.update_assistant_instructions_use_case import (
+    IUpdateAssistantInstructionsUseCase,
+    UpdateAssistantInstructionsCommand,
+)
+from luminary.assistant.application.interfaces.usecases.query.get_assistant_use_case import (
+    GetAssistantByIdQuery,
+    IGetAssistantByIdUseCase,
+)
+from luminary.assistant.application.interfaces.usecases.query.list_assistants_use_case import (
+    IListAssistantsUseCase,
+    ListAssistantsQuery,
 )
 from luminary.assistant.presentation.http.dto.request import (
     CreateAssistantRequest,
-    UpdateAssistantRequest,
+    UpdateAssistantInfoRequest,
+    UpdateAssistantInstructionsRequest,
+)
+from luminary.assistant.presentation.http.dto.response import (
+    AssistantResponse,
+    AssistantSummaryResponse,
 )
 
 
-assistant_command_router = APIRouter()
+command_router = APIRouter()
 
 
-@cbv(assistant_command_router)
-class AssitantCommandController:
+@cbv(command_router)
+class AssistantCommandController:
     create_assistant_use_case: ICreateAssistantUseCase = Depends()
-    update_assistant_use_case: IUpdateAssistantUseCase = Depends()
+    update_assistant_info_use_case: IUpdateAssistantInfoUseCase = Depends()
+    update_assistant_instructions_use_case: IUpdateAssistantInstructionsUseCase = (
+        Depends()
+    )
     delete_assistant_use_case: IDeleteAssistantUseCase = Depends()
 
-    @assistant_command_router.post("/", dependencies=[Depends(require_authenticated)])
+    @command_router.post("/", dependencies=[], status_code=status.HTTP_201_CREATED)
     async def create(
         self,
         request: CreateAssistantRequest,
-        descriptor: Annotated[UUID, Depends(get_descriptor)],
+        descriptor: Annotated[IdentityDescriptor, Depends(get_descriptor)],
     ) -> IDResponse:
-        try:
-            assistant_id = await self.create_assistant_use_case.execute(
-                CreateAssistantCommand(
-                    descriptor, request.name, request.description, request.prompt
-                )
+        assistant_id = await self.create_assistant_use_case.execute(
+            CreateAssistantCommand(
+                user_id=descriptor.identity_id,
+                name=request.name,
+                description=request.description,
+                prompt=request.prompt,
             )
-            return IDResponse(id=assistant_id)
-        except AssistantDuplicateNameError as exc:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail={
-                    "error": "AssistantDuplicateNameError",
-                    "name": exc.name,
-                    "message": str(exc),
-                },
-            ) from exc
+        )
+        return IDResponse(id=assistant_id)
 
-    @assistant_command_router.patch(
-        "/{assistant_id}", dependencies=[Depends(require_authenticated)]
+    @command_router.put(
+        "/{assistant_id:uuid}",
+        status_code=status.HTTP_204_NO_CONTENT,
     )
-    async def update(
+    async def update_info(
         self,
         assistant_id: UUID,
-        request: UpdateAssistantRequest,
-        descriptor: Annotated[UUID, Depends(get_descriptor)],
+        request: UpdateAssistantInfoRequest,
+        descriptor: Annotated[IdentityDescriptor, Depends(get_descriptor)],
     ) -> None:
-        try:
-            await self.update_assistant_use_case.execute(
-                UpdateAssistantCommand(
-                    assistant_id=assistant_id,
-                    user_id=descriptor,
-                    name=request.name,
-                    description=request.description,
-                    prompt=request.prompt,
-                )
+        await self.update_assistant_info_use_case.execute(
+            UpdateAssistantInfoCommand(
+                user_id=descriptor.identity_id,
+                assistant_id=assistant_id,
+                name=request.name,
+                description=request.description,
             )
-        except NotFoundError as exc:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail={
-                    "error": "AssistantNotFoundError",
-                    "assistant_id": str(exc.entity_id),
-                    "message": str(exc),
-                },
-            ) from exc
+        )
 
-    @assistant_command_router.delete(
-        "/{assistant_id}", dependencies=[Depends(require_authenticated)]
+    @command_router.put(
+        "/{assistant_id:uuid}/instructions",
+        status_code=status.HTTP_204_NO_CONTENT,
+    )
+    async def update_instructions(
+        self,
+        assistant_id: UUID,
+        request: UpdateAssistantInstructionsRequest,
+        descriptor: Annotated[IdentityDescriptor, Depends(get_descriptor)],
+    ) -> None:
+        await self.update_assistant_instructions_use_case.execute(
+            UpdateAssistantInstructionsCommand(
+                user_id=descriptor.identity_id,
+                assistant_id=assistant_id,
+                prompt=request.prompt,
+            )
+        )
+
+    @command_router.delete(
+        "/{assistant_id:uuid}",
+        status_code=status.HTTP_204_NO_CONTENT,
     )
     async def delete(
         self,
         assistant_id: UUID,
-        descriptor: Annotated[UUID, Depends(get_descriptor)],
+        descriptor: Annotated[IdentityDescriptor, Depends(get_descriptor)],
     ) -> None:
-        try:
-            await self.delete_assistant_use_case.execute(
-                DeleteAssistantCommand(assistant_id=assistant_id, user_id=descriptor)
+        await self.delete_assistant_use_case.execute(
+            DeleteAssistantCommand(
+                user_id=descriptor.identity_id,
+                assistant_id=assistant_id,
             )
-        except NotFoundError:
-            return
+        )
+
+
+query_router = APIRouter()
+
+
+@cbv(query_router)
+class AssistantQueryController:
+    get_assistant_by_id_use_case: IGetAssistantByIdUseCase = Depends()
+    list_assistants_use_case: IListAssistantsUseCase = Depends()
+
+    @query_router.get("/")
+    async def list_assistants(
+        self,
+        descriptor: Annotated[IdentityDescriptor, Depends(get_descriptor)],
+    ) -> list[AssistantSummaryResponse]:
+        read_models = await self.list_assistants_use_case.execute(
+            ListAssistantsQuery(user_id=descriptor.identity_id)
+        )
+        return [AssistantSummaryResponse.from_read_model(m) for m in read_models]
+
+    @query_router.get("/{assistant_id:uuid}")
+    async def get_assistant(
+        self,
+        assistant_id: UUID,
+        descriptor: Annotated[IdentityDescriptor, Depends(get_descriptor)],
+    ) -> AssistantResponse:
+        read_model = await self.get_assistant_by_id_use_case.execute(
+            GetAssistantByIdQuery(
+                user_id=descriptor.identity_id, assistant_id=assistant_id
+            )
+        )
+        return AssistantResponse.from_read_model(read_model)

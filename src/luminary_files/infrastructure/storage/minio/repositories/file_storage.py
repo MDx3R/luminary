@@ -1,6 +1,7 @@
 import asyncio
 import io
 from collections.abc import Iterable, Sequence
+from contextlib import suppress
 from datetime import timedelta
 from typing import BinaryIO
 
@@ -60,7 +61,6 @@ class MinioFileStorage(IFileStorage):
         return urls
 
     async def get(self, object_key: ObjectKey) -> BinaryIO:
-        pass
         loop = asyncio.get_running_loop()
 
         def fetch() -> bytes:
@@ -70,14 +70,10 @@ class MinioFileStorage(IFileStorage):
             try:
                 return resp.read()
             finally:
-                try:
+                with suppress(Exception):
                     resp.close()
-                except Exception:
-                    pass
-                try:
+                with suppress(Exception):
                     resp.release_conn()
-                except Exception:
-                    pass
 
         try:
             data = await loop.run_in_executor(None, fetch)

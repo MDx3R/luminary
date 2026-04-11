@@ -2,6 +2,7 @@ from common.application.interfaces.handlers.handler import IEventHandler
 from common.domain.interfaces.clock import IClock
 
 from luminary.content.application.interfaces.services.content_service import (
+    GetContentQuery,
     IContentService,
 )
 from luminary.model.application.exceptions import EmbeddingError
@@ -38,10 +39,16 @@ class SourceFetchedHandler(IEventHandler[SourceFetchedEvent]):
         if not source.can_be_embedded() or not source.content_id:
             return
 
+        content = await self.content_service.get_content(
+            GetContentQuery(
+                user_id=source.owner_id.value, content_id=source.content_id.value
+            )
+        )
+
         try:
             await self.embedding_service.embed_content(
                 EmbedContentCommand(
-                    content_id=source.content_id.value,
+                    content=content,
                     metadata=VectorStoreMetadata(source_id=source.id.value),
                 )
             )

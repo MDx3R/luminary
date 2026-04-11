@@ -20,6 +20,9 @@ class Content:
     size: int
     uploaded_at: DateTime
 
+    def is_owned_by(self, user_id: UserId) -> bool:
+        return self.owner_id == user_id
+
     @classmethod
     def create(  # noqa: PLR0913
         cls,

@@ -35,6 +35,7 @@ class FileSource(Source):
             type=SourceType.FILE,
             file_id=file_id,
             created_at=created_at,
+            is_deleted=False,
         )
         page._record_event(
             SourceCreatedEvent(source_id=id.value, fetch_status=page.fetch_status)

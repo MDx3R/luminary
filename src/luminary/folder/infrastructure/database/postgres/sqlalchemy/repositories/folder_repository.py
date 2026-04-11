@@ -1,8 +1,9 @@
 from common.application.exceptions import NotFoundError
 from common.infrastructure.database.sqlalchemy.executor import QueryExecutor
-from sqlalchemy import delete, select
+from sqlalchemy import and_, delete, select, update
 from sqlalchemy.orm import joinedload
 
+from luminary.assistant.domain.entity.assistant import AssistantId
 from luminary.chat.domain.value_objects.chat_id import ChatId
 from luminary.folder.application.interfaces.repositories.folder_repository import (
     IFolderRepository,
@@ -14,8 +15,8 @@ from luminary.folder.infrastructure.database.postgres.sqlalchemy.mappers.folder_
 )
 from luminary.folder.infrastructure.database.postgres.sqlalchemy.models.folder_base import (
     FolderBase,
-    FolderChatBase,
-    FolderSourceBase,
+    FolderChatAssociation,
+    FolderSourceAssociation,
 )
 from luminary.source.domain.entity.source import SourceId
 
@@ -28,34 +29,58 @@ class FolderRepository(IFolderRepository):
         stmt = (
             select(FolderBase)
             .where(FolderBase.folder_id == id.value)
-            .options(joinedload(FolderBase.chats))
-            .options(joinedload(FolderBase.sources))
+            .where(FolderBase.is_active)
+            .options(
+                joinedload(FolderBase.chat_associations),
+                joinedload(FolderBase.source_associations),
+            )
         )
-
-        result = await self.executor.execute_scalar_one(stmt)
-        if not result:
+        base = await self.executor.execute_scalar_one(stmt)
+        if base is None:
             raise NotFoundError(id)
-        return FolderMapper.to_domain(result)
+
+        return FolderMapper.to_domain(base)
 
     async def add(self, entity: Folder) -> None:
-        model = FolderMapper.to_persistence(entity)
-        await self.executor.add(model)
+        base = FolderMapper.to_persistence(entity)
+        await self.executor.add(base)
 
     async def save(self, entity: Folder) -> None:
-        model = FolderMapper.to_persistence(entity)
-        async with self.executor.uow:
-            await self.executor.save(model)
+        base = FolderMapper.to_persistence(entity)
+        await self.executor.save(base)
 
-    async def remove_chat(self, folder_id: FolderId, chat_id: ChatId) -> None:
-        stmt = delete(FolderChatBase).where(
-            FolderChatBase.folder_id == folder_id.value,
-            FolderChatBase.chat_id == chat_id.value,
+    async def clear_assistant_reference(self, assistant_id: AssistantId) -> None:
+        stmt = (
+            update(FolderBase)
+            .where(FolderBase.assistant_id == assistant_id.value)
+            .values(assistant_id=None)
         )
         await self.executor.execute(stmt)
 
-    async def remove_source(self, folder_id: FolderId, source_id: SourceId) -> None:
-        stmt = delete(FolderSourceBase).where(
-            FolderSourceBase.folder_id == folder_id.value,
-            FolderSourceBase.source_id == source_id.value,
+    async def clear_source_reference(self, source_id: SourceId) -> None:
+        stmt = delete(FolderSourceAssociation).where(
+            FolderSourceAssociation.source_id == source_id.value
+        )
+        await self.executor.execute(stmt)
+
+    async def clear_chat_association(
+        self, folder_id: FolderId, chat_id: ChatId
+    ) -> None:
+        stmt = delete(FolderChatAssociation).where(
+            and_(
+                FolderChatAssociation.folder_id == folder_id.value,
+                FolderChatAssociation.chat_id == chat_id.value,
+            )
+        )
+        await self.executor.execute(stmt)
+
+    async def clear_source_association(
+        self, folder_id: FolderId, source_id: SourceId
+    ) -> None:
+        stmt = delete(FolderSourceAssociation).where(
+            and_(
+                FolderSourceAssociation.folder_id == folder_id.value,
+                FolderSourceAssociation.source_id == source_id.value,
+            )
         )
         await self.executor.execute(stmt)

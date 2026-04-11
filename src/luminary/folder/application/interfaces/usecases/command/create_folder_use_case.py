@@ -8,7 +8,7 @@ class CreateFolderCommand:
     user_id: UUID
     name: str
     description: str | None
-    assistant_id: UUID
+    assistant_id: UUID | None
 
 
 class ICreateFolderUseCase(ABC):

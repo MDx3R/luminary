@@ -2,12 +2,13 @@ from uuid import UUID, uuid4
 
 from common.domain.value_objects.id import UserId
 
-from luminary.assistant.domain.entity.assisnant import (
+from luminary.assistant.domain.entity.assistant import (
     Assistant,
     AssistantId,
     AssistantInfo,
     Instructions,
 )
+from luminary.assistant.domain.enums import AssistantType
 
 
 # Factory function to create an Instructions instance
@@ -27,6 +28,7 @@ def make_assistant(  # noqa: PLR0913
     name: str = "Test Assistant",
     description: str = "Test Description",
     instructions: Instructions | None = None,
+    type: AssistantType = AssistantType.PERSONAL,
     is_deleted: bool = False,
 ) -> Assistant:
     """Create an Assistant instance with optional IDs, name, description, and instructions."""
@@ -35,6 +37,7 @@ def make_assistant(  # noqa: PLR0913
     return Assistant(
         id=AssistantId(assistant_id),
         owner_id=UserId(user_id),
+        type=type,
         info=AssistantInfo(name=name, description=description),
         instructions=instructions or make_instructions(),
         is_deleted=is_deleted,

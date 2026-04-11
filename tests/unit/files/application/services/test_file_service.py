@@ -7,9 +7,6 @@ import pytest
 from common.domain.value_objects.id import UserId
 from common.domain.value_objects.object_key import ObjectKey
 from luminary_files.application.dtos.dtos import FileType
-from luminary_files.application.dtos.query.get_presigned_url_query import (
-    GetPresignedUrlQuery,
-)
 from luminary_files.application.interfaces.repositories.file_repository import (
     IFileRepository,
 )
@@ -42,24 +39,28 @@ class TestFileService:
         self.expiration_delta = timedelta(days=7)
         self.presigned_url = "https://presigned.url"
 
-        self.file_factory = Mock(spec=IFileFactory)
-        self.file_type_introspector = Mock(spec=IFileTypeIntrospector)
-        self.file_repository = AsyncMock(spec=IFileRepository)
-        self.file_storage = AsyncMock(spec=IFileStorage)
-
         self.file_type = FileType(mime=self.mime, extension="txt")
-        self.file_type_introspector.extract.return_value = self.file_type
+        self.file = Mock(
+            spec=File,
+            id=FileId(self.file_id),
+            meta=FileMeta(self.filename, self.mime, None),
+            object_key=self.object_key,
+            specify_size=Mock(),
+        )
 
-        self.file = Mock(spec=File)
-        self.file.id = FileId(self.file_id)
-        self.file.meta = FileMeta(self.filename, self.mime, None)
-        self.file.object_key = self.object_key
-        self.file.specify_size = Mock()
-        self.file_factory.create.return_value = self.file
+        self.file_factory = Mock(spec=IFileFactory, create=Mock(return_value=self.file))
 
-        self.file_storage.get_presigned_get_url.return_value = self.presigned_url
+        self.file_type_introspector = Mock(
+            spec=IFileTypeIntrospector, extract=Mock(return_value=self.file_type)
+        )
+        self.file_repository = AsyncMock(spec=IFileRepository)
+        self.file_storage = AsyncMock(
+            spec=IFileStorage,
+            get_presigned_get_url=AsyncMock(return_value=self.presigned_url),
+        )
 
         self.service = FileService(
+            self.bucket,
             self.file_factory,
             self.file_type_introspector,
             self.file_repository,
@@ -119,17 +120,3 @@ class TestFileService:
         assert result == self.file_id
         self.file.specify_size.assert_called_once_with(0)
         assert empty_content.tell() == 0
-
-    async def test_get_file_presigned_url_success(self) -> None:
-        # Arrange
-        query = GetPresignedUrlQuery(object_key=self.object_key_value)
-
-        # Act
-        result = await self.service.get_file_presigned_url(query)
-
-        # Assert
-        assert result == self.presigned_url
-        self.file_storage.get_presigned_get_url.assert_awaited_once_with(
-            self.object_key,
-            self.expiration_delta,
-        )

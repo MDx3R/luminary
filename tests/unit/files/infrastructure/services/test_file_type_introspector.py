@@ -2,7 +2,6 @@ from io import BytesIO
 
 import pytest
 from luminary_files.application.dtos.dtos import FileType
-from luminary_files.application.exceptions import InvalidFileTypeError
 from luminary_files.infrastructure.services.file_type_introspector import (
     FileTypeIntrospector,
 )
@@ -45,8 +44,12 @@ class TestFileTypeIntrospector:
         assert result.mime == "image/png"
         assert self.png_content.tell() == 0  # Stream position reset
 
-    def test_extract_invalid_file_type_fails(self):
-        # Act & Assert
-        with pytest.raises(InvalidFileTypeError):
-            self.file_type_introspector.extract(self.invalid_content)
+    def test_extract_invalid_file_type_returns_txt(self):
+        # Act
+        result = self.file_type_introspector.extract(self.invalid_content)
+
+        # Assert
+        assert isinstance(result, FileType)
+        assert result.extension == "txt"
+        assert result.mime == "text/plain"
         assert self.invalid_content.tell() == 0  # Stream position reset

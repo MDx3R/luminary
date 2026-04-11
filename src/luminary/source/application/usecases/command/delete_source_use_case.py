@@ -15,9 +15,7 @@ from luminary.source.domain.entity.source import SourceId
 
 class DeleteSourceUseCase(IDeleteSourceUseCase):
     def __init__(
-        self,
-        repository: ISourceRepository,
-        access_policy: ISourceAccessPolicy,
+        self, repository: ISourceRepository, access_policy: ISourceAccessPolicy
     ) -> None:
         self.repository = repository
         self.access_policy = access_policy
@@ -25,4 +23,6 @@ class DeleteSourceUseCase(IDeleteSourceUseCase):
     async def execute(self, command: DeleteSourceCommand) -> None:
         source = await self.repository.get_by_id(SourceId(command.source_id))
         self.access_policy.assert_is_allowed(UserId(command.user_id), source)
-        await self.repository.remove(source)
+
+        source.delete()
+        await self.repository.save(source)

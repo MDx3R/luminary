@@ -3,6 +3,7 @@ from uuid import UUID
 from common.application.interfaces.transactions.unit_of_work import IUnitOfWork
 from common.domain.value_objects.id import UserId
 
+from luminary.assistant.domain.entity.assistant import AssistantId
 from luminary.chat.application.interfaces.repositories.chat_repository import (
     IChatRepository,
 )
@@ -19,54 +20,41 @@ from luminary.folder.application.interfaces.usecases.command.create_folder_chat_
     ICreateFolderChatUseCase,
 )
 from luminary.folder.domain.value_objects.folder_id import FolderId
-from luminary.model.application.interfaces.repositories.model_repository import (
-    IModelRepository,
-)
+from luminary.model.domain.entity.model import ModelId
 
 
 class CreateFolderChatUseCase(ICreateFolderChatUseCase):
-    DEFAULT_MODEL_NAME: str = "gemini-2.5-flash-lite"
-
-    def __init__(  # noqa: PLR0913
+    def __init__(
         self,
         uow: IUnitOfWork,
-        chat_factory: IChatFactory,
-        folder_access_policy: IFolderAccessPolicy,
         folder_repository: IFolderRepository,
+        chat_factory: IChatFactory,
         chat_repository: IChatRepository,
-        model_repository: IModelRepository,
+        access_policy: IFolderAccessPolicy,
     ) -> None:
         self.uow = uow
-        self.chat_factory = chat_factory
-        self.folder_access_policy = folder_access_policy
         self.folder_repository = folder_repository
+        self.chat_factory = chat_factory
         self.chat_repository = chat_repository
-        self.model_repository = model_repository
+        self.access_policy = access_policy
 
     async def execute(self, command: CreateFolderChatCommand) -> UUID:
-        user_id = UserId(command.user_id)
-        folder_id = FolderId(command.folder_id)
+        folder = await self.folder_repository.get_by_id(FolderId(command.folder_id))
+        self.access_policy.assert_is_allowed(UserId(command.user_id), folder)
 
-        folder = await self.folder_repository.get_by_id(folder_id)
-        self.folder_access_policy.assert_is_allowed(user_id, folder)
-
-        model = await self.model_repository.get_by_name(self.DEFAULT_MODEL_NAME)
-
-        # TODO: Define chat service
-        # NOTE: Chat must be accessed right away
-        # so eventual consistency doesn't work here
+        assistant_id = AssistantId.optional(command.assistant_id)
         chat = self.chat_factory.create(
             ChatFactoryDTO(
-                user_id,
-                folder_id,
-                name=None,
-                assisnant_id=folder.assistant_id,
-                settings=ChatSettings(model.id, 20),
+                user_id=UserId(command.user_id),
+                folder_id=FolderId(command.folder_id),
+                name=command.name,
+                assistant_id=assistant_id,
+                settings=ChatSettings(
+                    model_id=ModelId(command.model_id),
+                    max_context_messages=command.max_context_messages,
+                ),
             )
         )
-
-        for source_id in folder.sources:
-            chat.add_source(source_id)
 
         folder.add_chat(chat.id)
 

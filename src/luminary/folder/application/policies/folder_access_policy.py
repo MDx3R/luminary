@@ -14,5 +14,5 @@ class FolderAccessPolicy(IFolderAccessPolicy):
     def assert_is_allowed(self, user_id: UserId, entity: Folder) -> None:
         if not self.is_allowed(user_id, entity):
             raise AccessPolicyError(
-                entity.id, "folder is accessable only to user who created it"
+                entity.id, "folder is accessible only to user who created it"
             )

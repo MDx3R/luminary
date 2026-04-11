@@ -9,7 +9,6 @@ class CreateFileSourceCommand:
     user_id: UUID
     title: str
     file_id: UUID
-    data: BinaryIO | None = None  # TODO: Remove after implementing events
 
 
 class ICreateFileSourceUseCase(ABC):

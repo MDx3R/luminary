@@ -34,6 +34,7 @@ class LinkSource(Source):
             fetched_at=None,
             fetch_status=FetchStatus.NOT_FETCHED,
             created_at=created_at,
+            is_deleted=False,
         )
         page._record_event(
             SourceCreatedEvent(source_id=id.value, fetch_status=page.fetch_status)

@@ -8,6 +8,7 @@ from common.infrastructure.database.sqlalchemy.models.base import Base
 from luminary_files.domain.entity.file import FileId
 
 from luminary.content.domain.entity.content import ContentId
+from luminary.source.application.dtos.read_models import SourceReadModel
 from luminary.source.domain.entity.file_source import FileSource
 from luminary.source.domain.entity.link_source import LinkSource
 from luminary.source.domain.entity.page_source import PageSource
@@ -47,6 +48,7 @@ class SourceMapper:
             fetched_at=fetched_at,
             fetch_status=base.fetch_status,
             created_at=DateTime(base.created_at),
+            is_deleted=base.is_deleted,
         )
 
     @to_domain.register
@@ -69,6 +71,7 @@ class SourceMapper:
             fetched_at=fetched_at,
             fetch_status=base.fetch_status,
             created_at=DateTime(base.created_at),
+            is_deleted=base.is_deleted,
         )
 
     @to_domain.register
@@ -91,6 +94,7 @@ class SourceMapper:
             fetched_at=fetched_at,
             fetch_status=base.fetch_status,
             created_at=DateTime(base.created_at),
+            is_deleted=base.is_deleted,
         )
 
     @singledispatchmethod
@@ -118,6 +122,7 @@ class SourceMapper:
             fetched_at=fetched_at,
             fetch_status=source.fetch_status,
             created_at=source.created_at.value,
+            is_deleted=source.is_deleted,
         )
 
     @to_persistence.register
@@ -140,6 +145,7 @@ class SourceMapper:
             fetched_at=fetched_at,
             fetch_status=source.fetch_status,
             created_at=source.created_at.value,
+            is_deleted=source.is_deleted,
         )
 
     @to_persistence.register
@@ -162,4 +168,54 @@ class SourceMapper:
             fetched_at=fetched_at,
             fetch_status=source.fetch_status,
             created_at=source.created_at.value,
+            is_deleted=source.is_deleted,
+        )
+
+
+class SourceReadMapper:
+    @singledispatchmethod
+    @classmethod
+    def to_read(cls, base: SourceBase) -> SourceReadModel:
+        return SourceReadModel(
+            id=base.source_id,
+            title=base.title,
+            type=base.type.value,
+            fetch_status=base.fetch_status.value,
+            created_at=base.created_at,
+        )
+
+    @to_read.register
+    @classmethod
+    def _(cls, base: FileSourceBase) -> SourceReadModel:
+        return SourceReadModel(
+            id=base.source_id,
+            title=base.title,
+            type=base.type.value,
+            fetch_status=base.fetch_status.value,
+            created_at=base.created_at,
+            file_id=base.file_id,
+        )
+
+    @to_read.register
+    @classmethod
+    def _(cls, base: LinkSourceBase) -> SourceReadModel:
+        return SourceReadModel(
+            id=base.source_id,
+            title=base.title,
+            type=base.type.value,
+            fetch_status=base.fetch_status.value,
+            created_at=base.created_at,
+            url=base.url,
+        )
+
+    @to_read.register
+    @classmethod
+    def _(cls, base: PageSourceBase) -> SourceReadModel:
+        return SourceReadModel(
+            id=base.source_id,
+            title=base.title,
+            type=base.type.value,
+            fetch_status=base.fetch_status.value,
+            created_at=base.created_at,
+            editable=base.editable,
         )

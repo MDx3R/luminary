@@ -3,40 +3,65 @@ name: CI
 on:
   push:
     branches:
-      - '**'   
+      - "**"
   pull_request:
     branches:
       - dev
-      - main 
+      - main
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  test:
+  secret-scan:
+    name: Gitleaks Secret Scan
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          config-path: .gitleaks.toml
+          fail: true
+  
+  test:
+    name: Tests and Static Analysis
+    runs-on: ubuntu-latest
+    needs: secret-scan
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: "3.11"
+          cache: poetry
+          cache-dependency-path: poetry.lock
 
       - name: Install Poetry
-        run: |
-          curl -sSL https://install.python-poetry.org | python3 -
-          echo "$HOME/.local/bin" >> $GITHUB_PATH
+        run: pip install poetry
+
+      - name: Verify lock file is up to date
+        run: poetry check --lock
 
       - name: Install dependencies
-        run: |
-          poetry lock
-          poetry install --no-interaction --no-ansi
+        run: poetry install --no-interaction --no-ansi
 
       - name: Run Ruff linter
-        run: poetry run ruff check src tests
-
-      - name: Run Pytest
-        run: poetry run pytest -q
+        run: poetry run ruff check src tests --output-format=github
 
       - name: Run Mypy type check
         run: poetry run mypy src/ tests/
+
+      - name: Run Pytest
+        run: poetry run pytest -q

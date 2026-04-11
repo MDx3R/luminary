@@ -14,5 +14,5 @@ class ChatAccessPolicy(IChatAccessPolicy):
     def assert_is_allowed(self, user_id: UserId, entity: Chat) -> None:
         if not self.is_allowed(user_id, entity):
             raise AccessPolicyError(
-                entity.id, "chat is accessable only to user who created it"
+                entity.id, "chat is accessible only to user who created it"
             )

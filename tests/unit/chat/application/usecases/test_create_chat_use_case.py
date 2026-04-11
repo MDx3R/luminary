@@ -1,6 +1,5 @@
-from dataclasses import dataclass
 from unittest.mock import AsyncMock, Mock
-from uuid import UUID, uuid4
+from uuid import uuid4
 
 import pytest
 from common.domain.value_objects.id import UserId
@@ -16,75 +15,62 @@ from luminary.chat.application.usecases.command.create_chat_use_case import (
     CreateChatUseCase,
 )
 from luminary.chat.domain.interfaces.chat_factory import ChatFactoryDTO, IChatFactory
-from luminary.chat.domain.value_objects.chat_settings import ChatSettings
-from luminary.model.application.interfaces.repositories.model_repository import (
-    IModelRepository,
-)
-from luminary.model.domain.entity.model import ModelId
-
-
-@dataclass(frozen=True)
-class CreateChatFactoryParams:
-    user_id: UUID
-    folder_id: UUID | None
-    name: str | None
-    settings: ChatSettings
-
-
-class MockModel:
-    def __init__(self, id: ModelId, name: str) -> None:
-        self.id = id
-        self.name = name
 
 
 @pytest.mark.asyncio
 class TestCreateChatUseCase:
     @pytest.fixture(autouse=True)
     def setup(self) -> None:
-        self.user_id = UserId(uuid4())
-        self.model_id = ModelId(uuid4())
+        self.user_id = uuid4()
+        self.chat_id = uuid4()
+        self.model_id = uuid4()
+        self.name = "Test Chat"
 
-        self.chat_repository = AsyncMock(spec=IChatRepository)
-        self.chat_factory = Mock(spec=IChatFactory)
-        self.model_repository = AsyncMock(spec=IModelRepository)
-
-        self.command = CreateChatCommand(user_id=self.user_id.value, assistant_id=None)
-
-        self.use_case = CreateChatUseCase(
-            self.chat_factory, self.chat_repository, self.model_repository
+        self.chat = make_chat(
+            chat_id=self.chat_id,
+            user_id=self.user_id,
+            name=self.name,
+            model_id=self.model_id,
         )
 
-    async def test_create_chat_success(self) -> None:
-        chat = make_chat()
-        model = MockModel(id=self.model_id, name="gemini-2.5-flash-lite")
-
-        self.chat_factory.create.return_value = chat
-        self.model_repository.get_by_name.return_value = model
-
-        result = await self.use_case.execute(self.command)
-
-        assert result == chat.id.value
-        self.model_repository.get_by_name.assert_awaited_once_with(
-            "gemini-2.5-flash-lite"
+        self.chat_factory: Mock = Mock(
+            spec=IChatFactory, create=Mock(return_value=self.chat)
         )
-        self.chat_factory.create.assert_called_once()
-        self.chat_repository.add.assert_awaited_once_with(chat)
+        self.chat_repository: AsyncMock = AsyncMock(spec=IChatRepository)
 
-    async def test_create_chat_calls_factory_with_correct_params(self) -> None:
-        chat = make_chat()
-        model = MockModel(id=self.model_id, name="gemini-2.5-flash-lite")
-
-        self.chat_factory.create.return_value = chat
-        self.model_repository.get_by_name.return_value = model
-
-        await self.use_case.execute(self.command)
-
-        expected_data = ChatFactoryDTO(
+        self.command = CreateChatCommand(
             user_id=self.user_id,
             folder_id=None,
-            name=None,
-            assisnant_id=None,
-            settings=ChatSettings(model_id=self.model_id, max_context_messages=20),
+            name=self.name,
+            assistant_id=None,
+            model_id=self.model_id,
+            max_context_messages=10,
         )
 
-        self.chat_factory.create.assert_called_once_with(expected_data)
+        self.use_case = CreateChatUseCase(
+            chat_factory=self.chat_factory,
+            chat_repository=self.chat_repository,
+        )
+
+    async def test_calls_factory_with_correct_dto(self) -> None:
+        await self.use_case.execute(self.command)
+
+        self.chat_factory.create.assert_called_once()
+        call_args = self.chat_factory.create.call_args[0][0]
+        assert isinstance(call_args, ChatFactoryDTO)
+        assert call_args.user_id == UserId(self.user_id)
+        assert call_args.folder_id is None
+        assert call_args.name == self.name
+        assert call_args.assistant_id is None
+        assert call_args.settings.model_id.value == self.model_id
+        assert call_args.settings.max_context_messages == 10  # noqa: PLR2004
+
+    async def test_calls_repository_add_with_created_chat(self) -> None:
+        await self.use_case.execute(self.command)
+
+        self.chat_repository.add.assert_awaited_once_with(self.chat)
+
+    async def test_returns_created_chat_id(self) -> None:
+        result = await self.use_case.execute(self.command)
+
+        assert result == self.chat_id

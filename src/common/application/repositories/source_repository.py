@@ -2,10 +2,10 @@ from typing import Generic, Protocol, TypeVar
 
 from common.application.interfaces.services.event_bus import IEventBus
 from common.application.interfaces.transactions.unit_of_work import IUnitOfWork
-from common.domain.interfaces.entity import IEntity
+from common.domain.interfaces.entity import Entity
 
 
-ENTITY_contra = TypeVar("ENTITY_contra", bound=IEntity, contravariant=True)
+ENTITY_contra = TypeVar("ENTITY_contra", bound=Entity, contravariant=True)
 
 
 class IRepository(Protocol, Generic[ENTITY_contra]):

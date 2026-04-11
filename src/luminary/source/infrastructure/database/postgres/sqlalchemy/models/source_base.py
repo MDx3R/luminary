@@ -2,8 +2,9 @@ from datetime import datetime
 from uuid import UUID
 
 from common.infrastructure.database.sqlalchemy.models.base import Base
-from sqlalchemy import Boolean, DateTime, Enum, ForeignKey, String
+from sqlalchemy import Boolean, ColumnElement, DateTime, Enum, ForeignKey, String
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
+from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import Mapped, mapped_column
 
 from luminary.source.domain.enums import FetchStatus, SourceType
@@ -24,6 +25,16 @@ class SourceBase(Base):
     # TODO: Add FK
     owner_id: Mapped[UUID] = mapped_column(PGUUID, nullable=False)
     content_id: Mapped[UUID | None] = mapped_column(PGUUID, nullable=True)
+    is_deleted: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+
+    @hybrid_property
+    def is_active(self) -> bool:
+        return not self.is_deleted
+
+    @is_active.inplace.expression
+    @classmethod
+    def _is_active(cls) -> ColumnElement[bool]:
+        return cls.is_deleted.is_not(True)
 
     __mapper_args__ = {"polymorphic_on": "type"}  # noqa: RUF012
 

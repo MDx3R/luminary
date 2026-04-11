@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 
 from common.domain.value_objects.id import UserId
 
-from luminary.assistant.domain.entity.assisnant import AssistantId
+from luminary.assistant.domain.entity.assistant import AssistantId
 from luminary.folder.domain.entity.folder import Folder
 
 

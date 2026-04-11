@@ -14,7 +14,7 @@ class FileBase(Base):
     user_id: Mapped[UUID] = mapped_column(PGUUID, nullable=False)
     filename: Mapped[str] = mapped_column(String, nullable=False)
     bucket: Mapped[str] = mapped_column(String, nullable=False)
-    object_key: Mapped[str] = mapped_column(String, nullable=False)
+    object_key: Mapped[str] = mapped_column(String, nullable=False, unique=True)
     mime: Mapped[str] = mapped_column(String, nullable=False)
     size: Mapped[int | None] = mapped_column(Integer, nullable=True)
     uploaded_at: Mapped[datetime] = mapped_column(

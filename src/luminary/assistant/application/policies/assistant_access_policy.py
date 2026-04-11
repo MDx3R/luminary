@@ -4,7 +4,7 @@ from common.domain.value_objects.id import UserId
 from luminary.assistant.application.interfaces.policies.assistant_access_policy import (
     IAssistantAccessPolicy,
 )
-from luminary.assistant.domain.entity.assisnant import Assistant
+from luminary.assistant.domain.entity.assistant import Assistant
 
 
 class AssistantAccessPolicy(IAssistantAccessPolicy):
@@ -14,5 +14,5 @@ class AssistantAccessPolicy(IAssistantAccessPolicy):
     def assert_is_allowed(self, user_id: UserId, entity: Assistant) -> None:
         if not self.is_allowed(user_id, entity):
             raise AccessPolicyError(
-                entity.id, "assistant is accessable only to user who created it"
+                entity.id, "assistant is accessible only to user who created it"
             )

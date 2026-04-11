@@ -23,7 +23,7 @@ class ChatFactory(IChatFactory):
             owner_id=data.user_id,
             folder_id=data.folder_id,
             name=name,
-            assistant_id=data.assisnant_id,
+            assistant_id=data.assistant_id,
             settings=data.settings,
             created_at=self.clock.now(),
         )

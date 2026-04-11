@@ -15,9 +15,7 @@ from luminary.source.domain.entity.source import SourceId
 
 class UpdateSourceUseCase(IUpdateSourceUseCase):
     def __init__(
-        self,
-        repository: ISourceRepository,
-        access_policy: ISourceAccessPolicy,
+        self, repository: ISourceRepository, access_policy: ISourceAccessPolicy
     ) -> None:
         self.repository = repository
         self.access_policy = access_policy
@@ -27,7 +25,7 @@ class UpdateSourceUseCase(IUpdateSourceUseCase):
         self.access_policy.assert_is_allowed(UserId(command.user_id), source)
 
         if source.title_matches(command.title):
-            return None
+            return
 
         source.update_title(command.title)
         await self.repository.save(source)

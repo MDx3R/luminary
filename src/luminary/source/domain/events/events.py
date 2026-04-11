@@ -47,6 +47,11 @@ class SourceFailedEvent(SourceEvent):
 
 
 @dataclass(frozen=True)
+class SourceDeletedEvent(SourceEvent):
+    pass
+
+
+@dataclass(frozen=True)
 class PageSourceLockedEvent(SourceEvent):
     pass
 

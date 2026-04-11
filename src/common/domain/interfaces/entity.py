@@ -5,7 +5,7 @@ from common.domain.events.domain_event import DomainEvent
 
 
 @dataclass(kw_only=True)
-class IEntity(ABC):  # noqa: B024
+class Entity(ABC):  # noqa: B024
     _events: list[DomainEvent] = field(
         default_factory=list[DomainEvent], init=False, repr=False, compare=False
     )

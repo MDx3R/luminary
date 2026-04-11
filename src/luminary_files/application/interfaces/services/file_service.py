@@ -3,10 +3,6 @@ from dataclasses import dataclass
 from typing import BinaryIO
 from uuid import UUID
 
-from luminary_files.application.dtos.query.get_presigned_url_query import (
-    GetPresignedUrlQuery,
-)
-
 
 @dataclass(frozen=True)
 class UploadFileCommand:
@@ -18,7 +14,7 @@ class UploadFileCommand:
 @dataclass(frozen=True)
 class GetFileQuery:
     user_id: UUID
-    object_key: str
+    file_id: UUID
 
 
 class IFileService(ABC):
@@ -26,5 +22,3 @@ class IFileService(ABC):
     async def get_file(self, query: GetFileQuery) -> BinaryIO: ...
     @abstractmethod
     async def upload_file(self, command: UploadFileCommand) -> UUID: ...
-    @abstractmethod
-    async def get_file_presigned_url(self, query: GetPresignedUrlQuery) -> str: ...

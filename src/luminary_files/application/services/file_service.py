@@ -1,13 +1,9 @@
-from datetime import timedelta
 from os import SEEK_END, SEEK_SET
-from typing import BinaryIO, ClassVar
+from typing import BinaryIO
 from uuid import UUID
 
+from common.application.exceptions import NotFoundError
 from common.domain.value_objects.id import UserId
-from common.domain.value_objects.object_key import ObjectKey
-from luminary_files.application.dtos.query.get_presigned_url_query import (
-    GetPresignedUrlQuery,
-)
 from luminary_files.application.interfaces.repositories.file_repository import (
     IFileRepository,
 )
@@ -20,33 +16,33 @@ from luminary_files.application.interfaces.services.file_service import (
 from luminary_files.application.interfaces.services.file_type_introspector import (
     IFileTypeIntrospector,
 )
+from luminary_files.domain.entity.file import FileId
 from luminary_files.domain.interfaces.file_factory import IFileFactory
 
 
 class FileService(IFileService):
-    BUCKET_NAME: ClassVar[str] = "files"
-    EXPIRATION_DELTA: ClassVar[timedelta] = timedelta(days=7)
-
     def __init__(
         self,
+        bucket_name: str,
         file_factory: IFileFactory,
-        file_type_instorspector: IFileTypeIntrospector,
+        file_type_introspector: IFileTypeIntrospector,
         file_repository: IFileRepository,
         file_storage: IFileStorage,
     ) -> None:
+        self.bucket_name = bucket_name
         self.file_factory = file_factory
-        self.file_type_instorspector = file_type_instorspector
+        self.file_type_introspector = file_type_introspector
         self.file_repository = file_repository
         self.file_storage = file_storage
 
     async def upload_file(self, command: UploadFileCommand) -> UUID:
         content = command.content
-        file_type = self.file_type_instorspector.extract(content)
+        file_type = self.file_type_introspector.extract(content)
 
         file = self.file_factory.create(
             user_id=UserId(command.user_id),
             filename=command.filename,
-            bucket=self.BUCKET_NAME,
+            bucket=self.bucket_name,
             mime=file_type.mime,
         )
 
@@ -61,11 +57,11 @@ class FileService(IFileService):
 
         return file.id.value
 
-    async def get_file_presigned_url(self, query: GetPresignedUrlQuery) -> str:
-        # TODO: Check user access
-        return await self.file_storage.get_presigned_get_url(
-            ObjectKey(query.object_key), self.EXPIRATION_DELTA
-        )
-
     async def get_file(self, query: GetFileQuery) -> BinaryIO:
-        return await self.file_storage.get(ObjectKey(query.object_key))
+        file_id = FileId(query.file_id)
+        file = await self.file_repository.get_by_id(file_id)
+
+        if not file.is_owned_by(UserId(query.user_id)):
+            raise NotFoundError(file_id)
+
+        return await self.file_storage.get(file.object_key)

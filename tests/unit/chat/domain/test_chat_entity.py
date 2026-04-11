@@ -8,8 +8,12 @@ from common.domain.value_objects.datetime import DateTime
 from common.domain.value_objects.id import UserId
 from tests.unit.chat.utils import make_chat_settings
 
-from luminary.assistant.domain.entity.assisnant import AssistantId
+from luminary.assistant.domain.entity.assistant import AssistantId
 from luminary.chat.domain.entity.chat import Chat
+from luminary.chat.domain.events.events import (
+    ChatNameChangedEvent,
+    ChatSourceAddedEvent,
+)
 from luminary.chat.domain.value_objects.chat_id import ChatId
 from luminary.chat.domain.value_objects.chat_info import ChatInfo
 from luminary.chat.domain.value_objects.chat_settings import ChatSettings
@@ -67,6 +71,7 @@ class TestChat:
             created_at=self.created_at,
             info=ChatInfo(name=self.name),
             settings=self.settings,
+            is_deleted=False,
         )
 
     def test_create_chat_success(self):
@@ -87,9 +92,20 @@ class TestChat:
         self.chat.add_source(source_id)
         assert source_id in self.chat.sources
 
+    def test_add_source_emits_event_and_idempotent(self):
+        source_id = SourceId(uuid4())
+        self.chat.add_source(source_id)
+        assert len(self.chat.events) == 1
+        assert isinstance(self.chat.events[0], ChatSourceAddedEvent)
+        self.chat.add_source(source_id)
+        assert len(self.chat.events) == 1
+
     def test_change_chat_name_success(self):
         self.chat.change_name("New Name")
         assert self.chat.info.name == "New Name"
+        assert len(self.chat.events) == 1
+        assert isinstance(self.chat.events[0], ChatNameChangedEvent)
+        assert self.chat.events[0].name == "New Name"
 
     @pytest.mark.parametrize("name", ["", "   "])
     def test_change_chat_name_invalid(self, name: Literal[""] | Literal["   "]):

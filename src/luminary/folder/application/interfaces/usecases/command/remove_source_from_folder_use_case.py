@@ -8,7 +8,6 @@ class RemoveSourceFromFolderCommand:
     user_id: UUID
     folder_id: UUID
     source_id: UUID
-    # TODO: Add chats: list[UUID] field
 
 
 class IRemoveSourceFromFolderUseCase(ABC):

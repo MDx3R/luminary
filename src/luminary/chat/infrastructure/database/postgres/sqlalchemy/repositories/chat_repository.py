@@ -1,10 +1,9 @@
-from collections.abc import Iterable, Sequence
-
 from common.application.exceptions import NotFoundError
 from common.infrastructure.database.sqlalchemy.executor import QueryExecutor
-from sqlalchemy import delete, select
+from sqlalchemy import and_, delete, select, update
 from sqlalchemy.orm import joinedload
 
+from luminary.assistant.domain.entity.assistant import AssistantId
 from luminary.chat.application.interfaces.repositories.chat_repository import (
     IChatRepository,
 )
@@ -15,9 +14,9 @@ from luminary.chat.infrastructure.database.postgres.sqlalchemy.mappers.chat_mapp
 )
 from luminary.chat.infrastructure.database.postgres.sqlalchemy.models.chat_base import (
     ChatBase,
-    ChatSourceBase,
+    ChatSourceAssociation,
 )
-from luminary.folder.domain.value_objects.folder_id import FolderId
+from luminary.source.domain.entity.source import SourceId
 
 
 class ChatRepository(IChatRepository):
@@ -28,54 +27,44 @@ class ChatRepository(IChatRepository):
         stmt = (
             select(ChatBase)
             .where(ChatBase.chat_id == id.value)
-            .options(joinedload(ChatBase.sources))
+            .where(ChatBase.is_active)
+            .options(joinedload(ChatBase.source_associations))
         )
-
-        result = await self.executor.execute_scalar_one(stmt)
-        if not result:
+        base = await self.executor.execute_scalar_one(stmt)
+        if base is None:
             raise NotFoundError(id)
-        return ChatMapper.to_domain(result)
 
-    async def get_by_folder_id(self, folder_id: FolderId) -> Sequence[Chat]:
-        stmt = (
-            select(ChatBase)
-            .where(ChatBase.folder_id == folder_id.value)
-            .options(joinedload(ChatBase.sources))
-        )
-
-        result = await self.executor.execute_scalar_many(stmt)
-        return [ChatMapper.to_domain(i) for i in result]
+        return ChatMapper.to_domain(base)
 
     async def add(self, entity: Chat) -> None:
-        model = ChatMapper.to_persistence(entity)
-        await self.executor.add(model)
+        base = ChatMapper.to_persistence(entity)
+        await self.executor.add(base)
 
     async def save(self, entity: Chat) -> None:
-        # TODO: Remove this after refactor on entities for them to be eventual consistent
-        model = ChatMapper.to_persistence(entity)
-        async with self.executor.uow:
-            stmt = delete(ChatSourceBase).where(
-                ChatSourceBase.chat_id == entity.id.value
+        base = ChatMapper.to_persistence(entity)
+        await self.executor.save(base)
+
+    async def clear_assistant_reference(self, assistant_id: AssistantId) -> None:
+        stmt = (
+            update(ChatBase)
+            .where(ChatBase.assistant_id == assistant_id.value)
+            .values(assistant_id=None)
+        )
+        await self.executor.execute(stmt)
+
+    async def clear_source_reference(self, source_id: SourceId) -> None:
+        stmt = delete(ChatSourceAssociation).where(
+            ChatSourceAssociation.source_id == source_id.value
+        )
+        await self.executor.execute(stmt)
+
+    async def clear_source_association(
+        self, chat_id: ChatId, source_id: SourceId
+    ) -> None:
+        stmt = delete(ChatSourceAssociation).where(
+            and_(
+                ChatSourceAssociation.chat_id == chat_id.value,
+                ChatSourceAssociation.source_id == source_id.value,
             )
-            await self.executor.execute(stmt)
-
-            await self.executor.add_all(model.sources)
-            model.sources = []
-
-            await self.executor.save(model)
-
-    async def save_all(self, entities: Iterable[Chat]) -> None:
-        # TODO: Remove this after refactor on entities for them to be eventual consistent
-        models = [ChatMapper.to_persistence(e) for e in entities]
-        async with self.executor.uow:
-            chat_ids = [e.id.value for e in entities]
-            stmt = delete(ChatSourceBase).where(ChatSourceBase.chat_id.in_(chat_ids))
-            await self.executor.execute(stmt)
-
-            sources: list[ChatSourceBase] = []
-            for m in models:
-                sources.extend(m.sources)
-                m.sources = []
-            await self.executor.add_all(sources)
-
-            await self.executor.save_all(models)
+        )
+        await self.executor.execute(stmt)

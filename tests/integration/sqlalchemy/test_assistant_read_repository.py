@@ -32,6 +32,7 @@ class TestAssistantReadRepository:
     async def test_get_by_id_returns_read_model(self) -> None:
         # Arrange
         assistant = await self._add_assistant()
+        assert assistant.owner_id is not None
         owner_id = assistant.owner_id.value
 
         # Act
@@ -56,6 +57,7 @@ class TestAssistantReadRepository:
         # Arrange
         assistant = await self._add_assistant()
         other_owner = uuid4()
+        assert assistant.owner_id is not None
         assert other_owner != assistant.owner_id.value
 
         # Act & Assert
@@ -70,6 +72,7 @@ class TestAssistantReadRepository:
         await persist_assistant(self.maker, assistant)
 
         # Act & Assert
+        assert assistant.owner_id is not None
         with pytest.raises(NotFoundError):
             await self.read_repo.get_by_id(assistant.id.value, assistant.owner_id.value)
 

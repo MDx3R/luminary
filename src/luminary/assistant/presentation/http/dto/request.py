@@ -10,6 +10,7 @@ class CreateAssistantRequest(BaseModel):
 class UpdateAssistantInfoRequest(BaseModel):
     name: str
     description: str
+    tags: list[str] = []
 
 
 class UpdateAssistantInstructionsRequest(BaseModel):

@@ -86,6 +86,7 @@ class AssistantCommandController:
                 assistant_id=assistant_id,
                 name=request.name,
                 description=request.description,
+                tags=request.tags,
             )
         )
 

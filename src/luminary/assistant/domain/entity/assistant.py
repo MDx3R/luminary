@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Self
 
 from common.domain.exceptions import InvariantViolationError
@@ -11,6 +11,24 @@ from luminary.assistant.domain.events.events import (
     AssistantDeletedEvent,
     AssistantInfoChangedEvent,
 )
+
+
+MAX_TAG_LENGTH = 50
+MAX_TAGS_COUNT = 20
+
+
+def _validate_tags(tags: list[str]) -> None:
+    if len(tags) > MAX_TAGS_COUNT:
+        raise InvariantViolationError(
+            f"Assistant cannot have more than {MAX_TAGS_COUNT} tags"
+        )
+    for tag in tags:
+        if not tag.strip():
+            raise InvariantViolationError("Tag cannot be empty")
+        if len(tag) > MAX_TAG_LENGTH:
+            raise InvariantViolationError(
+                f"Tag cannot exceed {MAX_TAG_LENGTH} characters"
+            )
 
 
 @dataclass(frozen=True)
@@ -41,17 +59,25 @@ class AssistantId(EntityId): ...
 @dataclass
 class Assistant(Entity):
     id: AssistantId
-    owner_id: UserId
+    owner_id: UserId | None
     type: AssistantType
     info: AssistantInfo
     instructions: Instructions
     is_deleted: bool
+    tags: list[str] = field(default_factory=list)
+
+    def __post_init__(self) -> None:
+        if self.owner_id is None and self.type != AssistantType.SYSTEM:
+            raise InvariantViolationError("Only system assistants can have no owner")
 
     def is_owned_by(self, user_id: UserId) -> bool:
         return self.owner_id == user_id
 
     def info_matches(self, name: str, description: str) -> bool:
         return self.info.name == name and self.info.description == description
+
+    def tags_matches(self, tags: list[str]) -> bool:
+        return self.tags == tags
 
     def instructions_matches(self, prompt: str) -> bool:
         return self.instructions.prompt == prompt
@@ -83,6 +109,10 @@ class Assistant(Entity):
     def change_instructions(self, new_instructions: Instructions) -> None:
         self.instructions = new_instructions
 
+    def change_tags(self, new_tags: list[str]) -> None:
+        _validate_tags(new_tags)
+        self.tags = new_tags
+
     def delete(self) -> None:
         if self.type == AssistantType.SYSTEM:
             raise InvariantViolationError("System assistant cannot be deleted")
@@ -95,12 +125,15 @@ class Assistant(Entity):
     def create(  # noqa: PLR0913
         cls,
         id: AssistantId,
-        owner_id: UserId,
+        owner_id: UserId | None,
         type: AssistantType,
         name: str,
         description: str,
         instructions: Instructions,
+        tags: list[str] | None = None,
     ) -> Self:
+        resolved_tags = tags or []
+        _validate_tags(resolved_tags)
         instance = cls(
             id=id,
             owner_id=owner_id,
@@ -108,6 +141,7 @@ class Assistant(Entity):
             info=AssistantInfo(name, description),
             instructions=instructions,
             is_deleted=False,
+            tags=resolved_tags,
         )
         instance._record_event(AssistantCreatedEvent(assistant_id=id.value))
         return instance

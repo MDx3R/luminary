@@ -2,7 +2,7 @@ from uuid import UUID
 
 from common.infrastructure.database.sqlalchemy.models.base import Base
 from sqlalchemy import Boolean, ColumnElement, Enum, String, Text
-from sqlalchemy.dialects.postgresql import UUID as PGUUID
+from sqlalchemy.dialects.postgresql import ARRAY, UUID as PGUUID
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -13,12 +13,15 @@ class AssistantBase(Base):
     __tablename__ = "assistants"
 
     assistant_id: Mapped[UUID] = mapped_column(PGUUID, primary_key=True)
-    owner_id: Mapped[UUID] = mapped_column(PGUUID, nullable=False)
+    owner_id: Mapped[UUID | None] = mapped_column(PGUUID, nullable=True)
     type: Mapped[AssistantType] = mapped_column(Enum(AssistantType), nullable=False)
     name: Mapped[str] = mapped_column(String, nullable=False)
     description: Mapped[str] = mapped_column(String, nullable=False)
     prompt: Mapped[str] = mapped_column(Text, nullable=False)
     is_deleted: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    tags: Mapped[list[str]] = mapped_column(
+        ARRAY(String), nullable=False, default=list, server_default="{}"
+    )
 
     @hybrid_property
     def is_active(self) -> bool:

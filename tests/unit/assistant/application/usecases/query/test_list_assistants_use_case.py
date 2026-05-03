@@ -27,6 +27,7 @@ class TestListAssistantsUseCase:
                 name="A1",
                 description="D1",
                 type="personal",
+                tags=[],
             ),
         ]
         read_repo: AsyncMock = AsyncMock(spec=IAssistantReadRepository)

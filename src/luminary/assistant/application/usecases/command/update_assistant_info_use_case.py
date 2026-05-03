@@ -26,9 +26,17 @@ class UpdateAssistantInfoUseCase(IUpdateAssistantInfoUseCase):
         assistant = await self.repository.get_by_id(AssistantId(command.assistant_id))
         self.access_policy.assert_is_allowed(UserId(command.user_id), assistant)
 
-        if assistant.info_matches(command.name, command.description):
+        info_changed = not assistant.info_matches(command.name, command.description)
+        tags_changed = not assistant.tags_matches(command.tags)
+
+        if not info_changed and not tags_changed:
             return
 
-        assistant.change_name(command.name)
-        assistant.change_description(command.description)
+        if info_changed:
+            assistant.change_name(command.name)
+            assistant.change_description(command.description)
+
+        if tags_changed:
+            assistant.change_tags(command.tags)
+
         await self.repository.save(assistant)

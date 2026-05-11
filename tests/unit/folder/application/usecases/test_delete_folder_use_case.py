@@ -52,9 +52,7 @@ class TestDeleteFolderUseCase:
     async def test_calls_repository_get_by_id_with_folder_id(self) -> None:
         await self.use_case.execute(self.command)
 
-        self.repository.get_by_id.assert_awaited_once_with(
-            FolderId(self.folder_id)
-        )
+        self.repository.get_by_id.assert_awaited_once_with(FolderId(self.folder_id))
 
     async def test_calls_access_policy_with_user_and_folder(self) -> None:
         await self.use_case.execute(self.command)
@@ -70,9 +68,7 @@ class TestDeleteFolderUseCase:
         assert self.folder.is_deleted
 
     async def test_raises_not_found_when_folder_not_exists(self) -> None:
-        self.repository.get_by_id.side_effect = NotFoundError(
-            FolderId(self.folder_id)
-        )
+        self.repository.get_by_id.side_effect = NotFoundError(FolderId(self.folder_id))
 
         with pytest.raises(NotFoundError):
             await self.use_case.execute(self.command)

@@ -31,3 +31,13 @@ class AssistantInfoChangedEvent(AssistantEvent):
 @dataclass(frozen=True)
 class AssistantDeletedEvent(AssistantEvent):
     pass
+
+
+@dataclass(frozen=True)
+class AssistantPublishedEvent(AssistantEvent):
+    pass
+
+
+@dataclass(frozen=True)
+class AssistantClonedEvent(AssistantEvent):
+    source_assistant_id: UUID

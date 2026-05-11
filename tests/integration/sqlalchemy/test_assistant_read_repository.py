@@ -78,17 +78,17 @@ class TestAssistantReadRepository:
 
     # --- list_by_owner ---
 
-    async def test_list_by_owner_empty(self) -> None:
+    async def test_list_for_user_empty(self) -> None:
         # Arrange
         owner_id = uuid4()
 
         # Act
-        result = await self.read_repo.list_by_owner(owner_id)
+        result = await self.read_repo.list_for_user(owner_id)
 
         # Assert
         assert list(result) == []
 
-    async def test_list_by_owner_returns_summaries_ordered_by_created_at_desc(
+    async def test_list_for_user_returns_summaries_ordered_by_created_at_desc(
         self,
     ) -> None:
         # Arrange
@@ -97,25 +97,25 @@ class TestAssistantReadRepository:
         assistant2 = await add_assistant(self.maker, user_id=owner_id, name="A2")
 
         # Act
-        result = await self.read_repo.list_by_owner(owner_id)
+        result = await self.read_repo.list_for_user(owner_id)
 
         # Assert
         assert {r.id for r in result} == {a.id.value for a in [assistant1, assistant2]}
         assert {r.name for r in result} == {"A1", "A2"}
 
-    async def test_list_by_owner_excludes_other_owner(self) -> None:
+    async def test_list_for_user_excludes_other_owner(self) -> None:
         # Arrange
         owner_a = uuid4()
         owner_b = uuid4()
         await self._add_assistant(owner_id=owner_a)
 
         # Act
-        result = await self.read_repo.list_by_owner(owner_b)
+        result = await self.read_repo.list_for_user(owner_b)
 
         # Assert
         assert list(result) == []
 
-    async def test_list_by_owner_excludes_soft_deleted(self) -> None:
+    async def test_list_for_user_excludes_soft_deleted(self) -> None:
         # Arrange
         owner_id = uuid4()
         assistant = make_assistant(user_id=owner_id)
@@ -123,7 +123,7 @@ class TestAssistantReadRepository:
         await persist_assistant(self.maker, assistant)
 
         # Act
-        result = await self.read_repo.list_by_owner(owner_id)
+        result = await self.read_repo.list_for_user(owner_id)
 
         # Assert
         assert list(result) == []

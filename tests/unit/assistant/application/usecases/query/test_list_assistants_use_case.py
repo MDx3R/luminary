@@ -1,4 +1,4 @@
-"""Unit tests for ListAssistantsUseCase."""
+"""Unit tests for ListUserAssistantsUseCase."""
 
 from unittest.mock import AsyncMock
 from uuid import uuid4
@@ -10,16 +10,17 @@ from luminary.assistant.application.interfaces.repositories.assistant_read_repos
     IAssistantReadRepository,
 )
 from luminary.assistant.application.interfaces.usecases.query.list_assistants_use_case import (
-    ListAssistantsQuery,
+    ListUserAssistantsQuery,
 )
 from luminary.assistant.application.usecases.query.list_assistants_use_case import (
-    ListAssistantsUseCase,
+    ListUserAssistantsUseCase,
 )
 
 
 @pytest.mark.asyncio
-class TestListAssistantsUseCase:
+class TestListUserAssistantsUseCase:
     async def test_returns_sequence_from_repository(self) -> None:
+        # Arrange
         user_id = uuid4()
         read_models: list[AssistantSummaryReadModel] = [
             AssistantSummaryReadModel(
@@ -29,14 +30,23 @@ class TestListAssistantsUseCase:
                 type="personal",
                 tags=[],
             ),
+            AssistantSummaryReadModel(
+                id=uuid4(),
+                name="System Bot",
+                description="System",
+                type="system",
+                tags=[],
+            ),
         ]
         read_repo: AsyncMock = AsyncMock(spec=IAssistantReadRepository)
-        read_repo.list_by_owner = AsyncMock(return_value=read_models)
+        read_repo.list_for_user = AsyncMock(return_value=read_models)
 
-        use_case = ListAssistantsUseCase(read_repository=read_repo)
-        query = ListAssistantsQuery(user_id=user_id)
+        use_case = ListUserAssistantsUseCase(read_repository=read_repo)
+        query = ListUserAssistantsQuery(user_id=user_id)
 
+        # Act
         result = await use_case.execute(query)
 
+        # Assert
         assert list(result) == read_models
-        read_repo.list_by_owner.assert_awaited_once_with(user_id)
+        read_repo.list_for_user.assert_awaited_once_with(user_id)

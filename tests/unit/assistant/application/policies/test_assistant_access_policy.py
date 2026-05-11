@@ -85,3 +85,36 @@ class TestAssistantAccessPolicy:
             AccessPolicyError, match="system assistants cannot be modified"
         ):
             self.policy.assert_is_allowed(self.user_id, assistant)
+
+    # --- assert_can_clone ---
+
+    def test_can_clone_own_personal_assistant(self):
+        # Arrange
+        assistant = make_assistant(user_id=self.user_id.value)
+
+        # Act & Assert (no exception)
+        self.policy.assert_can_clone(self.user_id, assistant)
+
+    def test_cannot_clone_personal_assistant_of_another_user(self):
+        # Arrange
+        assistant = make_assistant()  # different random owner
+
+        # Act & Assert
+        with pytest.raises(
+            AccessPolicyError, match="personal assistants can only be cloned"
+        ):
+            self.policy.assert_can_clone(self.user_id, assistant)
+
+    def test_can_clone_system_assistant_by_any_user(self):
+        # Arrange
+        assistant = make_assistant(type=AssistantType.SYSTEM, user_id=None)
+
+        # Act & Assert (no exception)
+        self.policy.assert_can_clone(self.user_id, assistant)
+
+    def test_can_clone_public_assistant_by_any_user(self):
+        # Arrange — public assistant owned by someone else
+        assistant = make_assistant(type=AssistantType.PUBLIC)
+
+        # Act & Assert (no exception)
+        self.policy.assert_can_clone(self.user_id, assistant)

@@ -7,9 +7,11 @@ from common.domain.value_objects.id import EntityId, UserId
 
 from luminary.assistant.domain.enums import AssistantType
 from luminary.assistant.domain.events.events import (
+    AssistantClonedEvent,
     AssistantCreatedEvent,
     AssistantDeletedEvent,
     AssistantInfoChangedEvent,
+    AssistantPublishedEvent,
 )
 
 
@@ -112,6 +114,36 @@ class Assistant(Entity):
     def change_tags(self, new_tags: list[str]) -> None:
         _validate_tags(new_tags)
         self.tags = new_tags
+
+    def publish(self) -> None:
+        if self.type != AssistantType.PERSONAL:
+            raise InvariantViolationError("Only personal assistants can be published")
+        self.type = AssistantType.PUBLIC
+        self._record_event(AssistantPublishedEvent(assistant_id=self.id.value))
+
+    @classmethod
+    def clone(
+        cls,
+        source: "Assistant",
+        new_id: "AssistantId",
+        new_owner_id: UserId,
+    ) -> "Assistant":
+        instance = cls(
+            id=new_id,
+            owner_id=new_owner_id,
+            type=AssistantType.PERSONAL,
+            info=source.info,
+            instructions=source.instructions,
+            is_deleted=False,
+            tags=list(source.tags),
+        )
+        instance._record_event(
+            AssistantClonedEvent(
+                assistant_id=new_id.value,
+                source_assistant_id=source.id.value,
+            )
+        )
+        return instance
 
     def delete(self) -> None:
         if self.type == AssistantType.SYSTEM:

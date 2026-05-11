@@ -13,7 +13,11 @@ from luminary.assistant.domain.entity.assistant import (
     MAX_TAGS_COUNT,
 )
 from luminary.assistant.domain.enums import AssistantType
-from luminary.assistant.domain.events.events import AssistantCreatedEvent
+from luminary.assistant.domain.events.events import (
+    AssistantClonedEvent,
+    AssistantCreatedEvent,
+    AssistantPublishedEvent,
+)
 
 
 class TestAssistantEntity:
@@ -265,3 +269,112 @@ class TestAssistantEntity:
 
         # Assert
         assert system_assistant.is_owned_by(self.user_id) is False
+
+    # --- publish ---
+
+    def test_publish_changes_type_to_public(self):
+        # Act
+        self.assistant.publish()
+
+        # Assert
+        assert self.assistant.type == AssistantType.PUBLIC
+
+    def test_publish_emits_published_event(self):
+        # Act
+        self.assistant.publish()
+
+        # Assert
+        assert len(self.assistant.events) == 1
+        assert isinstance(self.assistant.events[0], AssistantPublishedEvent)
+
+    def test_publish_raises_for_system_assistant(self):
+        # Arrange
+        system_assistant = make_assistant(type=AssistantType.SYSTEM)
+
+        # Act & Assert
+        with pytest.raises(InvariantViolationError, match="Only personal assistants"):
+            system_assistant.publish()
+
+    def test_publish_raises_for_already_public_assistant(self):
+        # Arrange
+        public_assistant = make_assistant(type=AssistantType.PUBLIC)
+
+        # Act & Assert
+        with pytest.raises(InvariantViolationError, match="Only personal assistants"):
+            public_assistant.publish()
+
+    # --- clone ---
+
+    def test_clone_creates_personal_assistant_with_new_id(self):
+        # Arrange
+        new_id = AssistantId(uuid4())
+        new_owner = UserId(uuid4())
+
+        # Act
+        clone = Assistant.clone(
+            source=self.assistant, new_id=new_id, new_owner_id=new_owner
+        )
+
+        # Assert
+        assert clone.id == new_id
+        assert clone.owner_id == new_owner
+        assert clone.type == AssistantType.PERSONAL
+
+    def test_clone_copies_info_instructions_and_tags(self):
+        # Arrange
+        self.assistant.change_tags(["a", "b"])
+        new_id = AssistantId(uuid4())
+        new_owner = UserId(uuid4())
+
+        # Act
+        clone = Assistant.clone(
+            source=self.assistant, new_id=new_id, new_owner_id=new_owner
+        )
+
+        # Assert
+        assert clone.info == self.assistant.info
+        assert clone.instructions == self.assistant.instructions
+        assert clone.tags == ["a", "b"]
+
+    def test_clone_tags_are_independent_copy(self):
+        # Arrange
+        self.assistant.change_tags(["x"])
+        new_id = AssistantId(uuid4())
+        clone = Assistant.clone(
+            source=self.assistant, new_id=new_id, new_owner_id=UserId(uuid4())
+        )
+
+        # Act — mutate original tags
+        self.assistant.change_tags(["y"])
+
+        # Assert — clone is unaffected
+        assert clone.tags == ["x"]
+
+    def test_clone_emits_cloned_event(self):
+        # Arrange
+        new_id = AssistantId(uuid4())
+
+        # Act
+        clone = Assistant.clone(
+            source=self.assistant, new_id=new_id, new_owner_id=UserId(uuid4())
+        )
+
+        # Assert
+        assert len(clone.events) == 1
+        event = clone.events[0]
+        assert isinstance(event, AssistantClonedEvent)
+        assert event.assistant_id == new_id.value
+        assert event.source_assistant_id == self.assistant.id.value
+
+    def test_clone_is_not_deleted(self):
+        # Arrange — deleted source
+        self.assistant.delete()
+        new_id = AssistantId(uuid4())
+
+        # Act
+        clone = Assistant.clone(
+            source=self.assistant, new_id=new_id, new_owner_id=UserId(uuid4())
+        )
+
+        # Assert
+        assert clone.is_deleted is False

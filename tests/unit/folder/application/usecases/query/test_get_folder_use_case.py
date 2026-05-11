@@ -38,9 +38,7 @@ class TestGetFolderByIdUseCase:
         read_repo.get_by_id = AsyncMock(return_value=read_model)
 
         use_case = GetFolderByIdUseCase(read_repository=read_repo)
-        query = GetFolderByIdQuery(
-            user_id=user_id, folder_id=folder_id
-        )
+        query = GetFolderByIdQuery(user_id=user_id, folder_id=folder_id)
 
         result = await use_case.execute(query)
 

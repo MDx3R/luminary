@@ -15,3 +15,8 @@ class UpdateAssistantInfoRequest(BaseModel):
 
 class UpdateAssistantInstructionsRequest(BaseModel):
     prompt: str
+
+
+class ListPublicAssistantsRequest(BaseModel):
+    offset: int = 0
+    limit: int = 20

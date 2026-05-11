@@ -21,3 +21,10 @@ class AssistantAccessPolicy(IAssistantAccessPolicy):
             raise AccessPolicyError(
                 entity.id, "assistant is accessible only to user who created it"
             )
+
+    def assert_can_clone(self, user_id: UserId, entity: Assistant) -> None:
+        """PERSONAL assistants require ownership; SYSTEM and PUBLIC are open to all."""
+        if entity.type == AssistantType.PERSONAL and not entity.is_owned_by(user_id):
+            raise AccessPolicyError(
+                entity.id, "personal assistants can only be cloned by their owner"
+            )

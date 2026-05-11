@@ -1,3 +1,4 @@
+from collections.abc import AsyncGenerator
 from uuid import uuid4
 
 from common.domain.value_objects.id import UserId
@@ -8,6 +9,7 @@ from luminary.assistant.application.interfaces.repositories.assistant_repository
 from luminary.chat.application.interfaces.usecases.command.get_message_response_use_case import (
     STREAM_END_CONTENT,
     STREAM_START_CONTENT,
+    StreamingMessageDTO,
     StreamState,
 )
 from luminary.chat.domain.enums import MessageStatus
@@ -47,7 +49,9 @@ class StreamFolderEditorInlineUseCase(IStreamFolderEditorInlineUseCase):
         self._assistant_repository = assistant_repository
         self._inference_engine = inference_engine
 
-    async def execute(self, command: StreamFolderEditorInlineCommand):
+    async def execute(
+        self, command: StreamFolderEditorInlineCommand
+    ) -> AsyncGenerator[StreamingMessageDTO, None]:
         folder = await self._folder_repository.get_by_id(FolderId(command.folder_id))
         self._access_policy.assert_is_allowed(UserId(command.user_id), folder)
 

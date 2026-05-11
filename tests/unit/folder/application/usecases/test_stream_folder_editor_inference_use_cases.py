@@ -35,12 +35,22 @@ from luminary.model.application.interfaces.services.engine import (
     InferenceMode,
     InferenceRequestDTO,
 )
+from luminary.model.application.prompts import AUTOCOMPLETE_EMPTY_SIGNAL
 from luminary.source.domain.entity.source import SourceId
 
 
 async def _mock_stream(*chunks: str):
     for c in chunks:
         yield EngineStreamingResponse(content=c)
+
+
+async def _mock_empty_stream():
+    if False:
+        yield EngineStreamingResponse(content="")
+
+
+async def _mock_whitespace_only_stream():
+    yield EngineStreamingResponse(content="  \n\t")
 
 
 class TestStreamFolderEditorInlineUseCase:
@@ -222,5 +232,82 @@ class TestStreamFolderEditorAutocompleteUseCase:
 
             deltas = [c for c in chunks if c.state == StreamState.DELTA]
             assert deltas[0].content == "next"
+
+        asyncio.run(run())
+
+    def test_empty_model_output_emits_explicit_signal_and_end(self) -> None:
+        async def run() -> None:
+            user_id = uuid4()
+            folder_id = uuid4()
+            folder = make_folder(folder_id=folder_id, owner_id=user_id)
+
+            folder_repository = AsyncMock(
+                spec=IFolderRepository,
+                get_by_id=AsyncMock(return_value=folder),
+            )
+            inference_engine = Mock(spec=IInferenceEngine)
+            inference_engine.send.return_value = _mock_empty_stream()
+
+            use_case = StreamFolderEditorAutocompleteUseCase(
+                folder_repository=folder_repository,
+                access_policy=Mock(spec=IFolderAccessPolicy),
+                assistant_repository=AsyncMock(),
+                inference_engine=inference_engine,
+            )
+
+            chunks = [
+                c
+                async for c in use_case.execute(
+                    StreamFolderEditorAutocompleteCommand(
+                        user_id=user_id,
+                        folder_id=folder_id,
+                        text_before_cursor="x",
+                        text_after_cursor="",
+                    )
+                )
+            ]
+
+            assert chunks[0].state == StreamState.START
+            assert chunks[-1].state == StreamState.END
+            deltas = [c for c in chunks if c.state == StreamState.DELTA]
+            assert len(deltas) == 1
+            assert deltas[0].content == AUTOCOMPLETE_EMPTY_SIGNAL
+
+        asyncio.run(run())
+
+    def test_whitespace_only_output_emits_explicit_signal(self) -> None:
+        async def run() -> None:
+            user_id = uuid4()
+            folder_id = uuid4()
+            folder = make_folder(folder_id=folder_id, owner_id=user_id)
+
+            inference_engine = Mock(spec=IInferenceEngine)
+            inference_engine.send.return_value = _mock_whitespace_only_stream()
+
+            use_case = StreamFolderEditorAutocompleteUseCase(
+                folder_repository=AsyncMock(
+                    spec=IFolderRepository,
+                    get_by_id=AsyncMock(return_value=folder),
+                ),
+                access_policy=Mock(spec=IFolderAccessPolicy),
+                assistant_repository=AsyncMock(),
+                inference_engine=inference_engine,
+            )
+
+            chunks = [
+                c
+                async for c in use_case.execute(
+                    StreamFolderEditorAutocompleteCommand(
+                        user_id=user_id,
+                        folder_id=folder_id,
+                        text_before_cursor="",
+                        text_after_cursor="",
+                    )
+                )
+            ]
+
+            deltas = [c for c in chunks if c.state == StreamState.DELTA]
+            assert len(deltas) == 1
+            assert deltas[0].content == AUTOCOMPLETE_EMPTY_SIGNAL
 
         asyncio.run(run())

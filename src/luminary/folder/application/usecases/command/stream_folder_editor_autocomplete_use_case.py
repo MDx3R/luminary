@@ -34,6 +34,9 @@ from luminary.model.application.interfaces.services.engine import (
     InferenceMode,
     InferenceRequestDTO,
 )
+from luminary.model.application.prompts.streaming_signals import (
+    AUTOCOMPLETE_EMPTY_SIGNAL,
+)
 from luminary.model.application.prompts.user_message_format import (
     build_autocomplete_user_content,
 )
@@ -82,10 +85,21 @@ class StreamFolderEditorAutocompleteUseCase(IStreamFolderEditorAutocompleteUseCa
             mode=InferenceMode.EDITOR_AUTOCOMPLETE,
             chat_source_context=None,
         )
+        accumulated = ""
         async for chunk in self._inference_engine.send(request):
+            accumulated += chunk.content
+            if chunk.content and chunk.content.strip():
+                yield editor_stream_chunk(
+                    state=StreamState.DELTA,
+                    content=chunk.content,
+                    message_id=stream_id,
+                    status=MessageStatus.STREAMING,
+                )
+
+        if not accumulated.strip():
             yield editor_stream_chunk(
                 state=StreamState.DELTA,
-                content=chunk.content,
+                content=AUTOCOMPLETE_EMPTY_SIGNAL,
                 message_id=stream_id,
                 status=MessageStatus.STREAMING,
             )

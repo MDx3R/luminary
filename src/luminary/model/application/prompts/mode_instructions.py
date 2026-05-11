@@ -9,9 +9,10 @@ from luminary.model.application.interfaces.services.engine import (
     ChatSourceContext,
     InferenceMode,
 )
+from luminary.model.application.prompts.streaming_signals import (
+    AUTOCOMPLETE_EMPTY_SIGNAL,
+)
 
-
-__all__ = ["MODE_CHAT_FOLDER", "MODE_CHAT_STANDALONE", "resolve_mode_instructions"]
 
 MODE_CHAT_FOLDER: Final[str] = """## Current task mode: Folder chat (full agent context)
 - You may use conversation history, retrieved sources attached to this folder and this chat, and the folder editor draft when provided.
@@ -30,12 +31,14 @@ MODE_EDITOR_INLINE: Final[str] = """## Current task mode: Editor inline command
 
 MODE_EDITOR_AUTOCOMPLETE: Final[
     str
-] = """## Current task mode: Markdown autocomplete at cursor
+] = f"""## Current task mode: Markdown autocomplete at cursor
 - You complete text at the cursor inside an existing Markdown document. The user message contains only `<text_before_cursor>` and `<text_after_cursor>` buffers.
 - Emit only the characters to insert at the cursor—continuation of the current line, word, list item, heading, or fenced code block as appropriate.
 - Do not repeat any characters from `text_before_cursor` or `text_after_cursor`. Do not wrap output in quotes or markdown fences unless completing inside an already-open fence.
 - Stay syntactically consistent with surrounding Markdown (heading levels, list markers, indentation).
-- Keep completions concise; avoid explanations, meta-commentary, or XML tags in the output."""
+- Keep completions concise; avoid explanations, meta-commentary, or XML tags in the output.
+- **No insertion:** When nothing appropriate should be inserted (cursor already complete, insufficient context, continuation would be guesswork), output **exactly** this token and nothing else—same spelling, no surrounding whitespace or punctuation: `{AUTOCOMPLETE_EMPTY_SIGNAL}`
+- APIs may still deliver **zero streaming tokens** in edge cases; that is acceptable—the server normalizes to the same empty-completion contract."""
 
 
 def resolve_mode_instructions(

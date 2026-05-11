@@ -5,6 +5,9 @@ from luminary.model.application.prompts.defaults import (
 from luminary.model.application.prompts.luminary_identity import (
     LUMINARY_BASE_SYSTEM_PROMPT,
 )
+from luminary.model.application.prompts.streaming_signals import (
+    AUTOCOMPLETE_EMPTY_SIGNAL,
+)
 from luminary.model.application.prompts.system_message import (
     build_system_message,
     compose_instruction_body,
@@ -23,6 +26,7 @@ from luminary.model.application.prompts.user_message_format import (
 
 
 __all__ = [
+    "AUTOCOMPLETE_EMPTY_SIGNAL",
     "DEFAULT_ASSISTANT_INSTRUCTIONS_ON_CREATE",
     "EMPTY_ASSISTANT_INSTRUCTIONS",
     "INSTRUCTION_BODY_ASSISTANT_SUFFIX",

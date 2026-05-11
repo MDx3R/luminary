@@ -14,11 +14,9 @@ db:
   db_extension: "asyncpg"
 
 llm:
-  base_url: "https://api.vsegpt.ru/v1"
-  model: "gpt-5-nano"
-  provider_model: "openai/gpt-5-nano"
-  embed_model: "text-embedding-3-small"
-  provider_embed_model: "emb-openai/text-embedding-3-small"
+  base_url: "https://openrouter.ai/api/v1"
+  model: "openrouter/free"
+  embed_model: "openai/text-embedding-ada-002"
 
 deploy:
   external_url: "http://localhost"

@@ -346,6 +346,7 @@ def main() -> FastAPI:  # noqa: PLR0915
         api_key=config.llm.api_key,
         api_base=config.llm.base_url,
         temperature=0.3,
+        max_tokens=config.llm.max_tokes,
     )
     logger.info("llm initialized")
 

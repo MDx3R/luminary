@@ -115,7 +115,9 @@ class LlamaIndexEngine(IInferenceEngine):
         streaming_response = await self.llm.astream_chat(messages)
 
         async for chunk in streaming_response:
-            yield EngineStreamingResponse(content=chunk.delta or "")
+            if not chunk.delta:
+                continue
+            yield EngineStreamingResponse(content=chunk.delta)
 
 
 class ChatEngineLlamaIndexEngine(IInferenceEngine):
@@ -189,4 +191,6 @@ class ChatEngineLlamaIndexEngine(IInferenceEngine):
         async_response_gen = streaming_response.async_response_gen()
 
         async for chunk in async_response_gen:
-            yield EngineStreamingResponse(content=chunk or "")
+            if not chunk:
+                continue
+            yield EngineStreamingResponse(content=chunk)

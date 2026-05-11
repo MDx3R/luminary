@@ -33,11 +33,6 @@ class ChatNameChangedEvent(ChatEvent):
 
 
 @dataclass(frozen=True)
-class ChatSettingsChangedEvent(ChatEvent):
-    pass
-
-
-@dataclass(frozen=True)
 class ChatAssistantChangedEvent(ChatEvent):
     assistant_id: UUID | None
 

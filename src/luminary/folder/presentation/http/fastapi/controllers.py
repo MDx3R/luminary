@@ -232,8 +232,6 @@ class FolderCommandController:
                 folder_id=folder_id,
                 name=request.name,
                 assistant_id=request.assistant_id,
-                model_id=request.model_id,
-                max_context_messages=request.max_context_messages,
             )
         )
         return IDResponse(id=chat_id)

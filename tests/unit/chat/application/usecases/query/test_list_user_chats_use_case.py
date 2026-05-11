@@ -26,7 +26,6 @@ class TestListUserChatsUseCase:
             ChatSummaryReadModel(
                 id=uuid4(),
                 name="C1",
-                model_id=uuid4(),
                 created_at=datetime.now(UTC),
             ),
         ]

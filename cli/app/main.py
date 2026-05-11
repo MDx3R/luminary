@@ -106,9 +106,6 @@ from luminary.chat.application.interfaces.usecases.command.send_message_use_case
 from luminary.chat.application.interfaces.usecases.command.update_chat_name_use_case import (
     IUpdateChatNameUseCase,
 )
-from luminary.chat.application.interfaces.usecases.command.update_chat_settings_use_case import (
-    IUpdateChatSettingsUseCase,
-)
 from luminary.chat.application.interfaces.usecases.query.get_chat_use_case import (
     IGetChatByIdUseCase,
 )
@@ -580,9 +577,6 @@ def main() -> FastAPI:  # noqa: PLR0915
     )
     server.dependency_overrides[IUpdateChatNameUseCase] = (
         lambda: chat_container.update_chat_name_use_case()
-    )
-    server.dependency_overrides[IUpdateChatSettingsUseCase] = (
-        lambda: chat_container.update_chat_settings_use_case()
     )
     server.dependency_overrides[IChangeChatAssistantUseCase] = (
         lambda: chat_container.change_chat_assistant_use_case()

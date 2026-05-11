@@ -30,7 +30,6 @@ class TestListChatMessagesUseCase:
                 role="user",
                 status="completed",
                 content="Hi",
-                model_id=uuid4(),
                 tokens=1,
                 created_at=datetime.now(UTC),
                 edited_at=datetime.now(UTC),

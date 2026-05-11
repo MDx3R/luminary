@@ -12,7 +12,6 @@ from luminary.chat.application.interfaces.usecases.command.create_chat_use_case 
 )
 from luminary.chat.domain.interfaces.chat_factory import ChatFactoryDTO, IChatFactory
 from luminary.folder.domain.value_objects.folder_id import FolderId
-from luminary.model.domain.entity.model import ModelId
 
 
 class CreateChatUseCase(ICreateChatUseCase):
@@ -33,8 +32,6 @@ class CreateChatUseCase(ICreateChatUseCase):
                 folder_id=folder_id,
                 name=command.name,
                 assistant_id=assistant_id,
-                model_id=ModelId(command.model_id),
-                max_context_messages=command.max_context_messages,
             )
         )
         await self.chat_repository.add(chat)

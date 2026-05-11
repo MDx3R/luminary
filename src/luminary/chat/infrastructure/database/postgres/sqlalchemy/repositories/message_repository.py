@@ -33,8 +33,8 @@ class MessageRepository(IMessageRepository, IMessageReader):
             .where(MessageBase.chat_id == chat_id.value)
             .order_by(MessageBase.created_at.desc())
         )
-
-        stmt = stmt.limit(limit)
+        if limit is not None:
+            stmt = stmt.limit(limit)
 
         result = await self.executor.execute_scalar_many(stmt)
         domain = [MessageMapper.to_domain(b) for b in reversed(result)]

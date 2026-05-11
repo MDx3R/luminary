@@ -29,8 +29,6 @@ class TestGetChatByIdUseCase:
             folder_id=None,
             assistant_id=None,
             assistant_name=None,
-            model_id=uuid4(),
-            max_context_messages=10,
             sources=(),
             created_at=datetime.now(UTC),
         )

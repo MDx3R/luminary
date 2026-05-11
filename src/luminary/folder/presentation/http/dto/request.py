@@ -25,8 +25,6 @@ class AddSourceToFolderRequest(BaseModel):
 class CreateFolderChatRequest(BaseModel):
     name: str | None = None
     assistant_id: UUID | None = None
-    model_id: UUID
-    max_context_messages: int
 
 
 class UpdateEditorContentRequest(BaseModel):

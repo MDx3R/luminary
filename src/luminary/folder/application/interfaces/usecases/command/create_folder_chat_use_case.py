@@ -9,8 +9,6 @@ class CreateFolderChatCommand:
     folder_id: UUID
     name: str | None
     assistant_id: UUID | None
-    model_id: UUID
-    max_context_messages: int
 
 
 class ICreateFolderChatUseCase(ABC):

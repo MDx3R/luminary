@@ -25,7 +25,6 @@ class FolderChatItem:
 
     id: UUID
     name: str
-    model_id: UUID
     created_at: datetime
 
 

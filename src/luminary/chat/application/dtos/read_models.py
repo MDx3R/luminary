@@ -28,8 +28,6 @@ class ChatReadModel:
     folder_id: UUID | None
     assistant_id: UUID | None
     assistant_name: str | None
-    model_id: UUID
-    max_context_messages: int
     sources: Sequence[ChatSourceItem]
     created_at: datetime
 
@@ -40,7 +38,6 @@ class ChatSummaryReadModel:
 
     id: UUID
     name: str
-    model_id: UUID
     created_at: datetime
 
 
@@ -62,7 +59,6 @@ class MessageReadModel:
     role: str
     status: str
     content: str
-    model_id: UUID
     tokens: int | None
     created_at: datetime
     edited_at: datetime

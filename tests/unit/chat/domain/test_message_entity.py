@@ -16,7 +16,6 @@ from luminary.chat.domain.events.events import (
 )
 from luminary.chat.domain.value_objects.chat_id import ChatId
 from luminary.chat.domain.value_objects.message_id import MessageId
-from luminary.model.domain.entity.model import ModelId
 from luminary.source.domain.entity.source import SourceId
 
 
@@ -38,14 +37,12 @@ class TestMessage:
     def setup(self):
         self.message_id = MessageId(uuid4())
         self.chat_id = ChatId(uuid4())
-        self.model_id = ModelId(uuid4())
         self.content = "Hello, world!"
         self.created_at = DateTime(datetime.now(UTC))
 
         self.message = Message(
             id=self.message_id,
             chat_id=self.chat_id,
-            model_id=self.model_id,
             content=self.content,
             role=Author.USER,
             status=MessageStatus.COMPLETED,
@@ -75,7 +72,6 @@ class TestMessage:
         message = Message.create(
             id=self.message_id,
             chat_id=self.chat_id,
-            model_id=self.model_id,
             content=self.content,
             role=Author.USER,
             status=MessageStatus.COMPLETED,
@@ -88,7 +84,6 @@ class TestMessage:
             Message(
                 id=self.message_id,
                 chat_id=self.chat_id,
-                model_id=self.model_id,
                 content="Test message",
                 role=Author.USER,
                 status=MessageStatus.PENDING,

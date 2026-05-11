@@ -49,10 +49,6 @@ from luminary.chat.application.interfaces.usecases.command.update_chat_name_use_
     IUpdateChatNameUseCase,
     UpdateChatNameCommand,
 )
-from luminary.chat.application.interfaces.usecases.command.update_chat_settings_use_case import (
-    IUpdateChatSettingsUseCase,
-    UpdateChatSettingsCommand,
-)
 from luminary.chat.application.interfaces.usecases.query.get_chat_use_case import (
     GetChatByIdQuery,
     IGetChatByIdUseCase,
@@ -71,7 +67,6 @@ from luminary.chat.presentation.http.dto.request import (
     CreateChatRequest,
     SendMessageRequest,
     UpdateChatNameRequest,
-    UpdateChatSettingsRequest,
 )
 from luminary.chat.presentation.http.dto.response import (
     ChatResponse,
@@ -88,7 +83,6 @@ command_router = APIRouter()
 class ChatCommandController:
     create_chat_use_case: ICreateChatUseCase = Depends()
     update_chat_name_use_case: IUpdateChatNameUseCase = Depends()
-    update_chat_settings_use_case: IUpdateChatSettingsUseCase = Depends()
     change_chat_assistant_use_case: IChangeChatAssistantUseCase = Depends()
     remove_chat_assistant_use_case: IRemoveChatAssistantUseCase = Depends()
     add_source_to_chat_use_case: IAddSourceToChatUseCase = Depends()
@@ -110,8 +104,6 @@ class ChatCommandController:
                 folder_id=None,
                 name=request.name,
                 assistant_id=request.assistant_id,
-                model_id=request.model_id,
-                max_context_messages=request.max_context_messages,
             )
         )
         return IDResponse(id=chat_id)
@@ -129,25 +121,6 @@ class ChatCommandController:
         await self.update_chat_name_use_case.execute(
             UpdateChatNameCommand(
                 user_id=descriptor.identity_id, chat_id=chat_id, name=request.name
-            )
-        )
-
-    @command_router.put(
-        "/{chat_id:uuid}/settings",
-        status_code=status.HTTP_204_NO_CONTENT,
-    )
-    async def update_settings(
-        self,
-        chat_id: UUID,
-        request: UpdateChatSettingsRequest,
-        descriptor: Annotated[IdentityDescriptor, Depends(get_descriptor)],
-    ) -> None:
-        await self.update_chat_settings_use_case.execute(
-            UpdateChatSettingsCommand(
-                user_id=descriptor.identity_id,
-                chat_id=chat_id,
-                model_id=request.model_id,
-                max_context_messages=request.max_context_messages,
             )
         )
 

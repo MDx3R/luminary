@@ -46,7 +46,6 @@ class SendMessageUseCase(ISendMessageUseCase):
         message = self.message_factory.create(
             MessageFactoryDTO(
                 chat_id=chat_id,
-                model_id=chat.model_id,
                 role=Author.USER,
                 content=command.content,
             )

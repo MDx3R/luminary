@@ -54,6 +54,9 @@ from luminary.model.application.interfaces.services.engine import (
 from luminary.model.application.prompts.defaults import EMPTY_ASSISTANT_INSTRUCTIONS
 
 
+_INFERENCE_CHAT_HISTORY_MESSAGE_LIMIT = 100
+
+
 def _author_to_role(author: Author) -> Role:
     if author == Author.USER:
         return Role.USER
@@ -120,7 +123,6 @@ class GetStreamingMessageResponseUseCase(IGetStreamingMessageResponseUseCase):
         response = self.message_factory.create(
             MessageFactoryDTO(
                 chat_id=ctx.chat.id,
-                model_id=ctx.request.model_id,
                 role=Author.ASSISTANT,
                 content=EMPTY_CONTENT,
             )
@@ -180,7 +182,7 @@ class GetStreamingMessageResponseUseCase(IGetStreamingMessageResponseUseCase):
         self.chat_access_policy.assert_is_allowed(user_id, chat)
 
         messages = await self.message_reader.get_chat_messages(
-            chat_id, limit=chat.max_context_messages
+            chat_id, limit=_INFERENCE_CHAT_HISTORY_MESSAGE_LIMIT
         )
         if not messages:
             raise InvariantViolationError(

@@ -24,7 +24,6 @@ class MessageBase(Base):
     role: Mapped[Author] = mapped_column(Enum(Author), nullable=False)
     status: Mapped[MessageStatus] = mapped_column(Enum(MessageStatus), nullable=False)
     content: Mapped[str] = mapped_column(Text, nullable=False, default="")
-    model_id: Mapped[UUID] = mapped_column(PGUUID, nullable=False)
     tokens: Mapped[int | None] = mapped_column(Integer, nullable=True)
     edited_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 

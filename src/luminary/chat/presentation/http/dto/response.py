@@ -45,8 +45,6 @@ class ChatResponse(BaseModel):
     folder_id: UUID | None
     assistant_id: UUID | None
     assistant_name: str | None
-    model_id: UUID
-    max_context_messages: int
     sources: list[ChatSourceItemResponse]
     created_at: datetime
 
@@ -58,8 +56,6 @@ class ChatResponse(BaseModel):
             folder_id=model.folder_id,
             assistant_id=model.assistant_id,
             assistant_name=model.assistant_name,
-            model_id=model.model_id,
-            max_context_messages=model.max_context_messages,
             sources=[ChatSourceItemResponse.from_read_model(s) for s in model.sources],
             created_at=model.created_at,
         )
@@ -68,7 +64,6 @@ class ChatResponse(BaseModel):
 class ChatSummaryResponse(BaseModel):
     id: UUID
     name: str
-    model_id: UUID
     created_at: datetime
 
     @classmethod
@@ -76,7 +71,6 @@ class ChatSummaryResponse(BaseModel):
         return cls(
             id=model.id,
             name=model.name,
-            model_id=model.model_id,
             created_at=model.created_at,
         )
 
@@ -93,7 +87,6 @@ class MessageResponse(BaseModel):
     role: str
     status: str
     content: str
-    model_id: UUID
     tokens: int | None
     created_at: datetime
     edited_at: datetime
@@ -107,7 +100,6 @@ class MessageResponse(BaseModel):
             role=model.role,
             status=model.status,
             content=model.content,
-            model_id=model.model_id,
             tokens=model.tokens,
             created_at=model.created_at,
             edited_at=model.edited_at,

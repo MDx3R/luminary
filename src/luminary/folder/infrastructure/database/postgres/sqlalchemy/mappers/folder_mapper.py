@@ -132,7 +132,6 @@ class FolderReadMapper:
         return FolderChatItem(
             id=base.chat_id,
             name=base.name,
-            model_id=base.model_id,
             created_at=base.created_at,
         )
 

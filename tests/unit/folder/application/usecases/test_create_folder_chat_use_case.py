@@ -32,7 +32,6 @@ class TestCreateFolderChatUseCase:
         self.user_id = uuid4()
         self.folder_id = uuid4()
         self.chat_id = uuid4()
-        self.model_id = uuid4()
 
         self.folder = make_folder(
             folder_id=self.folder_id,
@@ -41,7 +40,6 @@ class TestCreateFolderChatUseCase:
         self.chat = make_chat(
             chat_id=self.chat_id,
             user_id=self.user_id,
-            model_id=self.model_id,
         )
 
         self.folder_repository: AsyncMock = AsyncMock(
@@ -59,8 +57,6 @@ class TestCreateFolderChatUseCase:
             folder_id=self.folder_id,
             name="New Chat",
             assistant_id=None,
-            model_id=self.model_id,
-            max_context_messages=10,
         )
 
         self.use_case = CreateFolderChatUseCase(

@@ -50,9 +50,6 @@ from luminary.chat.application.usecases.command.send_message_use_case import (
 from luminary.chat.application.usecases.command.update_chat_name_use_case import (
     UpdateChatNameUseCase,
 )
-from luminary.chat.application.usecases.command.update_chat_settings_use_case import (
-    UpdateChatSettingsUseCase,
-)
 from luminary.chat.application.usecases.query.get_chat_use_case import (
     GetChatByIdUseCase,
 )
@@ -146,11 +143,6 @@ class ChatContainer(containers.DeclarativeContainer):
     )
     update_chat_name_use_case = providers.Singleton(
         UpdateChatNameUseCase,
-        repository=event_bus_chat_repository,
-        access_policy=chat_access_policy,
-    )
-    update_chat_settings_use_case = providers.Singleton(
-        UpdateChatSettingsUseCase,
         repository=event_bus_chat_repository,
         access_policy=chat_access_policy,
     )

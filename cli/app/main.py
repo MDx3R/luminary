@@ -37,6 +37,8 @@ from idp.identity.application.interfaces.usecases.command.create_identity_use_ca
 from idp.identity.infrastructure.di.container.container import IdentityContainer
 from idp.identity.presentation.http.fastapi.controllers import identity_router
 from llama_index.core import Settings, VectorStoreIndex
+from llama_index.embeddings.openai_like import OpenAILikeEmbedding
+from llama_index.llms.openai_like import OpenAILike
 from llama_index.vector_stores.qdrant import QdrantVectorStore
 from luminary_files.application.interfaces.services.file_service import IFileService
 from luminary_files.infrastructure.di.container import FileContainer
@@ -175,10 +177,6 @@ from luminary.folder.presentation.http.fastapi.controllers import (
     query_router as folder_query_router,
 )
 from luminary.model.infrastructure.di.container import ModelContainer
-from luminary.model.infrastructure.services.llama_index.client import (
-    MappedOpenAI,
-    MappedOpenAIEmbedding,
-)
 from luminary.source.application.interfaces.usecases.command.create_source_use_case import (
     ICreateFileSourceUseCase,
     ICreateLinkSourceUseCase,
@@ -346,21 +344,17 @@ def main() -> FastAPI:  # noqa: PLR0915
     logger.info("broker initialized")
 
     # LLM
-    llm = MappedOpenAI(
+    llm = OpenAILike(
         model=config.llm.model,
         api_key=config.llm.api_key,
         api_base=config.llm.base_url,
         temperature=0.3,
     )
-    MappedOpenAI.override(config.llm.model, config.llm.provider_model)
     logger.info("llm initialized")
 
     # Embedding Model
-    MappedOpenAIEmbedding.override(
-        config.llm.embed_model, config.llm.provider_embed_model
-    )
-    embed_model = MappedOpenAIEmbedding(
-        model=config.llm.embed_model,
+    embed_model = OpenAILikeEmbedding(
+        model_name=config.llm.embed_model,
         api_key=config.llm.api_key,
         api_base=config.llm.base_url,
     )

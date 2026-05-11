@@ -7,7 +7,7 @@ class LLMConfig(BaseModel):
     model: str
     provider_model: str = ""
     base_url: str
-    api_key: str | None = None
+    api_key: str = ""
     embed_model: str
     provider_embed_model: str = ""
 

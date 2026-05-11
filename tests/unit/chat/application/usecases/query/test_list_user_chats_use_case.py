@@ -31,9 +31,7 @@ class TestListUserChatsUseCase:
             ),
         ]
         read_repo: AsyncMock = AsyncMock(spec=IChatReadRepository)
-        read_repo.list_standalone_by_owner = AsyncMock(
-            return_value=read_models
-        )
+        read_repo.list_standalone_by_owner = AsyncMock(return_value=read_models)
 
         use_case = ListUserChatsUseCase(read_repository=read_repo)
         query = ListUserChatsQuery(user_id=user_id)

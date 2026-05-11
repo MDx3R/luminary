@@ -192,17 +192,13 @@ class TestGetStreamingMessageResponseUseCase:
 
         mock_assistant = Mock()
         mock_assistant.instructions.prompt = "Folder assistant instructions"
-        self.assistant_repository.get_by_id = AsyncMock(
-            return_value=mock_assistant
-        )
+        self.assistant_repository.get_by_id = AsyncMock(return_value=mock_assistant)
 
         async for _ in self.use_case.execute(self.command):
             pass
 
         self.folder_repository.get_by_id.assert_called_once()
-        self.assistant_repository.get_by_id.assert_called_once_with(
-            folder.assistant_id
-        )
+        self.assistant_repository.get_by_id.assert_called_once_with(folder.assistant_id)
         request = self.inference_engine.send.call_args[0][0]
         assert request.system_prompt == "Folder assistant instructions"
 

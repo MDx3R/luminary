@@ -1,4 +1,4 @@
-"""Query use case: list assistants for a user."""
+"""Query use case: list assistants visible to a user."""
 
 from abc import ABC, abstractmethod
 from collections.abc import Sequence
@@ -9,14 +9,14 @@ from luminary.assistant.application.dtos.read_models import AssistantSummaryRead
 
 
 @dataclass(frozen=True)
-class ListAssistantsQuery:
+class ListUserAssistantsQuery:
     user_id: UUID
 
 
-class IListAssistantsUseCase(ABC):
+class IListUserAssistantsUseCase(ABC):
     @abstractmethod
     async def execute(
-        self, query: ListAssistantsQuery
+        self, query: ListUserAssistantsQuery
     ) -> Sequence[AssistantSummaryReadModel]:
-        """Return all assistants owned by the user."""
+        """Return PERSONAL (owned) + all SYSTEM + PUBLIC (owned) assistants."""
         ...

@@ -33,6 +33,7 @@ class TestUpdateAssistantInfoUseCase:
             user_id=self.user_id,
             name="Old Name",
             description="Old Description",
+            tags=["old-tag"],
         )
 
         self.access_policy: Mock = Mock(spec=IAssistantAccessPolicy)
@@ -46,6 +47,7 @@ class TestUpdateAssistantInfoUseCase:
             assistant_id=self.assistant_id,
             name="New Name",
             description="New Description",
+            tags=["new-tag"],
         )
 
         self.use_case = UpdateAssistantInfoUseCase(
@@ -73,6 +75,11 @@ class TestUpdateAssistantInfoUseCase:
         assert self.assistant.info.name == "New Name"
         assert self.assistant.info.description == "New Description"
 
+    async def test_updates_assistant_tags(self) -> None:
+        await self.use_case.execute(self.command)
+
+        assert self.assistant.tags == ["new-tag"]
+
     async def test_calls_repository_save_when_changes_made(self) -> None:
         await self.use_case.execute(self.command)
 
@@ -84,11 +91,46 @@ class TestUpdateAssistantInfoUseCase:
             assistant_id=self.assistant_id,
             name="Old Name",
             description="Old Description",
+            tags=["old-tag"],
         )
 
         await self.use_case.execute(unchanged_command)
 
         self.repository.save.assert_not_awaited()
+
+    async def test_saves_when_only_tags_changed(self) -> None:
+        # Arrange
+        tags_only_command = UpdateAssistantInfoCommand(
+            user_id=self.user_id,
+            assistant_id=self.assistant_id,
+            name="Old Name",
+            description="Old Description",
+            tags=["brand-new-tag"],
+        )
+
+        # Act
+        await self.use_case.execute(tags_only_command)
+
+        # Assert
+        self.repository.save.assert_awaited_once_with(self.assistant)
+        assert self.assistant.tags == ["brand-new-tag"]
+
+    async def test_saves_when_only_info_changed(self) -> None:
+        # Arrange — different name/description, same tags
+        info_only_command = UpdateAssistantInfoCommand(
+            user_id=self.user_id,
+            assistant_id=self.assistant_id,
+            name="Changed Name",
+            description="Changed Desc",
+            tags=["old-tag"],
+        )
+
+        # Act
+        await self.use_case.execute(info_only_command)
+
+        # Assert
+        self.repository.save.assert_awaited_once_with(self.assistant)
+        assert self.assistant.info.name == "Changed Name"
 
     async def test_raises_not_found_when_assistant_not_exists(self) -> None:
         self.repository.get_by_id.side_effect = NotFoundError(

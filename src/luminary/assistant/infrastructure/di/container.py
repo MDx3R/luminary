@@ -10,11 +10,17 @@ from luminary.assistant.application.policies.assistant_access_policy import (
 from luminary.assistant.application.repositories.assistant_repository import (
     EventBusAssistantRepository,
 )
+from luminary.assistant.application.usecases.command.clone_assistant_use_case import (
+    CloneAssistantUseCase,
+)
 from luminary.assistant.application.usecases.command.create_assistant_use_case import (
     CreateAssistantUseCase,
 )
 from luminary.assistant.application.usecases.command.delete_assistant_use_case import (
     DeleteAssistantUseCase,
+)
+from luminary.assistant.application.usecases.command.publish_assistant_use_case import (
+    PublishAssistantUseCase,
 )
 from luminary.assistant.application.usecases.command.update_assistant_info_use_case import (
     UpdateAssistantInfoUseCase,
@@ -26,7 +32,10 @@ from luminary.assistant.application.usecases.query.get_assistant_use_case import
     GetAssistantByIdUseCase,
 )
 from luminary.assistant.application.usecases.query.list_assistants_use_case import (
-    ListAssistantsUseCase,
+    ListUserAssistantsUseCase,
+)
+from luminary.assistant.application.usecases.query.list_public_assistants_use_case import (
+    ListPublicAssistantsUseCase,
 )
 from luminary.assistant.domain.factories.assistant_factory import AssistantFactory
 from luminary.assistant.infrastructure.database.postgres.sqlalchemy.repositories.assistant_read_repository import (
@@ -83,11 +92,25 @@ class AssistantContainer(containers.DeclarativeContainer):
         repository=event_bus_assistant_repository,
         access_policy=assistant_access_policy,
     )
+    clone_assistant_use_case = providers.Singleton(
+        CloneAssistantUseCase,
+        repository=event_bus_assistant_repository,
+        access_policy=assistant_access_policy,
+        uuid_generator=uuid_generator,
+    )
+    publish_assistant_use_case = providers.Singleton(
+        PublishAssistantUseCase,
+        repository=event_bus_assistant_repository,
+        access_policy=assistant_access_policy,
+    )
 
     # Query use cases
     get_assistant_by_id_use_case = providers.Singleton(
         GetAssistantByIdUseCase, read_repository=assistant_read_repository
     )
-    list_assistants_use_case = providers.Singleton(
-        ListAssistantsUseCase, read_repository=assistant_read_repository
+    list_user_assistants_use_case = providers.Singleton(
+        ListUserAssistantsUseCase, read_repository=assistant_read_repository
+    )
+    list_public_assistants_use_case = providers.Singleton(
+        ListPublicAssistantsUseCase, read_repository=assistant_read_repository
     )

@@ -6,11 +6,11 @@ from common.domain.value_objects.id import UserId
 from tests.unit.assistant.utils import make_assistant, make_instructions
 
 from luminary.assistant.domain.entity.assistant import (
+    MAX_TAG_LENGTH,
+    MAX_TAGS_COUNT,
     Assistant,
     AssistantId,
     AssistantInfo,
-    MAX_TAG_LENGTH,
-    MAX_TAGS_COUNT,
 )
 from luminary.assistant.domain.enums import AssistantType
 from luminary.assistant.domain.events.events import (

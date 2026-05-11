@@ -116,7 +116,7 @@ class TestChat:
         new_model = ModelId(uuid4())
         self.chat.update_model_and_context(new_model, 15)
         assert self.chat.model_id == new_model
-        assert self.chat.max_context_messages == 15
+        assert self.chat.max_context_messages == 15  # noqa: PLR2004
         assert len(self.chat.events) == 1
         assert isinstance(self.chat.events[0], ChatSettingsChangedEvent)
 

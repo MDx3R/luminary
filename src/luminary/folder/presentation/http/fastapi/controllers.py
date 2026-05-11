@@ -1,12 +1,15 @@
+from collections.abc import AsyncGenerator
 from typing import Annotated
 from uuid import UUID
 
 from common.presentation.http.dto.response import IDResponse
 from common.presentation.http.fastapi.cbv import cbv
 from fastapi import APIRouter, Depends, status
+from fastapi.responses import StreamingResponse
 from idp.identity.domain.value_objects.descriptor import IdentityDescriptor
 from idp.identity.presentation.http.fastapi.auth import get_descriptor
 
+from luminary.chat.presentation.http.dto.response import StreamingMessageResponse
 from luminary.folder.application.interfaces.usecases.command.add_source_to_folder_use_case import (
     AddSourceToFolderCommand,
     IAddSourceToFolderUseCase,
@@ -39,6 +42,14 @@ from luminary.folder.application.interfaces.usecases.command.remove_source_from_
     IRemoveSourceFromFolderUseCase,
     RemoveSourceFromFolderCommand,
 )
+from luminary.folder.application.interfaces.usecases.command.stream_folder_editor_autocomplete_use_case import (
+    IStreamFolderEditorAutocompleteUseCase,
+    StreamFolderEditorAutocompleteCommand,
+)
+from luminary.folder.application.interfaces.usecases.command.stream_folder_editor_inline_use_case import (
+    IStreamFolderEditorInlineUseCase,
+    StreamFolderEditorInlineCommand,
+)
 from luminary.folder.application.interfaces.usecases.command.update_editor_content_use_case import (
     IUpdateEditorContentUseCase,
     UpdateEditorContentCommand,
@@ -60,6 +71,8 @@ from luminary.folder.presentation.http.dto.request import (
     ChangeFolderAssistantRequest,
     CreateFolderChatRequest,
     CreateFolderRequest,
+    StreamFolderEditorAutocompleteRequest,
+    StreamFolderEditorInlineRequest,
     UpdateEditorContentRequest,
     UpdateFolderInfoRequest,
 )
@@ -84,6 +97,10 @@ class FolderCommandController:
     create_folder_chat_use_case: ICreateFolderChatUseCase = Depends()
     remove_chat_from_folder_use_case: IRemoveChatFromFolderUseCase = Depends()
     update_editor_content_use_case: IUpdateEditorContentUseCase = Depends()
+    stream_folder_editor_inline_use_case: IStreamFolderEditorInlineUseCase = Depends()
+    stream_folder_editor_autocomplete_use_case: (
+        IStreamFolderEditorAutocompleteUseCase
+    ) = Depends()
 
     @command_router.post("/", status_code=status.HTTP_201_CREATED)
     async def create(
@@ -256,6 +273,54 @@ class FolderCommandController:
                 text=request.text,
             )
         )
+
+    @command_router.post("/{folder_id:uuid}/editor/inline/stream")
+    async def stream_editor_inline(
+        self,
+        folder_id: UUID,
+        request: StreamFolderEditorInlineRequest,
+        descriptor: Annotated[IdentityDescriptor, Depends(get_descriptor)],
+    ) -> StreamingResponse:
+        stream = self.stream_folder_editor_inline_use_case.execute(
+            StreamFolderEditorInlineCommand(
+                user_id=descriptor.identity_id,
+                folder_id=folder_id,
+                instruction=request.instruction,
+                document_markdown=request.document_markdown,
+            )
+        )
+
+        async def process_stream() -> AsyncGenerator[str]:
+            async for chunk in stream:
+                yield (
+                    f"data: {StreamingMessageResponse.from_dto(chunk).model_dump_json()}\n\n"
+                )
+
+        return StreamingResponse(process_stream(), media_type="text/event-stream")
+
+    @command_router.post("/{folder_id:uuid}/editor/autocomplete/stream")
+    async def stream_editor_autocomplete(
+        self,
+        folder_id: UUID,
+        request: StreamFolderEditorAutocompleteRequest,
+        descriptor: Annotated[IdentityDescriptor, Depends(get_descriptor)],
+    ) -> StreamingResponse:
+        stream = self.stream_folder_editor_autocomplete_use_case.execute(
+            StreamFolderEditorAutocompleteCommand(
+                user_id=descriptor.identity_id,
+                folder_id=folder_id,
+                text_before_cursor=request.text_before_cursor,
+                text_after_cursor=request.text_after_cursor,
+            )
+        )
+
+        async def process_stream() -> AsyncGenerator[str]:
+            async for chunk in stream:
+                yield (
+                    f"data: {StreamingMessageResponse.from_dto(chunk).model_dump_json()}\n\n"
+                )
+
+        return StreamingResponse(process_stream(), media_type="text/event-stream")
 
 
 query_router = APIRouter()

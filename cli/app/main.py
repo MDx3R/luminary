@@ -138,6 +138,12 @@ from luminary.folder.application.interfaces.usecases.command.remove_folder_assis
 from luminary.folder.application.interfaces.usecases.command.remove_source_from_folder_use_case import (
     IRemoveSourceFromFolderUseCase,
 )
+from luminary.folder.application.interfaces.usecases.command.stream_folder_editor_autocomplete_use_case import (
+    IStreamFolderEditorAutocompleteUseCase,
+)
+from luminary.folder.application.interfaces.usecases.command.stream_folder_editor_inline_use_case import (
+    IStreamFolderEditorInlineUseCase,
+)
 from luminary.folder.application.interfaces.usecases.command.update_editor_content_use_case import (
     IUpdateEditorContentUseCase,
 )
@@ -498,6 +504,8 @@ def main() -> FastAPI:  # noqa: PLR0915
         event_bus=event_bus,
         chat_factory=chat_container.chat_factory,
         chat_repository=chat_container.event_bus_chat_repository,
+        inference_engine=model_container.inference_engine,
+        assistant_repository=assistant_container.event_bus_assistant_repository,
     )
     chat_container.folder_repository.override(
         folder_container.event_bus_folder_repository
@@ -627,6 +635,12 @@ def main() -> FastAPI:  # noqa: PLR0915
     )
     server.dependency_overrides[IUpdateEditorContentUseCase] = (
         lambda: folder_container.update_editor_content_use_case()
+    )
+    server.dependency_overrides[IStreamFolderEditorInlineUseCase] = (
+        lambda: folder_container.stream_folder_editor_inline_use_case()
+    )
+    server.dependency_overrides[IStreamFolderEditorAutocompleteUseCase] = (
+        lambda: folder_container.stream_folder_editor_autocomplete_use_case()
     )
     server.dependency_overrides[IGetFolderByIdUseCase] = (
         lambda: folder_container.get_folder_by_id_use_case()

@@ -31,3 +31,13 @@ class CreateFolderChatRequest(BaseModel):
 
 class UpdateEditorContentRequest(BaseModel):
     text: str
+
+
+class StreamFolderEditorInlineRequest(BaseModel):
+    instruction: str
+    document_markdown: str
+
+
+class StreamFolderEditorAutocompleteRequest(BaseModel):
+    text_before_cursor: str
+    text_after_cursor: str

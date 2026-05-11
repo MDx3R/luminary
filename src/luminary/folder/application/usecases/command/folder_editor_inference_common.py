@@ -9,9 +9,7 @@ from luminary.chat.application.interfaces.usecases.command.get_message_response_
 )
 from luminary.chat.domain.enums import Author, MessageStatus
 from luminary.folder.domain.entity.folder import Folder
-
-
-DEFAULT_SYSTEM_PROMPT = "You are a helpful assistant."
+from luminary.model.application.prompts.defaults import EMPTY_ASSISTANT_INSTRUCTIONS
 
 
 def editor_stream_chunk(
@@ -37,7 +35,7 @@ async def folder_inference_system_prompt(
     if folder.assistant_id is not None:
         assistant = await assistant_repository.get_by_id(folder.assistant_id)
         return assistant.instructions.prompt
-    return DEFAULT_SYSTEM_PROMPT
+    return EMPTY_ASSISTANT_INSTRUCTIONS
 
 
 def folder_source_ids(folder: Folder) -> list[UUID]:

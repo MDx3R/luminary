@@ -29,18 +29,12 @@ from luminary.folder.application.usecases.command.folder_editor_inference_common
 from luminary.folder.domain.value_objects.folder_id import FolderId
 from luminary.model.application.interfaces.services.engine import (
     IInferenceEngine,
+    InferenceMode,
     InferenceRequestDTO,
 )
-
-
-def _autocomplete_query(text_before: str, text_after: str) -> str:
-    return (
-        "You are completing markdown at the user's cursor position.\n\n"
-        f"Text before cursor:\n{text_before}\n\n"
-        f"Text after cursor:\n{text_after}\n\n"
-        "Emit only the characters to insert at the cursor (continuation of the line or "
-        "block). Do not repeat text before the cursor. Do not add explanations."
-    )
+from luminary.model.application.prompts.user_message_format import (
+    build_autocomplete_user_content,
+)
 
 
 class StreamFolderEditorAutocompleteUseCase(IStreamFolderEditorAutocompleteUseCase):
@@ -74,13 +68,15 @@ class StreamFolderEditorAutocompleteUseCase(IStreamFolderEditorAutocompleteUseCa
         )
 
         request = InferenceRequestDTO(
-            query=_autocomplete_query(
+            query=build_autocomplete_user_content(
                 command.text_before_cursor, command.text_after_cursor
             ),
             system_prompt=system_prompt,
             source_ids=source_ids,
             history=(),
             editor_content=None,
+            mode=InferenceMode.EDITOR_AUTOCOMPLETE,
+            chat_source_context=None,
         )
         async for chunk in self._inference_engine.send(request):
             yield editor_stream_chunk(

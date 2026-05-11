@@ -6,8 +6,10 @@ from dependency_injector import containers, providers
 from llama_index.readers.file import UnstructuredReader
 
 from luminary.model.application.services.embedding_service import EmbeddingService
-from luminary.model.infrastructure.services.llama_index.engine import (
+from luminary.model.application.prompts.luminary_identity import (
     LUMINARY_BASE_SYSTEM_PROMPT,
+)
+from luminary.model.infrastructure.services.llama_index.engine import (
     ChatEngineLlamaIndexEngine,
 )
 from luminary.model.infrastructure.services.llama_index.file_content_extractor import (

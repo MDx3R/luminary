@@ -32,6 +32,7 @@ from luminary.folder.domain.value_objects.folder_id import FolderId
 from luminary.model.application.interfaces.services.engine import (
     EngineStreamingResponse,
     IInferenceEngine,
+    InferenceMode,
     InferenceRequestDTO,
 )
 from luminary.source.domain.entity.source import SourceId
@@ -86,6 +87,7 @@ class TestStreamFolderEditorInlineUseCase:
             assert request.query == "Shorten intro"
             assert request.editor_content == "# Doc"
             assert request.source_ids == [source_id]
+            assert request.mode == InferenceMode.EDITOR_INLINE
 
             assert chunks[0].state == StreamState.START
             deltas = [c for c in chunks if c.state == StreamState.DELTA]
@@ -215,6 +217,8 @@ class TestStreamFolderEditorAutocompleteUseCase:
             assert "## He" in request.query
             assert "llo" in request.query
             assert request.source_ids == [source_id]
+            assert request.mode == InferenceMode.EDITOR_AUTOCOMPLETE
+            assert "<cursor_completion_request>" in request.query
 
             deltas = [c for c in chunks if c.state == StreamState.DELTA]
             assert deltas[0].content == "next"

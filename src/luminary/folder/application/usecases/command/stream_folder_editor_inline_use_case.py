@@ -29,6 +29,7 @@ from luminary.folder.application.usecases.command.folder_editor_inference_common
 from luminary.folder.domain.value_objects.folder_id import FolderId
 from luminary.model.application.interfaces.services.engine import (
     IInferenceEngine,
+    InferenceMode,
     InferenceRequestDTO,
 )
 
@@ -69,6 +70,8 @@ class StreamFolderEditorInlineUseCase(IStreamFolderEditorInlineUseCase):
             source_ids=source_ids,
             history=(),
             editor_content=command.document_markdown,
+            mode=InferenceMode.EDITOR_INLINE,
+            chat_source_context=None,
         )
         async for chunk in self._inference_engine.send(request):
             yield editor_stream_chunk(

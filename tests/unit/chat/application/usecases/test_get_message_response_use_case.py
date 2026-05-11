@@ -37,10 +37,13 @@ from luminary.folder.application.interfaces.repositories.folder_repository impor
 )
 from luminary.folder.domain.value_objects.editor_content import EditorContent
 from luminary.model.application.interfaces.services.engine import (
+    ChatSourceContext,
     EngineStreamingResponse,
     IInferenceEngine,
+    InferenceMode,
     InferenceRequestDTO,
 )
+from luminary.model.application.prompts.defaults import EMPTY_ASSISTANT_INSTRUCTIONS
 from luminary.source.domain.entity.source import SourceId
 
 
@@ -132,6 +135,9 @@ class TestGetStreamingMessageResponseUseCase:
         assert isinstance(request, InferenceRequestDTO)
         assert request.query == "Hello"
         assert request.editor_content is None
+        assert request.mode == InferenceMode.CHAT
+        assert request.chat_source_context == ChatSourceContext.STANDALONE
+        assert request.system_prompt == EMPTY_ASSISTANT_INSTRUCTIONS
 
     async def test_calls_access_policy_with_user_and_chat(self) -> None:
         async for _ in self.use_case.execute(self.command):
@@ -169,6 +175,7 @@ class TestGetStreamingMessageResponseUseCase:
         self.folder_repository.get_by_id.assert_not_called()
         request = self.inference_engine.send.call_args[0][0]
         assert request.editor_content is None
+        assert request.chat_source_context == ChatSourceContext.STANDALONE
 
     async def test_folder_chat_uses_folder_assistant_when_chat_has_none(
         self,
@@ -201,6 +208,7 @@ class TestGetStreamingMessageResponseUseCase:
         self.assistant_repository.get_by_id.assert_called_once_with(folder.assistant_id)
         request = self.inference_engine.send.call_args[0][0]
         assert request.system_prompt == "Folder assistant instructions"
+        assert request.chat_source_context == ChatSourceContext.FOLDER
 
     async def test_folder_chat_merges_chat_and_folder_sources(self) -> None:
         folder_id = uuid4()
@@ -247,3 +255,4 @@ class TestGetStreamingMessageResponseUseCase:
 
         request = self.inference_engine.send.call_args[0][0]
         assert request.editor_content == "# Document from editor"
+        assert request.chat_source_context == ChatSourceContext.FOLDER

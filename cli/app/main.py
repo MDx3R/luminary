@@ -347,6 +347,8 @@ def main() -> FastAPI:  # noqa: PLR0915
         api_base=config.llm.base_url,
         temperature=0.3,
         max_tokens=config.llm.max_tokens,
+        context_window=128000,
+        is_chat_model=True,
     )
     logger.info("llm initialized")
 

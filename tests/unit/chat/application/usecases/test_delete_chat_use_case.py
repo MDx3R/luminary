@@ -52,9 +52,7 @@ class TestDeleteChatUseCase:
     async def test_calls_repository_get_by_id_with_chat_id(self) -> None:
         await self.use_case.execute(self.command)
 
-        self.repository.get_by_id.assert_awaited_once_with(
-            ChatId(self.chat_id)
-        )
+        self.repository.get_by_id.assert_awaited_once_with(ChatId(self.chat_id))
 
     async def test_calls_access_policy_with_user_and_chat(self) -> None:
         await self.use_case.execute(self.command)
@@ -70,9 +68,7 @@ class TestDeleteChatUseCase:
         assert self.chat.is_deleted
 
     async def test_raises_not_found_when_chat_not_exists(self) -> None:
-        self.repository.get_by_id.side_effect = NotFoundError(
-            ChatId(self.chat_id)
-        )
+        self.repository.get_by_id.side_effect = NotFoundError(ChatId(self.chat_id))
 
         with pytest.raises(NotFoundError):
             await self.use_case.execute(self.command)

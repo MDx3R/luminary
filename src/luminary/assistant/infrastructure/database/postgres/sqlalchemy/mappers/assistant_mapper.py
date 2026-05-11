@@ -20,23 +20,27 @@ class AssistantMapper:
     def to_domain(cls, base: AssistantBase) -> Assistant:
         return Assistant(
             id=AssistantId(base.assistant_id),
-            owner_id=UserId(base.owner_id),
+            owner_id=UserId(base.owner_id) if base.owner_id is not None else None,
             type=base.type,
             info=AssistantInfo(name=base.name, description=base.description),
             instructions=Instructions(prompt=base.prompt),
             is_deleted=base.is_deleted,
+            tags=list(base.tags) if base.tags else [],
         )
 
     @classmethod
     def to_persistence(cls, assistant: Assistant) -> AssistantBase:
         return AssistantBase(
             assistant_id=assistant.id.value,
-            owner_id=assistant.owner_id.value,
+            owner_id=(
+                assistant.owner_id.value if assistant.owner_id is not None else None
+            ),
             type=assistant.type,
             name=assistant.info.name,
             description=assistant.info.description,
             prompt=assistant.instructions.prompt,
             is_deleted=assistant.is_deleted,
+            tags=assistant.tags,
         )
 
 
@@ -50,6 +54,7 @@ class AssistantReadMapper:
             type=base.type.value,
             prompt=base.prompt,
             created_at=base.created_at,
+            tags=list(base.tags) if base.tags else [],
         )
 
     @classmethod
@@ -59,4 +64,5 @@ class AssistantReadMapper:
             name=base.name,
             description=base.description,
             type=base.type.value,
+            tags=list(base.tags) if base.tags else [],
         )

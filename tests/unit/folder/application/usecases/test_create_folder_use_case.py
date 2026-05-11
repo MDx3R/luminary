@@ -34,9 +34,7 @@ class TestCreateFolderUseCase:
         self.folder_factory: Mock = Mock(
             spec=IFolderFactory, create=Mock(return_value=self.folder)
         )
-        self.folder_repository: AsyncMock = AsyncMock(
-            spec=IFolderRepository
-        )
+        self.folder_repository: AsyncMock = AsyncMock(spec=IFolderRepository)
 
         self.command = CreateFolderCommand(
             user_id=self.user_id,

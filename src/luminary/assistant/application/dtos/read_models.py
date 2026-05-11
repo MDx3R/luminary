@@ -15,6 +15,7 @@ class AssistantReadModel:
     type: str
     prompt: str
     created_at: datetime
+    tags: list[str]
 
 
 @dataclass(frozen=True)
@@ -25,3 +26,4 @@ class AssistantSummaryReadModel:
     name: str
     description: str
     type: str
+    tags: list[str]

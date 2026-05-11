@@ -38,9 +38,7 @@ class TestCreateAssistantUseCase:
         self.assistant_factory: Mock = Mock(
             spec=IAssistantFactory, create=Mock(return_value=self.assistant)
         )
-        self.assistant_repository: AsyncMock = AsyncMock(
-            spec=IAssistantRepository
-        )
+        self.assistant_repository: AsyncMock = AsyncMock(spec=IAssistantRepository)
 
         self.command = CreateAssistantCommand(
             user_id=self.user_id,

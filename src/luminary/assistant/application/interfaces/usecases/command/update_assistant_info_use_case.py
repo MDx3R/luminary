@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from uuid import UUID
 
 
@@ -9,6 +9,7 @@ class UpdateAssistantInfoCommand:
     assistant_id: UUID
     name: str
     description: str
+    tags: list[str] = field(default_factory=list)
 
 
 class IUpdateAssistantInfoUseCase(ABC):

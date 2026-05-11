@@ -41,11 +41,17 @@ from llama_index.vector_stores.qdrant import QdrantVectorStore
 from luminary_files.application.interfaces.services.file_service import IFileService
 from luminary_files.infrastructure.di.container import FileContainer
 
+from luminary.assistant.application.interfaces.usecases.command.clone_assistant_use_case import (
+    ICloneAssistantUseCase,
+)
 from luminary.assistant.application.interfaces.usecases.command.create_assistant_use_case import (
     ICreateAssistantUseCase,
 )
 from luminary.assistant.application.interfaces.usecases.command.delete_assistant_use_case import (
     IDeleteAssistantUseCase,
+)
+from luminary.assistant.application.interfaces.usecases.command.publish_assistant_use_case import (
+    IPublishAssistantUseCase,
 )
 from luminary.assistant.application.interfaces.usecases.command.update_assistant_info_use_case import (
     IUpdateAssistantInfoUseCase,
@@ -57,7 +63,10 @@ from luminary.assistant.application.interfaces.usecases.query.get_assistant_use_
     IGetAssistantByIdUseCase,
 )
 from luminary.assistant.application.interfaces.usecases.query.list_assistants_use_case import (
-    IListAssistantsUseCase,
+    IListUserAssistantsUseCase,
+)
+from luminary.assistant.application.interfaces.usecases.query.list_public_assistants_use_case import (
+    IListPublicAssistantsUseCase,
 )
 from luminary.assistant.domain.events.events import AssistantDeletedEvent
 from luminary.assistant.infrastructure.di.container import AssistantContainer
@@ -545,14 +554,23 @@ def main() -> FastAPI:  # noqa: PLR0915
     server.dependency_overrides[IUpdateAssistantInstructionsUseCase] = (
         lambda: assistant_container.update_assistant_instructions_use_case()
     )
+    server.dependency_overrides[ICloneAssistantUseCase] = (
+        lambda: assistant_container.clone_assistant_use_case()
+    )
+    server.dependency_overrides[IPublishAssistantUseCase] = (
+        lambda: assistant_container.publish_assistant_use_case()
+    )
     server.dependency_overrides[IDeleteAssistantUseCase] = (
         lambda: assistant_container.delete_assistant_use_case()
     )
     server.dependency_overrides[IGetAssistantByIdUseCase] = (
         lambda: assistant_container.get_assistant_by_id_use_case()
     )
-    server.dependency_overrides[IListAssistantsUseCase] = (
-        lambda: assistant_container.list_assistants_use_case()
+    server.dependency_overrides[IListUserAssistantsUseCase] = (
+        lambda: assistant_container.list_user_assistants_use_case()
+    )
+    server.dependency_overrides[IListPublicAssistantsUseCase] = (
+        lambda: assistant_container.list_public_assistants_use_case()
     )
 
     server.dependency_overrides[ICreateChatUseCase] = (

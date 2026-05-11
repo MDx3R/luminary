@@ -30,14 +30,13 @@ class TestGetAssistantByIdUseCase:
             type="personal",
             prompt="You are...",
             created_at=datetime.now(UTC),
+            tags=[],
         )
         read_repo: AsyncMock = AsyncMock(spec=IAssistantReadRepository)
         read_repo.get_by_id = AsyncMock(return_value=read_model)
 
         use_case = GetAssistantByIdUseCase(read_repository=read_repo)
-        query = GetAssistantByIdQuery(
-            user_id=user_id, assistant_id=assistant_id
-        )
+        query = GetAssistantByIdQuery(user_id=user_id, assistant_id=assistant_id)
 
         result = await use_case.execute(query)
 

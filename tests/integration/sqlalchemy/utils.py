@@ -45,9 +45,7 @@ async def persist_source(
         await session.commit()
 
 
-async def add_source(
-    maker: async_sessionmaker[AsyncSession], **kwargs: Any
-) -> Source:
+async def add_source(maker: async_sessionmaker[AsyncSession], **kwargs: Any) -> Source:
     source = make_source(**kwargs)
     await persist_source(maker, source)
     return source
@@ -94,18 +92,14 @@ async def add_assistant(
     return assistant
 
 
-async def persist_chat(
-    maker: async_sessionmaker[AsyncSession], chat: Chat
-) -> None:
+async def persist_chat(maker: async_sessionmaker[AsyncSession], chat: Chat) -> None:
     async with maker() as session:
         model = ChatMapper.to_persistence(chat)
         session.add(model)
         await session.commit()
 
 
-async def add_chat(
-    maker: async_sessionmaker[AsyncSession], **kwargs: Any
-) -> Chat:
+async def add_chat(maker: async_sessionmaker[AsyncSession], **kwargs: Any) -> Chat:
     chat = make_chat(**kwargs)
     await persist_chat(maker, chat)
     return chat
@@ -137,10 +131,7 @@ async def persist_folder(
         await session.commit()
 
 
-async def add_folder(
-    maker: async_sessionmaker[AsyncSession], **kwargs: Any
-) -> Folder:
+async def add_folder(maker: async_sessionmaker[AsyncSession], **kwargs: Any) -> Folder:
     folder = make_folder(**kwargs)
     await persist_folder(maker, folder)
     return folder
-

@@ -18,6 +18,7 @@ class AssistantSummaryResponse(BaseModel):
     name: str
     description: str
     type: str
+    tags: list[str]
 
     @classmethod
     def from_read_model(
@@ -28,6 +29,7 @@ class AssistantSummaryResponse(BaseModel):
             name=model.name,
             description=model.description,
             type=model.type,
+            tags=model.tags,
         )
 
 
@@ -40,6 +42,7 @@ class AssistantResponse(BaseModel):
     type: str
     prompt: str
     created_at: datetime
+    tags: list[str]
 
     @classmethod
     def from_read_model(cls, model: AssistantReadModel) -> "AssistantResponse":
@@ -50,4 +53,5 @@ class AssistantResponse(BaseModel):
             type=model.type,
             prompt=model.prompt,
             created_at=model.created_at,
+            tags=model.tags,
         )

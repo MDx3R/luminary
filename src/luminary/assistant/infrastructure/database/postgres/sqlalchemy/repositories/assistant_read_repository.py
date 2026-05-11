@@ -31,7 +31,13 @@ class AssistantReadRepository(IAssistantReadRepository):
         stmt = (
             select(AssistantBase)
             .where(AssistantBase.assistant_id == assistant_id)
-            .where(AssistantBase.owner_id == owner_id)
+            .where(
+                or_(
+                    AssistantBase.owner_id == owner_id,
+                    AssistantBase.type == AssistantType.PUBLIC,
+                    AssistantBase.type == AssistantType.SYSTEM,
+                )
+            )
             .where(AssistantBase.is_active)
         )
         row = await self._executor.execute_scalar_one(stmt)

@@ -24,6 +24,7 @@ class ChatFactory(IChatFactory):
             folder_id=data.folder_id,
             name=name,
             assistant_id=data.assistant_id,
-            settings=data.settings,
+            model_id=data.model_id,
+            max_context_messages=data.max_context_messages,
             created_at=self.clock.now(),
         )

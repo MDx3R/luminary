@@ -10,7 +10,6 @@ from luminary.chat.domain.entity.message import Message
 from luminary.chat.domain.enums import Author, MessageStatus
 from luminary.chat.domain.value_objects.chat_id import ChatId
 from luminary.chat.domain.value_objects.chat_info import ChatInfo
-from luminary.chat.domain.value_objects.chat_settings import ChatSettings
 from luminary.chat.domain.value_objects.message_id import MessageId
 from luminary.folder.domain.value_objects.folder_id import FolderId
 from luminary.model.domain.entity.model import ModelId
@@ -23,7 +22,7 @@ def make_chat(  # noqa: PLR0913
     folder_id: UUID | None = None,
     model_id: UUID | None = None,
     assistant_id: UUID | None = None,
-    settings: ChatSettings | None = None,
+    max_context_messages: int = 10,
     name: str = "Test Chat",
 ) -> Chat:
     chat_id = chat_id or uuid4()
@@ -35,17 +34,9 @@ def make_chat(  # noqa: PLR0913
         assistant_id=AssistantId(assistant_id) if assistant_id else None,
         created_at=DateTime(datetime.now(UTC)),
         info=ChatInfo(name=name),
-        settings=settings or make_chat_settings(model_id=model_id),
-        is_deleted=False,
-    )
-
-
-def make_chat_settings(
-    *, model_id: UUID | None = None, max_context_messages: int = 10
-) -> ChatSettings:
-    return ChatSettings(
         model_id=ModelId(model_id or uuid4()),
         max_context_messages=max_context_messages,
+        is_deleted=False,
     )
 
 

@@ -2,6 +2,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass, field
 from typing import Self
 
+from common.domain.exceptions import InvariantViolationError
 from common.domain.interfaces.entity import Entity
 from common.domain.value_objects.datetime import DateTime
 from common.domain.value_objects.id import UserId
@@ -17,8 +18,8 @@ from luminary.chat.domain.events.events import (
 )
 from luminary.chat.domain.value_objects.chat_id import ChatId
 from luminary.chat.domain.value_objects.chat_info import ChatInfo
-from luminary.chat.domain.value_objects.chat_settings import ChatSettings
 from luminary.folder.domain.value_objects.folder_id import FolderId
+from luminary.model.domain.entity.model import ModelId
 from luminary.source.domain.entity.source import SourceId
 
 
@@ -29,10 +30,17 @@ class Chat(Entity):
     folder_id: FolderId | None
     info: ChatInfo
     assistant_id: AssistantId | None
-    settings: ChatSettings
+    model_id: ModelId
+    max_context_messages: int
     created_at: DateTime
     is_deleted: bool
     _sources: set[SourceId] = field(default_factory=set[SourceId])
+
+    def __post_init__(self) -> None:
+        if self.max_context_messages <= 0:
+            raise InvariantViolationError(
+                "Number of context messages cannot be non-positive"
+            )
 
     @property
     def sources(self) -> Sequence[SourceId]:
@@ -66,8 +74,13 @@ class Chat(Entity):
     def name_matches(self, name: str) -> bool:
         return self.info.name == name
 
-    def settings_matches(self, settings: ChatSettings) -> bool:
-        return self.settings == settings
+    def model_config_matches(
+        self, model_id: ModelId, max_context_messages: int
+    ) -> bool:
+        return (
+            self.model_id == model_id
+            and self.max_context_messages == max_context_messages
+        )
 
     def change_name(self, new_name: str) -> None:
         if self.info.name == new_name:
@@ -75,10 +88,17 @@ class Chat(Entity):
         self.info = ChatInfo(new_name)
         self._record_event(ChatNameChangedEvent(chat_id=self.id.value, name=new_name))
 
-    def change_settings(self, new_settings: ChatSettings) -> None:
-        if self.settings == new_settings:
+    def update_model_and_context(
+        self, model_id: ModelId, max_context_messages: int
+    ) -> None:
+        if max_context_messages <= 0:
+            raise InvariantViolationError(
+                "Number of context messages cannot be non-positive"
+            )
+        if self.model_config_matches(model_id, max_context_messages):
             return
-        self.settings = new_settings
+        self.model_id = model_id
+        self.max_context_messages = max_context_messages
         self._record_event(ChatSettingsChangedEvent(chat_id=self.id.value))
 
     def assistant_matches(self, assistant_id: AssistantId | None) -> bool:
@@ -121,7 +141,8 @@ class Chat(Entity):
         folder_id: FolderId | None,
         name: str,
         assistant_id: AssistantId | None,
-        settings: ChatSettings,
+        model_id: ModelId,
+        max_context_messages: int,
         created_at: DateTime,
     ) -> Self:
         return cls(
@@ -130,7 +151,8 @@ class Chat(Entity):
             folder_id=folder_id,
             info=ChatInfo(name=name),
             assistant_id=assistant_id,
-            settings=settings,
+            model_id=model_id,
+            max_context_messages=max_context_messages,
             created_at=created_at,
             is_deleted=False,
         )

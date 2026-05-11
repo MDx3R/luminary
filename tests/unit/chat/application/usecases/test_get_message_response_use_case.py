@@ -6,7 +6,7 @@ import pytest
 from common.application.exceptions import AccessPolicyError, NotFoundError
 from common.application.interfaces.transactions.unit_of_work import IUnitOfWork
 from common.domain.value_objects.datetime import DateTime
-from tests.unit.chat.utils import make_chat, make_chat_settings, make_message
+from tests.unit.chat.utils import make_chat, make_message
 from tests.unit.folder.utils import make_folder
 
 from luminary.chat.application.interfaces.policies.chat_access_policy import (
@@ -60,7 +60,7 @@ class TestGetStreamingMessageResponseUseCase:
         self.chat = make_chat(
             chat_id=self.chat_id,
             user_id=self.user_id,
-            settings=make_chat_settings(max_context_messages=5),
+            max_context_messages=5,
         )
         self.user_message = make_message(
             message_id=self.message_id,
@@ -185,7 +185,7 @@ class TestGetStreamingMessageResponseUseCase:
             user_id=self.user_id,
             folder_id=folder_id,
             assistant_id=None,
-            settings=make_chat_settings(max_context_messages=5),
+            max_context_messages=5,
         )
         self.chat_repository.get_by_id = AsyncMock(return_value=self.chat)
         self.folder_repository.get_by_id = AsyncMock(return_value=folder)
@@ -214,7 +214,7 @@ class TestGetStreamingMessageResponseUseCase:
             chat_id=self.chat_id,
             user_id=self.user_id,
             folder_id=folder_id,
-            settings=make_chat_settings(max_context_messages=5),
+            max_context_messages=5,
         )
         self.chat.add_source(SourceId(source_chat))
         folder = make_folder(folder_id=folder_id, owner_id=self.user_id)
@@ -235,7 +235,7 @@ class TestGetStreamingMessageResponseUseCase:
             chat_id=self.chat_id,
             user_id=self.user_id,
             folder_id=folder_id,
-            settings=make_chat_settings(max_context_messages=5),
+            max_context_messages=5,
         )
         folder = make_folder(folder_id=folder_id, owner_id=self.user_id)
         folder.editor_content = EditorContent(

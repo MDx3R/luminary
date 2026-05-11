@@ -119,7 +119,7 @@ class GetStreamingMessageResponseUseCase(IGetStreamingMessageResponseUseCase):
         response = self.message_factory.create(
             MessageFactoryDTO(
                 chat_id=ctx.chat.id,
-                model_id=ctx.chat.settings.model_id,
+                model_id=ctx.request.model_id,
                 role=Author.ASSISTANT,
                 content=EMPTY_CONTENT,
             )
@@ -173,7 +173,7 @@ class GetStreamingMessageResponseUseCase(IGetStreamingMessageResponseUseCase):
         self.chat_access_policy.assert_is_allowed(user_id, chat)
 
         messages = await self.message_reader.get_chat_messages(
-            chat_id, limit=chat.settings.max_context_messages
+            chat_id, limit=chat.max_context_messages
         )
         if not messages:
             raise InvariantViolationError(

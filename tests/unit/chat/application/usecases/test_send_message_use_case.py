@@ -6,7 +6,7 @@ import pytest
 from common.application.exceptions import AccessPolicyError
 from common.domain.value_objects.datetime import DateTime
 from common.domain.value_objects.id import UserId
-from tests.unit.chat.utils import make_chat, make_chat_settings
+from tests.unit.chat.utils import make_chat
 
 from luminary.chat.application.interfaces.policies.chat_access_policy import (
     IChatAccessPolicy,
@@ -44,13 +44,13 @@ class TestSendMessageUseCase:
         self.chat = make_chat(
             chat_id=self.chat_id,
             user_id=self.user_id,
-            settings=make_chat_settings(max_context_messages=5),
+            max_context_messages=5,
         )
         now = DateTime(datetime.now(UTC))
         self.user_message = Message(
             id=MessageId(uuid4()),
             chat_id=ChatId(self.chat_id),
-            model_id=self.chat.settings.model_id,
+            model_id=self.chat.model_id,
             role=Author.USER,
             status=MessageStatus.COMPLETED,
             content=self.content,
@@ -94,7 +94,7 @@ class TestSendMessageUseCase:
         self.message_factory.create.assert_called_once_with(
             MessageFactoryDTO(
                 chat_id=ChatId(self.chat_id),
-                model_id=self.chat.settings.model_id,
+                model_id=self.chat.model_id,
                 role=Author.USER,
                 content=self.content,
             )

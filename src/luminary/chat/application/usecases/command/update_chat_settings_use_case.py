@@ -11,7 +11,6 @@ from luminary.chat.application.interfaces.usecases.command.update_chat_settings_
     UpdateChatSettingsCommand,
 )
 from luminary.chat.domain.value_objects.chat_id import ChatId
-from luminary.chat.domain.value_objects.chat_settings import ChatSettings
 from luminary.model.domain.entity.model import ModelId
 
 
@@ -28,13 +27,9 @@ class UpdateChatSettingsUseCase(IUpdateChatSettingsUseCase):
         chat = await self.repository.get_by_id(ChatId(command.chat_id))
         self.access_policy.assert_is_allowed(UserId(command.user_id), chat)
 
-        new_settings = ChatSettings(
-            model_id=ModelId(command.model_id),
-            max_context_messages=command.max_context_messages,
-        )
-
-        if chat.settings_matches(new_settings):
+        model_id = ModelId(command.model_id)
+        if chat.model_config_matches(model_id, command.max_context_messages):
             return
 
-        chat.change_settings(new_settings)
+        chat.update_model_and_context(model_id, command.max_context_messages)
         await self.repository.save(chat)

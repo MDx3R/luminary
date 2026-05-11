@@ -5,8 +5,8 @@ from common.domain.value_objects.id import UserId
 
 from luminary.assistant.domain.entity.assistant import AssistantId
 from luminary.chat.domain.entity.chat import Chat
-from luminary.chat.domain.value_objects.chat_settings import ChatSettings
 from luminary.folder.domain.value_objects.folder_id import FolderId
+from luminary.model.domain.entity.model import ModelId
 
 
 @dataclass(frozen=True)
@@ -15,7 +15,8 @@ class ChatFactoryDTO:
     folder_id: FolderId | None
     name: str | None
     assistant_id: AssistantId | None
-    settings: ChatSettings
+    model_id: ModelId
+    max_context_messages: int
 
 
 class IChatFactory(ABC):

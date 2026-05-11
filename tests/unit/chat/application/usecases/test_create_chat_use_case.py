@@ -62,8 +62,8 @@ class TestCreateChatUseCase:
         assert call_args.folder_id is None
         assert call_args.name == self.name
         assert call_args.assistant_id is None
-        assert call_args.settings.model_id.value == self.model_id
-        assert call_args.settings.max_context_messages == 10  # noqa: PLR2004
+        assert call_args.model_id.value == self.model_id
+        assert call_args.max_context_messages == 10  # noqa: PLR2004
 
     async def test_calls_repository_add_with_created_chat(self) -> None:
         await self.use_case.execute(self.command)

@@ -11,7 +11,9 @@ from luminary.assistant.domain.events.events import (
     AssistantCreatedEvent,
     AssistantDeletedEvent,
     AssistantInfoChangedEvent,
+    AssistantInstructionsChangedEvent,
     AssistantPublishedEvent,
+    AssistantTagsChangedEvent,
 )
 
 
@@ -109,11 +111,29 @@ class Assistant(Entity):
         )
 
     def change_instructions(self, new_instructions: Instructions) -> None:
+        if self.instructions_matches(new_instructions.prompt):
+            return
+
         self.instructions = new_instructions
+        self._record_event(
+            AssistantInstructionsChangedEvent(
+                assistant_id=self.id.value,
+                prompt=new_instructions.prompt,
+            )
+        )
 
     def change_tags(self, new_tags: list[str]) -> None:
         _validate_tags(new_tags)
+        if self.tags_matches(new_tags):
+            return
+
         self.tags = new_tags
+        self._record_event(
+            AssistantTagsChangedEvent(
+                assistant_id=self.id.value,
+                tags=tuple(new_tags),
+            )
+        )
 
     def publish(self) -> None:
         if self.type != AssistantType.PERSONAL:

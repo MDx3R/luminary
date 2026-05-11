@@ -10,6 +10,7 @@ from common.domain.value_objects.id import UserId
 from luminary.assistant.domain.entity.assistant import AssistantId
 from luminary.chat.domain.entity.chat import Chat
 from luminary.chat.domain.events.events import (
+    ChatCreatedEvent,
     ChatNameChangedEvent,
     ChatSourceAddedEvent,
 )
@@ -61,6 +62,27 @@ class TestChat:
         )
 
         assert chat == self.chat
+
+    def test_create_chat_emits_created_event(self):
+        chat = Chat.create(
+            id=self.chat_id,
+            owner_id=self.user_id,
+            folder_id=self.folder_id,
+            assistant_id=self.assistant_id,
+            name=self.name,
+            created_at=self.created_at,
+        )
+
+        assert chat.has_changes()
+        assert len(chat.events) == 1
+        event = chat.events[0]
+        assert isinstance(event, ChatCreatedEvent)
+        assert event.chat_id == self.chat_id.value
+        assert event.owner_id == self.user_id.value
+        assert event.folder_id == self.folder_id.value
+        assert event.name == self.name
+        assert event.assistant_id == self.assistant_id.value
+        assert event.created_at == self.created_at.value
 
     def test_add_source_success(self):
         source_id = SourceId(uuid4())

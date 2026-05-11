@@ -9,6 +9,7 @@ from common.domain.value_objects.id import UserId
 from luminary.assistant.domain.entity.assistant import AssistantId
 from luminary.chat.domain.events.events import (
     ChatAssistantChangedEvent,
+    ChatCreatedEvent,
     ChatDeletedEvent,
     ChatNameChangedEvent,
     ChatSourceAddedEvent,
@@ -111,7 +112,7 @@ class Chat(Entity):
         assistant_id: AssistantId | None,
         created_at: DateTime,
     ) -> Self:
-        return cls(
+        instance = cls(
             id=id,
             owner_id=owner_id,
             folder_id=folder_id,
@@ -120,3 +121,14 @@ class Chat(Entity):
             created_at=created_at,
             is_deleted=False,
         )
+        instance._record_event(
+            ChatCreatedEvent(
+                chat_id=id.value,
+                owner_id=owner_id.value,
+                folder_id=folder_id.value if folder_id else None,
+                name=name,
+                assistant_id=assistant_id.value if assistant_id else None,
+                created_at=created_at.value,
+            )
+        )
+        return instance

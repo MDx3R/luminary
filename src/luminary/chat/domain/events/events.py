@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from datetime import datetime
 from uuid import UUID
 
 from common.domain.events.domain_event import DomainEvent
@@ -15,6 +16,15 @@ class ChatEvent(DomainEvent):
     @classmethod
     def aggregate_type(cls) -> str:
         return "chat"
+
+
+@dataclass(frozen=True)
+class ChatCreatedEvent(ChatEvent):
+    owner_id: UUID
+    folder_id: UUID | None
+    name: str
+    assistant_id: UUID | None
+    created_at: datetime
 
 
 @dataclass(frozen=True)

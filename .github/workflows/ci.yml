@@ -31,7 +31,7 @@ jobs:
         with:
           config-path: .gitleaks.toml
           fail: true
-  
+
   test:
     name: Tests and Static Analysis
     runs-on: ubuntu-latest
@@ -58,10 +58,10 @@ jobs:
         run: poetry install --no-interaction --no-ansi
 
       - name: Run Ruff linter
-        run: poetry run ruff check src tests --output-format=github
+        run: poetry run ruff check src tests cli --output-format=github
 
       - name: Run Mypy type check
-        run: poetry run mypy src/ tests/
+        run: poetry run mypy src/ tests/ cli/
 
       - name: Run Pytest
         run: poetry run pytest -q

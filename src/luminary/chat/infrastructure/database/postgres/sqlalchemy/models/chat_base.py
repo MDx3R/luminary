@@ -3,7 +3,7 @@ from __future__ import annotations
 from uuid import UUID
 
 from common.infrastructure.database.sqlalchemy.models.base import Base
-from sqlalchemy import Boolean, ColumnElement, ForeignKey, Integer, String, and_
+from sqlalchemy import Boolean, ColumnElement, ForeignKey, String, and_
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import Mapped, foreign, mapped_column, relationship
@@ -33,8 +33,6 @@ class ChatBase(Base):
     folder_id: Mapped[UUID | None] = mapped_column(PGUUID, nullable=True)
     name: Mapped[str] = mapped_column(String, nullable=False)
     assistant_id: Mapped[UUID | None] = mapped_column(PGUUID, nullable=True)
-    model_id: Mapped[UUID] = mapped_column(PGUUID, nullable=False)
-    max_context_messages: Mapped[int] = mapped_column(Integer, nullable=False)
     is_deleted: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
 
     source_associations: Mapped[list[ChatSourceAssociation]] = relationship(

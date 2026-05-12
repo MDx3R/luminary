@@ -44,11 +44,17 @@ from luminary.folder.application.interfaces.repositories.folder_repository impor
 )
 from luminary.folder.domain.entity.folder import Folder
 from luminary.model.application.interfaces.services.engine import (
+    ChatSourceContext,
     IInferenceEngine,
+    InferenceMode,
     InferenceRequestDTO,
     MessageDTO,
     Role,
 )
+from luminary.model.application.prompts.defaults import EMPTY_ASSISTANT_INSTRUCTIONS
+
+
+_INFERENCE_CHAT_HISTORY_MESSAGE_LIMIT = 100
 
 
 def _author_to_role(author: Author) -> Role:
@@ -87,8 +93,6 @@ class _ResolvedContext:
 
 
 class GetStreamingMessageResponseUseCase(IGetStreamingMessageResponseUseCase):
-    DEFAULT_SYSTEM_PROMPT = "You are a helpful assistant."
-
     def __init__(  # noqa: PLR0913
         self,
         uow: IUnitOfWork,
@@ -119,7 +123,6 @@ class GetStreamingMessageResponseUseCase(IGetStreamingMessageResponseUseCase):
         response = self.message_factory.create(
             MessageFactoryDTO(
                 chat_id=ctx.chat.id,
-                model_id=ctx.chat.settings.model_id,
                 role=Author.ASSISTANT,
                 content=EMPTY_CONTENT,
             )
@@ -142,12 +145,18 @@ class GetStreamingMessageResponseUseCase(IGetStreamingMessageResponseUseCase):
         if ctx.folder is not None and ctx.folder.editor_content is not None:
             editor_content = ctx.folder.editor_content.text
 
+        chat_ctx = (
+            ChatSourceContext.FOLDER if ctx.folder is not None else ChatSourceContext.STANDALONE
+        )
+
         request = InferenceRequestDTO(
             query=ctx.request.content,
             system_prompt=system_prompt,
             source_ids=source_ids,
             history=history,
             editor_content=editor_content,
+            mode=InferenceMode.CHAT,
+            chat_source_context=chat_ctx,
         )
         async for chunk in self.inference_engine.send(request):
             response.add_chunk(chunk.content)
@@ -173,7 +182,7 @@ class GetStreamingMessageResponseUseCase(IGetStreamingMessageResponseUseCase):
         self.chat_access_policy.assert_is_allowed(user_id, chat)
 
         messages = await self.message_reader.get_chat_messages(
-            chat_id, limit=chat.settings.max_context_messages
+            chat_id, limit=_INFERENCE_CHAT_HISTORY_MESSAGE_LIMIT
         )
         if not messages:
             raise InvariantViolationError(
@@ -201,4 +210,4 @@ class GetStreamingMessageResponseUseCase(IGetStreamingMessageResponseUseCase):
                 ctx.folder.assistant_id
             )
             return assistant.instructions.prompt
-        return self.DEFAULT_SYSTEM_PROMPT
+        return EMPTY_ASSISTANT_INSTRUCTIONS

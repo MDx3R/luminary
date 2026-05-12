@@ -15,7 +15,6 @@ from luminary.chat.domain.events.events import (
 )
 from luminary.chat.domain.value_objects.chat_id import ChatId
 from luminary.chat.domain.value_objects.message_id import MessageId
-from luminary.model.domain.entity.model import ModelId
 
 
 @dataclass
@@ -25,7 +24,6 @@ class Message(Entity):
     role: Author
     status: MessageStatus
     content: str
-    model_id: ModelId
     edited_at: DateTime
     created_at: DateTime
     tokens: int | None = None
@@ -86,13 +84,11 @@ class Message(Entity):
         role: Author,
         status: MessageStatus,
         content: str,
-        model_id: ModelId,
         created_at: DateTime,
     ) -> Self:
         return cls(
             id=id,
             chat_id=chat_id,
-            model_id=model_id,
             role=role,
             status=status,
             content=content,

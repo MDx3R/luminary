@@ -9,15 +9,14 @@ from common.domain.value_objects.id import UserId
 from luminary.assistant.domain.entity.assistant import AssistantId
 from luminary.chat.domain.events.events import (
     ChatAssistantChangedEvent,
+    ChatCreatedEvent,
     ChatDeletedEvent,
     ChatNameChangedEvent,
-    ChatSettingsChangedEvent,
     ChatSourceAddedEvent,
     ChatSourceRemovedEvent,
 )
 from luminary.chat.domain.value_objects.chat_id import ChatId
 from luminary.chat.domain.value_objects.chat_info import ChatInfo
-from luminary.chat.domain.value_objects.chat_settings import ChatSettings
 from luminary.folder.domain.value_objects.folder_id import FolderId
 from luminary.source.domain.entity.source import SourceId
 
@@ -29,7 +28,6 @@ class Chat(Entity):
     folder_id: FolderId | None
     info: ChatInfo
     assistant_id: AssistantId | None
-    settings: ChatSettings
     created_at: DateTime
     is_deleted: bool
     _sources: set[SourceId] = field(default_factory=set[SourceId])
@@ -66,20 +64,11 @@ class Chat(Entity):
     def name_matches(self, name: str) -> bool:
         return self.info.name == name
 
-    def settings_matches(self, settings: ChatSettings) -> bool:
-        return self.settings == settings
-
     def change_name(self, new_name: str) -> None:
         if self.info.name == new_name:
             return
         self.info = ChatInfo(new_name)
         self._record_event(ChatNameChangedEvent(chat_id=self.id.value, name=new_name))
-
-    def change_settings(self, new_settings: ChatSettings) -> None:
-        if self.settings == new_settings:
-            return
-        self.settings = new_settings
-        self._record_event(ChatSettingsChangedEvent(chat_id=self.id.value))
 
     def assistant_matches(self, assistant_id: AssistantId | None) -> bool:
         return self.assistant_id == assistant_id
@@ -121,16 +110,25 @@ class Chat(Entity):
         folder_id: FolderId | None,
         name: str,
         assistant_id: AssistantId | None,
-        settings: ChatSettings,
         created_at: DateTime,
     ) -> Self:
-        return cls(
+        instance = cls(
             id=id,
             owner_id=owner_id,
             folder_id=folder_id,
             info=ChatInfo(name=name),
             assistant_id=assistant_id,
-            settings=settings,
             created_at=created_at,
             is_deleted=False,
         )
+        instance._record_event(
+            ChatCreatedEvent(
+                chat_id=id.value,
+                owner_id=owner_id.value,
+                folder_id=folder_id.value if folder_id else None,
+                name=name,
+                assistant_id=assistant_id.value if assistant_id else None,
+                created_at=created_at.value,
+            )
+        )
+        return instance

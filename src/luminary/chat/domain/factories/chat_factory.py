@@ -24,6 +24,5 @@ class ChatFactory(IChatFactory):
             folder_id=data.folder_id,
             name=name,
             assistant_id=data.assistant_id,
-            settings=data.settings,
             created_at=self.clock.now(),
         )

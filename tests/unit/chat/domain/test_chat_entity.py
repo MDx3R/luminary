@@ -6,19 +6,17 @@ import pytest
 from common.domain.exceptions import InvariantViolationError
 from common.domain.value_objects.datetime import DateTime
 from common.domain.value_objects.id import UserId
-from tests.unit.chat.utils import make_chat_settings
 
 from luminary.assistant.domain.entity.assistant import AssistantId
 from luminary.chat.domain.entity.chat import Chat
 from luminary.chat.domain.events.events import (
+    ChatCreatedEvent,
     ChatNameChangedEvent,
     ChatSourceAddedEvent,
 )
 from luminary.chat.domain.value_objects.chat_id import ChatId
 from luminary.chat.domain.value_objects.chat_info import ChatInfo
-from luminary.chat.domain.value_objects.chat_settings import ChatSettings
 from luminary.folder.domain.value_objects.folder_id import FolderId
-from luminary.model.domain.entity.model import ModelId
 from luminary.source.domain.entity.source import SourceId
 
 
@@ -33,25 +31,6 @@ class TestChatInfo:
             ChatInfo(name=name)
 
 
-class TestChatSettings:
-    def test_init_success(self):
-        model_id = ModelId(uuid4())
-        max_context_messages = 10
-
-        settings = ChatSettings(
-            model_id=model_id,
-            max_context_messages=max_context_messages,
-        )
-
-        assert settings.model_id == model_id
-        assert settings.max_context_messages == max_context_messages
-
-    @pytest.mark.parametrize("count", [-1, 0])
-    def test_invalid_context_raises(self, count: Literal[-1] | Literal[0]):
-        with pytest.raises(InvariantViolationError):
-            make_chat_settings(max_context_messages=count)
-
-
 class TestChat:
     @pytest.fixture(autouse=True)
     def setup(self):
@@ -60,7 +39,6 @@ class TestChat:
         self.folder_id = FolderId(uuid4())
         self.assistant_id = AssistantId(uuid4())
         self.name = "Name"
-        self.settings = make_chat_settings()
         self.created_at = DateTime(datetime.now(UTC))
 
         self.chat = Chat(
@@ -70,7 +48,6 @@ class TestChat:
             assistant_id=self.assistant_id,
             created_at=self.created_at,
             info=ChatInfo(name=self.name),
-            settings=self.settings,
             is_deleted=False,
         )
 
@@ -81,11 +58,31 @@ class TestChat:
             folder_id=self.folder_id,
             assistant_id=self.assistant_id,
             name=self.name,
-            settings=self.settings,
             created_at=self.created_at,
         )
 
         assert chat == self.chat
+
+    def test_create_chat_emits_created_event(self):
+        chat = Chat.create(
+            id=self.chat_id,
+            owner_id=self.user_id,
+            folder_id=self.folder_id,
+            assistant_id=self.assistant_id,
+            name=self.name,
+            created_at=self.created_at,
+        )
+
+        assert chat.has_changes()
+        assert len(chat.events) == 1
+        event = chat.events[0]
+        assert isinstance(event, ChatCreatedEvent)
+        assert event.chat_id == self.chat_id.value
+        assert event.owner_id == self.user_id.value
+        assert event.folder_id == self.folder_id.value
+        assert event.name == self.name
+        assert event.assistant_id == self.assistant_id.value
+        assert event.created_at == self.created_at.value
 
     def test_add_source_success(self):
         source_id = SourceId(uuid4())
@@ -112,11 +109,6 @@ class TestChat:
         with pytest.raises(InvariantViolationError):
             self.chat.change_name(name)
 
-    def test_change_settings_success(self):
-        new_settings = make_chat_settings(max_context_messages=15)
-        self.chat.change_settings(new_settings)
-        assert self.chat.settings == new_settings
-
     def test_with_none_folder_id(self):
         chat = Chat.create(
             id=self.chat_id,
@@ -125,7 +117,6 @@ class TestChat:
             assistant_id=self.assistant_id,
             created_at=DateTime(datetime.now(UTC)),
             name="Test Chat",
-            settings=make_chat_settings(),
         )
         assert chat.folder_id is None
 
@@ -137,6 +128,5 @@ class TestChat:
             assistant_id=None,
             created_at=DateTime(datetime.now(UTC)),
             name="Test Chat",
-            settings=make_chat_settings(),
         )
         assert chat.assistant_id is None

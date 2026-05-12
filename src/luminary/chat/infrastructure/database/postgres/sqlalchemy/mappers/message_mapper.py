@@ -11,7 +11,6 @@ from luminary.chat.domain.value_objects.message_id import MessageId
 from luminary.chat.infrastructure.database.postgres.sqlalchemy.models.message_base import (
     MessageBase,
 )
-from luminary.model.domain.entity.model import ModelId
 
 
 class MessageMapper:
@@ -24,7 +23,6 @@ class MessageMapper:
             role=base.role,
             status=base.status,
             content=base.content or "",
-            model_id=ModelId(base.model_id),
             edited_at=DateTime(base.edited_at),
             created_at=DateTime(base.created_at),
             tokens=base.tokens,
@@ -39,7 +37,6 @@ class MessageMapper:
             role=message.role,
             status=message.status,
             content=message.content,
-            model_id=message.model_id.value,
             tokens=message.tokens,
             edited_at=message.edited_at.value,
             created_at=message.created_at.value,
@@ -62,7 +59,6 @@ class MessageReadMapper:
             role=base.role.value,
             status=base.status.value,
             content=base.content,
-            model_id=base.model_id,
             tokens=base.tokens,
             created_at=base.created_at,
             edited_at=base.edited_at,

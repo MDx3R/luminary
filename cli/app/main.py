@@ -37,6 +37,8 @@ from idp.identity.application.interfaces.usecases.command.create_identity_use_ca
 from idp.identity.infrastructure.di.container.container import IdentityContainer
 from idp.identity.presentation.http.fastapi.controllers import identity_router
 from llama_index.core import Settings, VectorStoreIndex
+from llama_index.embeddings.openai_like import OpenAILikeEmbedding
+from llama_index.llms.openai_like import OpenAILike
 from llama_index.vector_stores.qdrant import QdrantVectorStore
 from luminary_files.application.interfaces.services.file_service import IFileService
 from luminary_files.infrastructure.di.container import FileContainer
@@ -104,9 +106,6 @@ from luminary.chat.application.interfaces.usecases.command.send_message_use_case
 from luminary.chat.application.interfaces.usecases.command.update_chat_name_use_case import (
     IUpdateChatNameUseCase,
 )
-from luminary.chat.application.interfaces.usecases.command.update_chat_settings_use_case import (
-    IUpdateChatSettingsUseCase,
-)
 from luminary.chat.application.interfaces.usecases.query.get_chat_use_case import (
     IGetChatByIdUseCase,
 )
@@ -147,6 +146,12 @@ from luminary.folder.application.interfaces.usecases.command.remove_folder_assis
 from luminary.folder.application.interfaces.usecases.command.remove_source_from_folder_use_case import (
     IRemoveSourceFromFolderUseCase,
 )
+from luminary.folder.application.interfaces.usecases.command.stream_folder_editor_autocomplete_use_case import (
+    IStreamFolderEditorAutocompleteUseCase,
+)
+from luminary.folder.application.interfaces.usecases.command.stream_folder_editor_inline_use_case import (
+    IStreamFolderEditorInlineUseCase,
+)
 from luminary.folder.application.interfaces.usecases.command.update_editor_content_use_case import (
     IUpdateEditorContentUseCase,
 )
@@ -169,10 +174,6 @@ from luminary.folder.presentation.http.fastapi.controllers import (
     query_router as folder_query_router,
 )
 from luminary.model.infrastructure.di.container import ModelContainer
-from luminary.model.infrastructure.services.llama_index.client import (
-    MappedOpenAI,
-    MappedOpenAIEmbedding,
-)
 from luminary.source.application.interfaces.usecases.command.create_source_use_case import (
     ICreateFileSourceUseCase,
     ICreateLinkSourceUseCase,
@@ -340,21 +341,20 @@ def main() -> FastAPI:  # noqa: PLR0915
     logger.info("broker initialized")
 
     # LLM
-    llm = MappedOpenAI(
+    llm = OpenAILike(
         model=config.llm.model,
         api_key=config.llm.api_key,
         api_base=config.llm.base_url,
         temperature=0.3,
+        max_tokens=config.llm.max_tokens,
+        context_window=128000,
+        is_chat_model=True,
     )
-    MappedOpenAI.override(config.llm.model, config.llm.provider_model)
     logger.info("llm initialized")
 
     # Embedding Model
-    MappedOpenAIEmbedding.override(
-        config.llm.embed_model, config.llm.provider_embed_model
-    )
-    embed_model = MappedOpenAIEmbedding(
-        model=config.llm.embed_model,
+    embed_model = OpenAILikeEmbedding(
+        model_name=config.llm.embed_model,
         api_key=config.llm.api_key,
         api_base=config.llm.base_url,
     )
@@ -507,6 +507,8 @@ def main() -> FastAPI:  # noqa: PLR0915
         event_bus=event_bus,
         chat_factory=chat_container.chat_factory,
         chat_repository=chat_container.event_bus_chat_repository,
+        inference_engine=model_container.inference_engine,
+        assistant_repository=assistant_container.event_bus_assistant_repository,
     )
     chat_container.folder_repository.override(
         folder_container.event_bus_folder_repository
@@ -579,9 +581,6 @@ def main() -> FastAPI:  # noqa: PLR0915
     server.dependency_overrides[IUpdateChatNameUseCase] = (
         lambda: chat_container.update_chat_name_use_case()
     )
-    server.dependency_overrides[IUpdateChatSettingsUseCase] = (
-        lambda: chat_container.update_chat_settings_use_case()
-    )
     server.dependency_overrides[IChangeChatAssistantUseCase] = (
         lambda: chat_container.change_chat_assistant_use_case()
     )
@@ -645,6 +644,12 @@ def main() -> FastAPI:  # noqa: PLR0915
     )
     server.dependency_overrides[IUpdateEditorContentUseCase] = (
         lambda: folder_container.update_editor_content_use_case()
+    )
+    server.dependency_overrides[IStreamFolderEditorInlineUseCase] = (
+        lambda: folder_container.stream_folder_editor_inline_use_case()
+    )
+    server.dependency_overrides[IStreamFolderEditorAutocompleteUseCase] = (
+        lambda: folder_container.stream_folder_editor_autocomplete_use_case()
     )
     server.dependency_overrides[IGetFolderByIdUseCase] = (
         lambda: folder_container.get_folder_by_id_use_case()

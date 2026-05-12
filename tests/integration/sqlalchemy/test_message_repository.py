@@ -132,7 +132,6 @@ class TestMessageRepository:
         # Assert
         assert loaded.id == message.id
         assert loaded.content == message.content
-        assert loaded.model_id == message.model_id
 
     async def test_save_updates_entity(self):
         # Arrange

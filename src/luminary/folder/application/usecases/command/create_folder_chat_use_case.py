@@ -8,7 +8,6 @@ from luminary.chat.application.interfaces.repositories.chat_repository import (
     IChatRepository,
 )
 from luminary.chat.domain.interfaces.chat_factory import ChatFactoryDTO, IChatFactory
-from luminary.chat.domain.value_objects.chat_settings import ChatSettings
 from luminary.folder.application.interfaces.policies.folder_access_policy import (
     IFolderAccessPolicy,
 )
@@ -20,7 +19,6 @@ from luminary.folder.application.interfaces.usecases.command.create_folder_chat_
     ICreateFolderChatUseCase,
 )
 from luminary.folder.domain.value_objects.folder_id import FolderId
-from luminary.model.domain.entity.model import ModelId
 
 
 class CreateFolderChatUseCase(ICreateFolderChatUseCase):
@@ -49,10 +47,6 @@ class CreateFolderChatUseCase(ICreateFolderChatUseCase):
                 folder_id=FolderId(command.folder_id),
                 name=command.name,
                 assistant_id=assistant_id,
-                settings=ChatSettings(
-                    model_id=ModelId(command.model_id),
-                    max_context_messages=command.max_context_messages,
-                ),
             )
         )
 

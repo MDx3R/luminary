@@ -29,6 +29,16 @@ class AssistantInfoChangedEvent(AssistantEvent):
 
 
 @dataclass(frozen=True)
+class AssistantInstructionsChangedEvent(AssistantEvent):
+    prompt: str
+
+
+@dataclass(frozen=True)
+class AssistantTagsChangedEvent(AssistantEvent):
+    tags: tuple[str, ...]
+
+
+@dataclass(frozen=True)
 class AssistantDeletedEvent(AssistantEvent):
     pass
 

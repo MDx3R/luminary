@@ -23,6 +23,11 @@ from luminary.model.application.interfaces.services.engine import (
     MessageDTO,
     Role,
 )
+from luminary.model.application.prompts import (
+    LUMINARY_BASE_SYSTEM_PROMPT,
+    build_user_request_content,
+    render_final_system_prompt,
+)
 
 
 ROLE_MAP: Final[dict[Role, MessageRole]] = {
@@ -30,17 +35,6 @@ ROLE_MAP: Final[dict[Role, MessageRole]] = {
     Role.USER: MessageRole.USER,
     Role.ASSISTANT: MessageRole.ASSISTANT,
 }
-
-LUMINARY_BASE_SYSTEM_PROMPT: Final[
-    str
-] = """You are a co-pilot in a human-centric intelligent workspace called Luminary. The user leads; you assist.
-
-Your role: support the user's writing and analysis. 
-Ground your answers in the sources and context provided with the request. 
-Do not invent facts; when you use information from sources or context, rely on them and refer to them when helpful.
-
-Constraints: do not replace the user's voice or make decisions for them. Offer options, check hypotheses, and help the user develop their own document. 
-If the current request includes a "Current document (editor)" section, treat it as the user's working draft and help improve or extend it."""
 
 
 def build_filters(source_ids: Sequence[UUID]) -> MetadataFilters:
@@ -66,33 +60,6 @@ def build_history(history: Sequence[MessageDTO]) -> Sequence[ChatMessage]:
         )
         for msg in history
     ]
-
-
-def build_system_message(base_system_prompt: str, assistant_instructions: str) -> str:
-    """Build system message: base role/task prompt + assistant instructions."""
-    if not assistant_instructions or not assistant_instructions.strip():
-        return base_system_prompt
-    return (
-        f"{base_system_prompt}\n\n---\n\nAssistant instructions:\n"
-        f"{assistant_instructions}"
-    )
-
-
-def build_user_request_content(
-    query: str,
-    editor_content: str | None,
-    rag_context_str: str | None = None,
-) -> str:
-    """Build the final user message: optional editor block, optional RAG context, query."""
-    parts: list[str] = []
-    if editor_content and editor_content.strip():
-        parts.append(f"Current document (editor):\n{editor_content}")
-    if rag_context_str and rag_context_str.strip():
-        parts.append(f"Context information:\n{rag_context_str}")
-    parts.append(
-        f"Query: {query}\nAnswer the query using the provided context when relevant."
-    )
-    return "\n\n".join(parts)
 
 
 class LlamaIndexEngine(IInferenceEngine):
@@ -131,9 +98,7 @@ class LlamaIndexEngine(IInferenceEngine):
 
         context_str = "\n\n".join([node.text for node in nodes])
 
-        system_message = build_system_message(
-            self.base_system_prompt, request.system_prompt
-        )
+        system_message = render_final_system_prompt(self.base_system_prompt, request)
         messages = [
             ChatMessage(content=system_message, role=MessageRole.SYSTEM),
             *build_history(request.history),
@@ -143,13 +108,16 @@ class LlamaIndexEngine(IInferenceEngine):
             request.query,
             request.editor_content,
             rag_context_str=context_str,
+            mode=request.mode,
         )
         messages.append(ChatMessage(content=user_content, role=MessageRole.USER))
 
         streaming_response = await self.llm.astream_chat(messages)
 
         async for chunk in streaming_response:
-            yield EngineStreamingResponse(content=chunk.delta or "")
+            if not chunk.delta:
+                continue
+            yield EngineStreamingResponse(content=chunk.delta)
 
 
 class ChatEngineLlamaIndexEngine(IInferenceEngine):
@@ -190,11 +158,12 @@ class ChatEngineLlamaIndexEngine(IInferenceEngine):
 
             return
 
-        system_message = build_system_message(
-            self.base_system_prompt, request.system_prompt
-        )
+        system_message = render_final_system_prompt(self.base_system_prompt, request)
         user_content = build_user_request_content(
-            request.query, request.editor_content, rag_context_str=None
+            request.query,
+            request.editor_content,
+            rag_context_str=None,
+            mode=request.mode,
         )
 
         chat_history = list[ChatMessage](build_history(request.history))
@@ -222,4 +191,6 @@ class ChatEngineLlamaIndexEngine(IInferenceEngine):
         async_response_gen = streaming_response.async_response_gen()
 
         async for chunk in async_response_gen:
-            yield EngineStreamingResponse(content=chunk or "")
+            if not chunk:
+                continue
+            yield EngineStreamingResponse(content=chunk)

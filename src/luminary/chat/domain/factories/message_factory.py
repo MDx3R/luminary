@@ -24,7 +24,6 @@ class MessageFactory(IMessageFactory):
         return Message.create(
             id=MessageId(self.uuid_generator.create()),
             chat_id=data.chat_id,
-            model_id=data.model_id,
             role=data.role,
             status=status,
             content=data.content,

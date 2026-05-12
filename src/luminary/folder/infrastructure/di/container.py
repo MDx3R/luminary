@@ -46,6 +46,12 @@ from luminary.folder.application.usecases.command.remove_folder_assistant_use_ca
 from luminary.folder.application.usecases.command.remove_source_from_folder_use_case import (
     RemoveSourceFromFolderUseCase,
 )
+from luminary.folder.application.usecases.command.stream_folder_editor_autocomplete_use_case import (
+    StreamFolderEditorAutocompleteUseCase,
+)
+from luminary.folder.application.usecases.command.stream_folder_editor_inline_use_case import (
+    StreamFolderEditorInlineUseCase,
+)
 from luminary.folder.application.usecases.command.update_editor_content_use_case import (
     UpdateEditorContentUseCase,
 )
@@ -77,6 +83,8 @@ class FolderContainer(containers.DeclarativeContainer):
     event_bus: providers.Dependency[Any] = providers.Dependency()
     chat_factory: providers.Dependency[Any] = providers.Dependency()
     chat_repository: providers.Dependency[Any] = providers.Dependency()
+    inference_engine: providers.Dependency[Any] = providers.Dependency()
+    assistant_repository: providers.Dependency[Any] = providers.Dependency()
 
     folder_factory = providers.Singleton(
         FolderFactory, clock=clock, uuid_generator=uuid_generator
@@ -146,6 +154,20 @@ class FolderContainer(containers.DeclarativeContainer):
         repository=event_bus_folder_repository,
         access_policy=folder_access_policy,
         clock=clock,
+    )
+    stream_folder_editor_inline_use_case = providers.Singleton(
+        StreamFolderEditorInlineUseCase,
+        folder_repository=event_bus_folder_repository,
+        access_policy=folder_access_policy,
+        assistant_repository=assistant_repository,
+        inference_engine=inference_engine,
+    )
+    stream_folder_editor_autocomplete_use_case = providers.Singleton(
+        StreamFolderEditorAutocompleteUseCase,
+        folder_repository=event_bus_folder_repository,
+        access_policy=folder_access_policy,
+        assistant_repository=assistant_repository,
+        inference_engine=inference_engine,
     )
 
     # Query use cases

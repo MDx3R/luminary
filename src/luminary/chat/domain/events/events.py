@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from datetime import datetime
 from uuid import UUID
 
 from common.domain.events.domain_event import DomainEvent
@@ -18,6 +19,15 @@ class ChatEvent(DomainEvent):
 
 
 @dataclass(frozen=True)
+class ChatCreatedEvent(ChatEvent):
+    owner_id: UUID
+    folder_id: UUID | None
+    name: str
+    assistant_id: UUID | None
+    created_at: datetime
+
+
+@dataclass(frozen=True)
 class ChatSourceAddedEvent(ChatEvent):
     source_id: UUID
 
@@ -30,11 +40,6 @@ class ChatSourceRemovedEvent(ChatEvent):
 @dataclass(frozen=True)
 class ChatNameChangedEvent(ChatEvent):
     name: str
-
-
-@dataclass(frozen=True)
-class ChatSettingsChangedEvent(ChatEvent):
-    pass
 
 
 @dataclass(frozen=True)

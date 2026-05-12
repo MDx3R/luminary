@@ -6,17 +6,19 @@ from common.domain.value_objects.id import UserId
 from tests.unit.assistant.utils import make_assistant, make_instructions
 
 from luminary.assistant.domain.entity.assistant import (
+    MAX_TAG_LENGTH,
+    MAX_TAGS_COUNT,
     Assistant,
     AssistantId,
     AssistantInfo,
-    MAX_TAG_LENGTH,
-    MAX_TAGS_COUNT,
 )
 from luminary.assistant.domain.enums import AssistantType
 from luminary.assistant.domain.events.events import (
     AssistantClonedEvent,
     AssistantCreatedEvent,
+    AssistantInstructionsChangedEvent,
     AssistantPublishedEvent,
+    AssistantTagsChangedEvent,
 )
 
 
@@ -132,6 +134,17 @@ class TestAssistantEntity:
 
         # Assert
         assert self.assistant.instructions == new_instructions
+        assert len(self.assistant.events) == 1
+        event = self.assistant.events[0]
+        assert isinstance(event, AssistantInstructionsChangedEvent)
+        assert event.assistant_id == self.assistant_id.value
+        assert event.prompt == "New Prompt"
+
+    def test_change_instructions_no_op_same_prompt_emits_no_event(self):
+        same = make_instructions(prompt="Test Prompt")
+        self.assistant.change_instructions(same)
+        assert self.assistant.instructions == same
+        assert len(self.assistant.events) == 0
 
     def test_delete(self):
         # Act
@@ -182,6 +195,18 @@ class TestAssistantEntity:
 
         # Assert
         assert self.assistant.tags == ["a", "b"]
+        assert len(self.assistant.events) == 1
+        event = self.assistant.events[0]
+        assert isinstance(event, AssistantTagsChangedEvent)
+        assert event.assistant_id == self.assistant_id.value
+        assert event.tags == ("a", "b")
+
+    def test_change_tags_no_op_same_tags_emits_no_event(self):
+        self.assistant.change_tags(["a", "b"])
+        assert len(self.assistant.events) == 1
+        self.assistant.change_tags(["a", "b"])
+        assert self.assistant.tags == ["a", "b"]
+        assert len(self.assistant.events) == 1
 
     def test_change_tags_to_empty_clears_list(self):
         # Arrange

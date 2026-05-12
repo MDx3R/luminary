@@ -23,14 +23,12 @@ class TestCreateChatUseCase:
     def setup(self) -> None:
         self.user_id = uuid4()
         self.chat_id = uuid4()
-        self.model_id = uuid4()
         self.name = "Test Chat"
 
         self.chat = make_chat(
             chat_id=self.chat_id,
             user_id=self.user_id,
             name=self.name,
-            model_id=self.model_id,
         )
 
         self.chat_factory: Mock = Mock(
@@ -43,8 +41,6 @@ class TestCreateChatUseCase:
             folder_id=None,
             name=self.name,
             assistant_id=None,
-            model_id=self.model_id,
-            max_context_messages=10,
         )
 
         self.use_case = CreateChatUseCase(
@@ -62,8 +58,6 @@ class TestCreateChatUseCase:
         assert call_args.folder_id is None
         assert call_args.name == self.name
         assert call_args.assistant_id is None
-        assert call_args.settings.model_id.value == self.model_id
-        assert call_args.settings.max_context_messages == 10  # noqa: PLR2004
 
     async def test_calls_repository_add_with_created_chat(self) -> None:
         await self.use_case.execute(self.command)

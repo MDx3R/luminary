@@ -39,7 +39,6 @@ class FolderSourceItemResponse(BaseModel):
 class FolderChatItemResponse(BaseModel):
     id: UUID
     name: str
-    model_id: UUID
     created_at: datetime
 
     @classmethod
@@ -47,7 +46,6 @@ class FolderChatItemResponse(BaseModel):
         return cls(
             id=model.id,
             name=model.name,
-            model_id=model.model_id,
             created_at=model.created_at,
         )
 

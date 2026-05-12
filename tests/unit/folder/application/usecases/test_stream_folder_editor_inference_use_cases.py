@@ -182,7 +182,7 @@ class TestStreamFolderEditorAutocompleteUseCase:
         self.access_policy = Mock(spec=IFolderAccessPolicy)
         self.assistant_repository = Mock(spec=IAssistantRepository)
         self.inference_engine = Mock(
-            spec=IInferenceEngine, send=Mock(return_value=_mock_stream("ok"))
+            spec=IInferenceEngine, send=Mock(return_value=_mock_stream("next"))
         )
 
         self.use_case = StreamFolderEditorAutocompleteUseCase(

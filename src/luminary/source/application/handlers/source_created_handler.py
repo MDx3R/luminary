@@ -1,3 +1,5 @@
+import logging
+
 from common.application.interfaces.handlers.handler import IEventHandler
 from common.domain.interfaces.clock import IClock
 from luminary_files.application.interfaces.services.file_service import (
@@ -77,7 +79,8 @@ class SourceCreatedHandler(IEventHandler[SourceCreatedEvent]):
                 )
             )
             source.fetch(ContentId(content_id), self.clock.now())
-        except ParsingError:
+        except ParsingError as exc:
+            logging.getLogger().error(f"parsing failed {exc}")
             source.fail()
 
     async def handle_link(self, source: LinkSource) -> None:

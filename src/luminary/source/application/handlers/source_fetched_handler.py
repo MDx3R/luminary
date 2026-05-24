@@ -1,3 +1,5 @@
+import logging
+
 from common.application.interfaces.handlers.handler import IEventHandler
 from common.domain.interfaces.clock import IClock
 
@@ -53,7 +55,8 @@ class SourceFetchedHandler(IEventHandler[SourceFetchedEvent]):
                 )
             )
             source.embed()
-        except EmbeddingError:
+        except EmbeddingError as exc:
+            logging.getLogger().error(f"embedding failed {exc}")
             source.fail()
 
         await self.source_repository.save(source)

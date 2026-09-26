@@ -20,7 +20,9 @@ _LOGGER = logging.getLogger(__name__)
 def minio_container():
     try:
         with MinioContainer(
-            access_key=_MINIO_ACCESS_KEY, secret_key=_MINIO_SECRET_KEY
+            "docker.io/pgsty/silo:RELEASE.2026-09-16T00-00-00Z",
+            access_key=_MINIO_ACCESS_KEY,
+            secret_key=_MINIO_SECRET_KEY,
         ) as container:
             yield container
     except:

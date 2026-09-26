@@ -1,0 +1,49 @@
+env: local
+
+logger:
+  level: "INFO"
+  format: "json"
+
+auth:
+  secret_key: "super-secret"
+  algorithm: "HS256"
+  issuer: "my-service"
+  access_token_ttl: 1800
+  refresh_token_ttl: 604800
+
+db:
+  db_name: "luminary"
+  db_user: "postgres"
+  db_pass: "password"
+  db_host: "localhost"
+  db_port: 5432
+  db_driver: "postgresql"
+  db_extension: "asyncpg"
+
+llm:
+  api_key: "secret-key"
+  base_url: "http://localhost:8080"
+  model: "gpt-5-nano"
+  embed_model: "text-embedding-3-small"
+
+deploy:
+  external_url: "https://example.com"
+
+s3:
+  endpoint_url: "minio:9000"
+  access_key: "minioadmin"
+  secret_key: "minioadmin"
+  bucket_name: "luminary"
+
+rabbit:
+  queue_name: "luminary.events"
+  rabbit_host: "rabbitmq"
+  rabbit_port: 5672
+  rabbit_user: "admin"
+  rabbit_pass: "password"
+
+qdrant:
+  collection_name: "luminary_sources"
+  endpoint_url: "http://qdrant:6333"
+  secret_key: "secret-key"
+  vector_size: 1536

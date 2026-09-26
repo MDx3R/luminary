@@ -213,3 +213,6 @@ secrets.json
 *.pfx
 configs/*.yaml
 *.local.json
+
+# System
+.DS_Store

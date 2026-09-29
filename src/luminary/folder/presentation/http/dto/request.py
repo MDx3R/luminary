@@ -14,6 +14,14 @@ class UpdateFolderInfoRequest(BaseModel):
     description: str | None = None
 
 
+class SetFolderCollapsedRequest(BaseModel):
+    collapsed: bool
+
+
+class ReorderFoldersRequest(BaseModel):
+    folder_ids: list[UUID]
+
+
 class ChangeFolderAssistantRequest(BaseModel):
     assistant_id: UUID
 

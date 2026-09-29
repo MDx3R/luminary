@@ -38,11 +38,17 @@ from luminary.chat.application.usecases.command.delete_chat_use_case import (
 from luminary.chat.application.usecases.command.get_message_response_use_case import (
     GetStreamingMessageResponseUseCase,
 )
+from luminary.chat.application.usecases.command.move_chat_use_case import (
+    MoveChatUseCase,
+)
 from luminary.chat.application.usecases.command.remove_chat_assistant_use_case import (
     RemoveChatAssistantUseCase,
 )
 from luminary.chat.application.usecases.command.remove_source_from_chat_use_case import (
     RemoveSourceFromChatUseCase,
+)
+from luminary.chat.application.usecases.command.reorder_chats_use_case import (
+    ReorderChatsUseCase,
 )
 from luminary.chat.application.usecases.command.send_message_use_case import (
     SendMessageUseCase,
@@ -70,6 +76,7 @@ from luminary.chat.infrastructure.database.postgres.sqlalchemy.repositories.chat
 from luminary.chat.infrastructure.database.postgres.sqlalchemy.repositories.message_repository import (
     MessageRepository,
 )
+from luminary.folder.application.policies.folder_access_policy import FolderAccessPolicy
 
 
 class ChatContainer(containers.DeclarativeContainer):
@@ -170,6 +177,20 @@ class ChatContainer(containers.DeclarativeContainer):
         DeleteChatUseCase,
         repository=event_bus_chat_repository,
         access_policy=chat_access_policy,
+    )
+    folder_access_policy = providers.Singleton(FolderAccessPolicy)
+    move_chat_use_case = providers.Singleton(
+        MoveChatUseCase,
+        chat_repository=event_bus_chat_repository,
+        folder_repository=folder_repository,
+        chat_access_policy=chat_access_policy,
+        folder_access_policy=folder_access_policy,
+    )
+    reorder_chats_use_case = providers.Singleton(
+        ReorderChatsUseCase,
+        chat_repository=event_bus_chat_repository,
+        folder_repository=folder_repository,
+        folder_access_policy=folder_access_policy,
     )
 
     # Query use cases

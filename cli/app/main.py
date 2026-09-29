@@ -94,11 +94,17 @@ from luminary.chat.application.interfaces.usecases.command.delete_chat_use_case 
 from luminary.chat.application.interfaces.usecases.command.get_message_response_use_case import (
     IGetStreamingMessageResponseUseCase,
 )
+from luminary.chat.application.interfaces.usecases.command.move_chat_use_case import (
+    IMoveChatUseCase,
+)
 from luminary.chat.application.interfaces.usecases.command.remove_chat_assistant_use_case import (
     IRemoveChatAssistantUseCase,
 )
 from luminary.chat.application.interfaces.usecases.command.remove_source_from_chat_use_case import (
     IRemoveSourceFromChatUseCase,
+)
+from luminary.chat.application.interfaces.usecases.command.reorder_chats_use_case import (
+    IReorderChatsUseCase,
 )
 from luminary.chat.application.interfaces.usecases.command.send_message_use_case import (
     ISendMessageUseCase,
@@ -145,6 +151,12 @@ from luminary.folder.application.interfaces.usecases.command.remove_folder_assis
 )
 from luminary.folder.application.interfaces.usecases.command.remove_source_from_folder_use_case import (
     IRemoveSourceFromFolderUseCase,
+)
+from luminary.folder.application.interfaces.usecases.command.reorder_folders_use_case import (
+    IReorderFoldersUseCase,
+)
+from luminary.folder.application.interfaces.usecases.command.set_folder_collapsed_use_case import (
+    ISetFolderCollapsedUseCase,
 )
 from luminary.folder.application.interfaces.usecases.command.stream_folder_editor_autocomplete_use_case import (
     IStreamFolderEditorAutocompleteUseCase,
@@ -596,6 +608,12 @@ def main() -> FastAPI:  # noqa: PLR0915
     server.dependency_overrides[IDeleteChatUseCase] = (
         lambda: chat_container.delete_chat_use_case()
     )
+    server.dependency_overrides[IMoveChatUseCase] = (
+        lambda: chat_container.move_chat_use_case()
+    )
+    server.dependency_overrides[IReorderChatsUseCase] = (
+        lambda: chat_container.reorder_chats_use_case()
+    )
     server.dependency_overrides[ISendMessageUseCase] = (
         lambda: chat_container.send_message_use_case()
     )
@@ -623,6 +641,12 @@ def main() -> FastAPI:  # noqa: PLR0915
     )
     server.dependency_overrides[IDeleteFolderUseCase] = (
         lambda: folder_container.delete_folder_use_case()
+    )
+    server.dependency_overrides[ISetFolderCollapsedUseCase] = (
+        lambda: folder_container.set_folder_collapsed_use_case()
+    )
+    server.dependency_overrides[IReorderFoldersUseCase] = (
+        lambda: folder_container.reorder_folders_use_case()
     )
     server.dependency_overrides[IChangeFolderAssistantUseCase] = (
         lambda: folder_container.change_folder_assistant_use_case()

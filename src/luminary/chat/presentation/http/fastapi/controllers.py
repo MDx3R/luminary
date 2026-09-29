@@ -33,6 +33,10 @@ from luminary.chat.application.interfaces.usecases.command.get_message_response_
     GetMessageResponseCommand,
     IGetStreamingMessageResponseUseCase,
 )
+from luminary.chat.application.interfaces.usecases.command.move_chat_use_case import (
+    IMoveChatUseCase,
+    MoveChatCommand,
+)
 from luminary.chat.application.interfaces.usecases.command.remove_chat_assistant_use_case import (
     IRemoveChatAssistantUseCase,
     RemoveChatAssistantCommand,
@@ -40,6 +44,10 @@ from luminary.chat.application.interfaces.usecases.command.remove_chat_assistant
 from luminary.chat.application.interfaces.usecases.command.remove_source_from_chat_use_case import (
     IRemoveSourceFromChatUseCase,
     RemoveSourceFromChatCommand,
+)
+from luminary.chat.application.interfaces.usecases.command.reorder_chats_use_case import (
+    IReorderChatsUseCase,
+    ReorderChatsCommand,
 )
 from luminary.chat.application.interfaces.usecases.command.send_message_use_case import (
     ISendMessageUseCase,
@@ -65,6 +73,8 @@ from luminary.chat.presentation.http.dto.request import (
     AddSourceToChatRequest,
     ChangeChatAssistantRequest,
     CreateChatRequest,
+    MoveChatRequest,
+    ReorderChatsRequest,
     SendMessageRequest,
     UpdateChatNameRequest,
 )
@@ -88,6 +98,8 @@ class ChatCommandController:
     add_source_to_chat_use_case: IAddSourceToChatUseCase = Depends()
     remove_source_from_chat_use_case: IRemoveSourceFromChatUseCase = Depends()
     delete_chat_use_case: IDeleteChatUseCase = Depends()
+    move_chat_use_case: IMoveChatUseCase = Depends()
+    reorder_chats_use_case: IReorderChatsUseCase = Depends()
     send_message_use_case: ISendMessageUseCase = Depends()
     get_message_response_use_case: IGetStreamingMessageResponseUseCase = Depends()
     cancel_message_use_case: ICancelMessageUseCase = Depends()
@@ -107,6 +119,37 @@ class ChatCommandController:
             )
         )
         return IDResponse(id=chat_id)
+
+    @command_router.put("/order", status_code=status.HTTP_204_NO_CONTENT)
+    async def reorder(
+        self,
+        request: ReorderChatsRequest,
+        descriptor: Annotated[IdentityDescriptor, Depends(get_descriptor)],
+    ) -> None:
+        await self.reorder_chats_use_case.execute(
+            ReorderChatsCommand(
+                user_id=descriptor.identity_id,
+                folder_id=request.folder_id,
+                chat_ids=request.chat_ids,
+            )
+        )
+
+    @command_router.put(
+        "/{chat_id:uuid}/folder", status_code=status.HTTP_204_NO_CONTENT
+    )
+    async def move(
+        self,
+        chat_id: UUID,
+        request: MoveChatRequest,
+        descriptor: Annotated[IdentityDescriptor, Depends(get_descriptor)],
+    ) -> None:
+        await self.move_chat_use_case.execute(
+            MoveChatCommand(
+                user_id=descriptor.identity_id,
+                chat_id=chat_id,
+                folder_id=request.folder_id,
+            )
+        )
 
     @command_router.put(
         "/{chat_id:uuid}/name",

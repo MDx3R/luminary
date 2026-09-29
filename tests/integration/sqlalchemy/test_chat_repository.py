@@ -4,12 +4,20 @@ import pytest
 from common.application.exceptions import NotFoundError
 from common.infrastructure.database.sqlalchemy.executor import QueryExecutor
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
-from tests.integration.sqlalchemy.utils import add_chat
+from tests.integration.sqlalchemy.utils import (
+    add_chat,
+    add_file_source,
+    add_folder,
+    persist_chat,
+)
 from tests.unit.chat.utils import make_chat
 
 from luminary.chat.domain.value_objects.chat_id import ChatId
 from luminary.chat.infrastructure.database.postgres.sqlalchemy.repositories.chat_repository import (
     ChatRepository,
+)
+from luminary.folder.infrastructure.database.postgres.sqlalchemy.repositories.folder_read_repository import (
+    FolderReadRepository,
 )
 from luminary.source.domain.entity.source import SourceId
 
@@ -74,3 +82,47 @@ class TestChatRepository:
         # Act & Assert
         with pytest.raises(NotFoundError):
             await self.repository.get_by_id(chat.id)
+
+    async def test_move_to_folder_and_root_preserves_chat_sources(
+        self, query_executor: QueryExecutor
+    ):
+        owner_id = uuid4()
+        source = await add_file_source(self.maker, owner_id=owner_id)
+        chat = make_chat(user_id=owner_id)
+        chat.add_source(source.id)
+        await persist_chat(self.maker, chat)
+        folder = await add_folder(self.maker, owner_id=owner_id)
+
+        await self.repository.move_to_folder(chat.id, folder.id)
+
+        moved = await self.repository.get_by_id(chat.id)
+        assert moved.folder_id == folder.id
+        assert source.id in moved.sources
+        detail = await FolderReadRepository(query_executor).get_by_id(
+            folder.id.value, owner_id
+        )
+        assert [item.id for item in detail.chats] == [chat.id.value]
+
+        await self.repository.move_to_folder(chat.id, None)
+
+        assert (await self.repository.get_by_id(chat.id)).folder_id is None
+        detail = await FolderReadRepository(query_executor).get_by_id(
+            folder.id.value, owner_id
+        )
+        assert detail.chats == []
+        assert source.id in (await self.repository.get_by_id(chat.id)).sources
+
+    async def test_set_order_scopes_to_location(self):
+        owner_id = uuid4()
+        first = await add_chat(self.maker, user_id=owner_id)
+        second = await add_chat(self.maker, user_id=owner_id)
+        folder = await add_folder(self.maker, owner_id=owner_id)
+        other = await add_chat(self.maker, user_id=owner_id, folder_id=folder.id.value)
+
+        await self.repository.set_order(
+            first.owner_id, None, [second.id, first.id, other.id]
+        )
+
+        assert (await self.repository.get_by_id(second.id)).sort_order == 0
+        assert (await self.repository.get_by_id(first.id)).sort_order == 1
+        assert (await self.repository.get_by_id(other.id)).sort_order == -1

@@ -30,6 +30,7 @@ class Chat(Entity):
     assistant_id: AssistantId | None
     created_at: DateTime
     is_deleted: bool
+    sort_order: int = -1
     _sources: set[SourceId] = field(default_factory=set[SourceId])
 
     @property

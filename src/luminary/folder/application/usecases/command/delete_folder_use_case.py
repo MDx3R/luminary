@@ -1,3 +1,4 @@
+from common.application.interfaces.transactions.unit_of_work import IUnitOfWork
 from common.domain.value_objects.id import UserId
 
 from luminary.folder.application.interfaces.policies.folder_access_policy import (
@@ -18,13 +19,17 @@ class DeleteFolderUseCase(IDeleteFolderUseCase):
         self,
         repository: IFolderRepository,
         access_policy: IFolderAccessPolicy,
+        uow: IUnitOfWork,
     ) -> None:
         self.repository = repository
         self.access_policy = access_policy
+        self.uow = uow
 
     async def execute(self, command: DeleteFolderCommand) -> None:
         folder = await self.repository.get_by_id(FolderId(command.folder_id))
         self.access_policy.assert_is_allowed(UserId(command.user_id), folder)
 
         folder.delete()
-        await self.repository.save(folder)
+        async with self.uow:
+            await self.repository.save(folder)
+            await self.repository.clear_contents(folder.id)

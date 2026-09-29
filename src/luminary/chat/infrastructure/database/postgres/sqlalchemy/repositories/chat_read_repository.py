@@ -65,7 +65,11 @@ class ChatReadRepository(IChatReadRepository):
             .where(ChatBase.owner_id == owner_id)
             .where(ChatBase.folder_id.is_(None))
             .where(ChatBase.is_active)
-            .order_by(ChatBase.created_at.desc())
+            .order_by(
+                ChatBase.sort_order,
+                ChatBase.created_at.desc(),
+                ChatBase.chat_id,
+            )
         )
         result = await self._executor.execute_scalar_many(stmt)
         return [ChatReadMapper.to_summary(c) for c in result]

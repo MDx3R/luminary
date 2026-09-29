@@ -19,9 +19,15 @@ from tests.unit.folder.utils import make_folder
 from tests.unit.source.utils import make_file_source, make_link_source, make_page_source
 
 from luminary.chat.domain.value_objects.chat_id import ChatId
+from luminary.chat.infrastructure.database.postgres.sqlalchemy.repositories.chat_repository import (
+    ChatRepository,
+)
 from luminary.folder.domain.entity.folder import Folder
 from luminary.folder.infrastructure.database.postgres.sqlalchemy.repositories.folder_read_repository import (
     FolderReadRepository,
+)
+from luminary.folder.infrastructure.database.postgres.sqlalchemy.repositories.folder_repository import (
+    FolderRepository,
 )
 from luminary.source.domain.entity.file_source import FileSource
 from luminary.source.domain.entity.link_source import LinkSource
@@ -129,6 +135,26 @@ class TestFolderReadRepository:
         assert result.assistant_id == assistant.id.value
         assert result.assistant_name == "Folder Assistant"
 
+    async def test_get_by_id_orders_chats_by_saved_position(
+        self, query_executor: QueryExecutor
+    ) -> None:
+        owner_id = uuid4()
+        folder = await add_folder(self.maker, owner_id=owner_id)
+        first = make_chat(user_id=owner_id, folder_id=folder.id.value)
+        second = make_chat(user_id=owner_id, folder_id=folder.id.value)
+        await persist_chat(self.maker, first)
+        await persist_chat(self.maker, second)
+        folder.add_chat(first.id)
+        folder.add_chat(second.id)
+        await FolderRepository(query_executor).save(folder)
+        await ChatRepository(query_executor).set_order(
+            first.owner_id, folder.id, [first.id, second.id]
+        )
+
+        result = await self.read_repo.get_by_id(folder.id.value, owner_id)
+
+        assert [item.id for item in result.chats] == [first.id.value, second.id.value]
+
     async def test_get_by_id_not_found_raises(self) -> None:
         # Arrange
         owner_id = uuid4()
@@ -180,6 +206,23 @@ class TestFolderReadRepository:
         assert {r.id for r in result} == {f1.id.value, f2.id.value}
         assert {r.name for r in result} == {f1.info.name, f2.info.name}
         assert result[0].created_at >= result[1].created_at
+
+    async def test_list_by_owner_uses_saved_order_and_collapsed_state(
+        self, query_executor: QueryExecutor
+    ) -> None:
+        owner_id = uuid4()
+        first = await add_folder(self.maker, owner_id=owner_id)
+        second = await add_folder(self.maker, owner_id=owner_id)
+        repository = FolderRepository(query_executor)
+        second.set_collapsed(True)
+        await repository.save(second)
+        await repository.set_order(first.owner_id, [first.id, second.id])
+
+        result = await self.read_repo.list_by_owner(owner_id)
+
+        assert [item.id for item in result] == [first.id.value, second.id.value]
+        assert result[1].collapsed is True
+        assert [item.sort_order for item in result] == [0, 1]
 
     async def test_list_by_owner_excludes_other_owner(self) -> None:
         # Arrange

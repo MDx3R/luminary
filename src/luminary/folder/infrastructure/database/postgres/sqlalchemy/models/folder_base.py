@@ -4,7 +4,16 @@ from datetime import datetime
 from uuid import UUID
 
 from common.infrastructure.database.sqlalchemy.models.base import Base
-from sqlalchemy import Boolean, ColumnElement, DateTime, ForeignKey, String, Text, and_
+from sqlalchemy import (
+    Boolean,
+    ColumnElement,
+    DateTime,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+    and_,
+)
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import Mapped, foreign, mapped_column, relationship
@@ -51,6 +60,8 @@ class FolderBase(Base):
         DateTime(timezone=True), nullable=True
     )
     is_deleted: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    collapsed: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    sort_order: Mapped[int] = mapped_column(Integer, nullable=False, default=-1)
 
     chat_associations: Mapped[list[FolderChatAssociation]] = relationship(
         "FolderChatAssociation", lazy="noload"

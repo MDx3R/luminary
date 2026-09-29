@@ -11,6 +11,7 @@ from luminary.folder.domain.events.events import (
     FolderAssistantChangedEvent,
     FolderChatAddedEvent,
     FolderChatRemovedEvent,
+    FolderCollapsedChangedEvent,
     FolderDeletedEvent,
     FolderEditorContentUpdatedEvent,
     FolderInfoChangedEvent,
@@ -31,6 +32,8 @@ class Folder(Entity):
     assistant_id: AssistantId | None
     created_at: DateTime
     is_deleted: bool
+    collapsed: bool = False
+    sort_order: int = -1
     _chats: set[ChatId] = field(default_factory=set[ChatId])
     _sources: set[SourceId] = field(default_factory=set[SourceId])
     editor_content: EditorContent | None = None
@@ -45,6 +48,14 @@ class Folder(Entity):
 
     def is_owned_by(self, user_id: UserId) -> bool:
         return self.owner_id == user_id
+
+    def set_collapsed(self, collapsed: bool) -> None:
+        if self.collapsed == collapsed:
+            return
+        self.collapsed = collapsed
+        self._record_event(
+            FolderCollapsedChangedEvent(folder_id=self.id.value, collapsed=collapsed)
+        )
 
     def change_name(self, name: str) -> None:
         self.change_info(FolderInfo(name, self.info.description))

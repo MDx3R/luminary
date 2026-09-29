@@ -1,10 +1,16 @@
+from collections.abc import Sequence
+
 from common.application.exceptions import NotFoundError
+from common.domain.value_objects.id import UserId
 from common.infrastructure.database.sqlalchemy.executor import QueryExecutor
 from sqlalchemy import and_, delete, select, update
 from sqlalchemy.orm import joinedload
 
 from luminary.assistant.domain.entity.assistant import AssistantId
 from luminary.chat.domain.value_objects.chat_id import ChatId
+from luminary.chat.infrastructure.database.postgres.sqlalchemy.models.chat_base import (
+    ChatBase,
+)
 from luminary.folder.application.interfaces.repositories.folder_repository import (
     IFolderRepository,
 )
@@ -48,6 +54,43 @@ class FolderRepository(IFolderRepository):
     async def save(self, entity: Folder) -> None:
         base = FolderMapper.to_persistence(entity)
         await self.executor.save(base)
+
+    async def list_ids_by_owner(self, owner_id: UserId) -> Sequence[FolderId]:
+        stmt = select(FolderBase.folder_id).where(
+            FolderBase.owner_id == owner_id.value, FolderBase.is_active
+        )
+        ids = await self.executor.execute_scalar_many(stmt)
+        return [FolderId(id) for id in ids]
+
+    async def set_order(self, owner_id: UserId, folder_ids: Sequence[FolderId]) -> None:
+        for position, folder_id in enumerate(folder_ids):
+            stmt = (
+                update(FolderBase)
+                .where(
+                    FolderBase.folder_id == folder_id.value,
+                    FolderBase.owner_id == owner_id.value,
+                    FolderBase.is_active,
+                )
+                .values(sort_order=position)
+            )
+            await self.executor.execute(stmt)
+
+    async def clear_contents(self, folder_id: FolderId) -> None:
+        await self.executor.execute(
+            update(ChatBase)
+            .where(ChatBase.folder_id == folder_id.value)
+            .values(is_deleted=True)
+        )
+        await self.executor.execute(
+            delete(FolderChatAssociation).where(
+                FolderChatAssociation.folder_id == folder_id.value
+            )
+        )
+        await self.executor.execute(
+            delete(FolderSourceAssociation).where(
+                FolderSourceAssociation.folder_id == folder_id.value
+            )
+        )
 
     async def clear_assistant_reference(self, assistant_id: AssistantId) -> None:
         stmt = (

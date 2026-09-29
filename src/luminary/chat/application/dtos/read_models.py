@@ -30,6 +30,7 @@ class ChatReadModel:
     assistant_name: str | None
     sources: Sequence[ChatSourceItem]
     created_at: datetime
+    sort_order: int = -1
 
 
 @dataclass(frozen=True)
@@ -39,6 +40,7 @@ class ChatSummaryReadModel:
     id: UUID
     name: str
     created_at: datetime
+    sort_order: int = -1
 
 
 @dataclass(frozen=True)

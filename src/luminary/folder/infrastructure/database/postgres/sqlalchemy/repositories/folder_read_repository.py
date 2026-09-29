@@ -54,7 +54,11 @@ class FolderReadRepository(IFolderReadRepository):
             select(FolderBase)
             .where(FolderBase.owner_id == owner_id)
             .where(FolderBase.is_active)
-            .order_by(FolderBase.created_at.desc())
+            .order_by(
+                FolderBase.sort_order,
+                FolderBase.created_at.desc(),
+                FolderBase.folder_id,
+            )
         )
         rows = await self._executor.execute_scalar_many(stmt)
         return [FolderReadMapper.to_summary(r) for r in rows]

@@ -54,6 +54,8 @@ class FolderMapper:
             assistant_id=assistant_id,
             created_at=DateTime(base.created_at),
             is_deleted=base.is_deleted,
+            collapsed=base.collapsed,
+            sort_order=base.sort_order,
             _chats=chats,
             _sources=sources,
             editor_content=editor_content,
@@ -89,6 +91,8 @@ class FolderMapper:
             created_at=folder.created_at.value,
             updated_at=folder.created_at.value,
             is_deleted=folder.is_deleted,
+            collapsed=folder.collapsed,
+            sort_order=folder.sort_order,
             chat_associations=chats,
             source_associations=sources,
         )
@@ -104,7 +108,17 @@ class FolderReadMapper:
                 text=base.editor_text,
                 updated_at=base.editor_updated_at,
             )
-        chats = [cls.to_chat_item(c) for c in base.chats]
+        chats = [
+            cls.to_chat_item(c)
+            for c in sorted(
+                base.chats,
+                key=lambda chat: (
+                    chat.sort_order,
+                    -chat.created_at.timestamp(),
+                    str(chat.chat_id),
+                ),
+            )
+        ]
         sources = [cls.to_source_item(s) for s in base.sources]
         return FolderReadModel(
             id=base.folder_id,
@@ -116,6 +130,8 @@ class FolderReadMapper:
             chats=chats,
             sources=sources,
             created_at=base.created_at,
+            collapsed=base.collapsed,
+            sort_order=base.sort_order,
         )
 
     @classmethod
@@ -125,6 +141,8 @@ class FolderReadMapper:
             name=base.name,
             description=base.description,
             created_at=base.created_at,
+            collapsed=base.collapsed,
+            sort_order=base.sort_order,
         )
 
     @classmethod
@@ -133,6 +151,7 @@ class FolderReadMapper:
             id=base.chat_id,
             name=base.name,
             created_at=base.created_at,
+            sort_order=base.sort_order,
         )
 
     @singledispatchmethod

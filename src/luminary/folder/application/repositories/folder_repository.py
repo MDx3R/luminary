@@ -1,5 +1,8 @@
+from collections.abc import Sequence
+
 from common.application.interfaces.services.event_bus import IEventBus
 from common.application.interfaces.transactions.unit_of_work import IUnitOfWork
+from common.domain.value_objects.id import UserId
 
 from luminary.assistant.domain.entity.assistant import AssistantId
 from luminary.chat.domain.value_objects.chat_id import ChatId
@@ -36,6 +39,16 @@ class EventBusFolderRepository(IFolderRepository):
         async with self.uow:
             await self.repository.save(entity)
             await self.event_bus.publish_all(entity.events)
+
+    async def list_ids_by_owner(self, owner_id: UserId) -> Sequence[FolderId]:
+        return await self.repository.list_ids_by_owner(owner_id)
+
+    async def set_order(self, owner_id: UserId, folder_ids: Sequence[FolderId]) -> None:
+        async with self.uow:
+            await self.repository.set_order(owner_id, folder_ids)
+
+    async def clear_contents(self, folder_id: FolderId) -> None:
+        await self.repository.clear_contents(folder_id)
 
     async def clear_assistant_reference(self, assistant_id: AssistantId) -> None:
         await self.repository.clear_assistant_reference(assistant_id)

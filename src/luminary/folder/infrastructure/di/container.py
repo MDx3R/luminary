@@ -46,6 +46,12 @@ from luminary.folder.application.usecases.command.remove_folder_assistant_use_ca
 from luminary.folder.application.usecases.command.remove_source_from_folder_use_case import (
     RemoveSourceFromFolderUseCase,
 )
+from luminary.folder.application.usecases.command.reorder_folders_use_case import (
+    ReorderFoldersUseCase,
+)
+from luminary.folder.application.usecases.command.set_folder_collapsed_use_case import (
+    SetFolderCollapsedUseCase,
+)
 from luminary.folder.application.usecases.command.stream_folder_editor_autocomplete_use_case import (
     StreamFolderEditorAutocompleteUseCase,
 )
@@ -115,6 +121,15 @@ class FolderContainer(containers.DeclarativeContainer):
         DeleteFolderUseCase,
         repository=event_bus_folder_repository,
         access_policy=folder_access_policy,
+        uow=unit_of_work,
+    )
+    set_folder_collapsed_use_case = providers.Singleton(
+        SetFolderCollapsedUseCase,
+        repository=event_bus_folder_repository,
+        access_policy=folder_access_policy,
+    )
+    reorder_folders_use_case = providers.Singleton(
+        ReorderFoldersUseCase, repository=event_bus_folder_repository
     )
     change_folder_assistant_use_case = providers.Singleton(
         ChangeFolderAssistantUseCase,

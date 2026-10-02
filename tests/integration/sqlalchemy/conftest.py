@@ -43,12 +43,16 @@ from luminary.source.infrastructure.database.postgres.sqlalchemy.models.source_b
     PageSourceBase,
     SourceBase,
 )
+from luminary.user.infrastructure.database.postgres.sqlalchemy.models.user_base import (
+    UserBase,
+)
 
 
 os.environ["TESTCONTAINERS_RYUK_DISABLED"] = "true"
 
 # Needed for proper database configuration, e.g. fkeys and tables
 __models__: list[type[Base]] = [
+    UserBase,
     SourceBase,
     FileSourceBase,
     LinkSourceBase,

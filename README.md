@@ -17,6 +17,9 @@ Luminary - Python-проект (FastAPI + SQLAlchemy) с архитектуро�
 
 ## Запуск с Docker Compose
 
+Сначала настройте Zitadel и OIDC-клиент по [инструкции авторизации](docs/authentication.md).
+Она описывает новые секреты, первый вход и сохранение существующих пользователей.
+
 1. Клонируйте репозиторий и перейдите в корень проекта (где лежит `docker-compose.yaml`).
 
 2. Создайте внешнюю сеть Docker (в `docker-compose.yaml` она помечена как `external`):
@@ -43,7 +46,9 @@ docker compose up --build
 docker compose up --build -d
 ```
 
-**Что поднимается:** PostgreSQL, RabbitMQ, MinIO (S3), Qdrant, контейнер миграций Alembic, приложение FastAPI (uvicorn на порту **8000** внутри стека) и **nginx** на порту **80** на хосте.
+**Что поднимается:** PostgreSQL, RabbitMQ, MinIO (S3), Qdrant, миграции Alembic,
+FastAPI, Zitadel (init/setup/API/login с отдельной БД), oauth2-proxy и nginx.
+Приложение слушает **8000** только внутри Docker; nginx доступен на **127.0.0.1:80**.
 Управление RabbitMQ и консоль MinIO доступны на портах из `.env` (`RABBIT_MANAGEMENT_PORT`, `MINIO_CONSOLE_PORT`).
 
 Остановка:

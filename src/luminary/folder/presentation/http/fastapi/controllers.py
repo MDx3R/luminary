@@ -2,12 +2,12 @@ from collections.abc import AsyncGenerator
 from typing import Annotated
 from uuid import UUID
 
+from common.application.value_objects.descriptor import IdentityDescriptor
 from common.presentation.http.dto.response import IDResponse
+from common.presentation.http.fastapi.auth import get_descriptor
 from common.presentation.http.fastapi.cbv import cbv
 from fastapi import APIRouter, Depends, status
 from fastapi.responses import StreamingResponse
-from idp.identity.domain.value_objects.descriptor import IdentityDescriptor
-from idp.identity.presentation.http.fastapi.auth import get_descriptor
 
 from luminary.chat.presentation.http.dto.response import StreamingMessageResponse
 from luminary.folder.application.interfaces.usecases.command.add_source_to_folder_use_case import (
@@ -98,9 +98,7 @@ class FolderCommandController:
     remove_chat_from_folder_use_case: IRemoveChatFromFolderUseCase = Depends()
     update_editor_content_use_case: IUpdateEditorContentUseCase = Depends()
     stream_folder_editor_inline_use_case: IStreamFolderEditorInlineUseCase = Depends()
-    stream_folder_editor_autocomplete_use_case: (
-        IStreamFolderEditorAutocompleteUseCase
-    ) = Depends()
+    autocomplete_editor_use_case: IStreamFolderEditorAutocompleteUseCase = Depends()
 
     @command_router.post("/", status_code=status.HTTP_201_CREATED)
     async def create(
@@ -303,7 +301,7 @@ class FolderCommandController:
         request: StreamFolderEditorAutocompleteRequest,
         descriptor: Annotated[IdentityDescriptor, Depends(get_descriptor)],
     ) -> StreamingResponse:
-        stream = self.stream_folder_editor_autocomplete_use_case.execute(
+        stream = self.autocomplete_editor_use_case.execute(
             StreamFolderEditorAutocompleteCommand(
                 user_id=descriptor.identity_id,
                 folder_id=folder_id,

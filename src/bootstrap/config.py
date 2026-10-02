@@ -7,11 +7,13 @@ from common.infrastructure.config.llm_config import LLMConfig
 from common.infrastructure.config.logger_config import LoggerConfig
 from common.infrastructure.config.qdrant_config import QdrantConfig
 from common.infrastructure.config.rabbit_config import RabbitMQConfig
-from idp.auth.infrastructure.config.auth_config import AuthConfig
+from pydantic import Field
+
+from luminary.user.infrastructure.config.oidc_config import OIDCConfig
 
 
 class AppConfig(Settings):
-    auth: AuthConfig
+    oidc: OIDCConfig = Field(default_factory=OIDCConfig)
     db: DatabaseConfig
     llm: LLMConfig
     logger: LoggerConfig
@@ -25,7 +27,6 @@ class AppConfig(Settings):
             mode="json",
             exclude={
                 "db": {"db_pass"},
-                "auth": {"secret_key", "algorithm"},
                 "llm": {"api_key"},
                 "s3": {"secret_key"},
                 "rabbit": {"rabbit_pass"},

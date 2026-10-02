@@ -4,6 +4,7 @@ from collections.abc import AsyncGenerator, Sequence
 from contextlib import asynccontextmanager
 from typing import Any
 
+import httpx
 import uvicorn
 from bootstrap.config import AppConfig
 from bootstrap.utils import log_config
@@ -17,25 +18,6 @@ from common.infrastructure.storage.qdrant.client import QdrantStore
 from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from faststream.rabbit import RabbitRoute, RabbitRouter
-from idp.auth.application.interfaces.usecases.command.login_use_case import (
-    ILoginUseCase,
-)
-from idp.auth.application.interfaces.usecases.command.logout_use_case import (
-    ILogoutUseCase,
-)
-from idp.auth.application.interfaces.usecases.command.refresh_token_use_case import (
-    IRefreshTokenUseCase,
-)
-from idp.auth.infrastructure.di.container.container import AuthContainer, TokenContainer
-from idp.auth.presentation.http.fastapi.controllers import auth_router
-from idp.identity.application.interfaces.services.token_intospector import (
-    ITokenIntrospector,
-)
-from idp.identity.application.interfaces.usecases.command.create_identity_use_case import (
-    ICreateIdentityUseCase,
-)
-from idp.identity.infrastructure.di.container.container import IdentityContainer
-from idp.identity.presentation.http.fastapi.controllers import identity_router
 from llama_index.core import Settings, VectorStoreIndex
 from llama_index.embeddings.openai_like import OpenAILikeEmbedding
 from llama_index.llms.openai_like import OpenAILike
@@ -201,6 +183,11 @@ from luminary.source.presentation.http.fastapi.controllers import (
     command_router as source_command_router,
     query_router as source_query_router,
 )
+from luminary.user.application.interfaces.resolve_user_use_case import (
+    IResolveUserUseCase,
+)
+from luminary.user.infrastructure.di.container import UserContainer
+from luminary.user.presentation.http.fastapi.controllers import user_router
 
 
 FILES_BUCKET = "files"
@@ -375,6 +362,11 @@ def main() -> FastAPI:  # noqa: PLR0915
 
     logger.info("vector store initialized")
 
+    # Only the configured provider receives access tokens; redirects are not followed.
+    identity_http_client = httpx.AsyncClient(
+        timeout=config.oidc.timeout_seconds, follow_redirects=False, trust_env=False
+    )
+
     # Create FastAPI server
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncGenerator[None, Any]:
@@ -391,6 +383,7 @@ def main() -> FastAPI:  # noqa: PLR0915
         await database.shutdown()
         await storage.shutdown()
         await qdrant_store.shutdown()
+        await identity_http_client.aclose()
 
     server = FastAPI(lifespan=lifespan)
 
@@ -410,30 +403,11 @@ def main() -> FastAPI:  # noqa: PLR0915
     unit_of_work = common_container.unit_of_work
     event_bus = common_container.event_bus
 
-    identity_container = IdentityContainer(
+    user_container = UserContainer(
         uuid_generator=uuid_generator,
         query_executor=query_executor,
-        token_introspector=None,  # NOTE: Need to be overriden later
-    )
-
-    token_container = TokenContainer(
-        auth_config=config.auth,
-        clock=clock,
-        uuid_generator=uuid_generator,
-        token_generator=common_container.token_generator,
-        query_executor=query_executor,
-        identity_repository=identity_container.identity_repository,
-    )
-
-    identity_container.token_introspector.override(  # pyright: ignore[reportUnknownMemberType]
-        token_container.token_introspector
-    )
-
-    auth_container = AuthContainer(
-        identity_service=identity_container.identity_service,
-        token_issuer=token_container.token_issuer,
-        token_revoker=token_container.token_revoker,
-        token_refresher=token_container.token_refresher,
+        http_client=identity_http_client,
+        userinfo_url=str(config.oidc.userinfo_url),
     )
 
     file_container = FileContainer(
@@ -658,24 +632,13 @@ def main() -> FastAPI:  # noqa: PLR0915
         lambda: folder_container.list_user_folders_use_case()
     )
 
-    server.dependency_overrides[ILoginUseCase] = lambda: auth_container.login_use_case()
-    server.dependency_overrides[ILogoutUseCase] = (
-        lambda: auth_container.logout_use_case()
-    )
-    server.dependency_overrides[IRefreshTokenUseCase] = (
-        lambda: auth_container.refresh_token_use_case()
-    )
-
-    server.dependency_overrides[ICreateIdentityUseCase] = (
-        lambda: identity_container.create_identity_use_case()
-    )
-    server.dependency_overrides[ITokenIntrospector] = (
-        lambda: identity_container.token_introspector()
+    server.dependency_overrides[IResolveUserUseCase] = (
+        lambda: user_container.resolve_user_use_case()
     )
 
     server.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],
+        allow_origins=[config.deploy.external_url.rstrip("/")],
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
@@ -683,8 +646,7 @@ def main() -> FastAPI:  # noqa: PLR0915
 
     router = APIRouter()
 
-    server.include_router(identity_router, prefix="/users", tags=["users"])
-    server.include_router(auth_router, prefix="/auth", tags=["auth"])
+    server.include_router(user_router, prefix="/users", tags=["users"])
 
     router.include_router(source_command_router, prefix="/sources", tags=["sources"])
     router.include_router(source_query_router, prefix="/sources", tags=["sources"])

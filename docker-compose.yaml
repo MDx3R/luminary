@@ -1,4 +1,128 @@
+x-zitadel-environment: &zitadel-environment
+  ZITADEL_DATABASE_POSTGRES_HOST: zitadel-db
+  ZITADEL_DATABASE_POSTGRES_PORT: 5432
+  ZITADEL_DATABASE_POSTGRES_DATABASE: zitadel
+  ZITADEL_DATABASE_POSTGRES_USER_USERNAME: zitadel
+  ZITADEL_DATABASE_POSTGRES_USER_PASSWORD: ${ZITADEL_DB_PASSWORD:?Set ZITADEL_DB_PASSWORD}
+  ZITADEL_DATABASE_POSTGRES_USER_SSL_MODE: disable
+  ZITADEL_DATABASE_POSTGRES_ADMIN_USERNAME: postgres
+  ZITADEL_DATABASE_POSTGRES_ADMIN_PASSWORD: ${ZITADEL_DB_ADMIN_PASSWORD:?Set ZITADEL_DB_ADMIN_PASSWORD}
+  ZITADEL_DATABASE_POSTGRES_ADMIN_SSL_MODE: disable
+  ZITADEL_EXTERNALDOMAIN: ${ZITADEL_DOMAIN:-zitadel.localhost}
+  ZITADEL_EXTERNALPORT: 80
+  ZITADEL_EXTERNALSECURE: false
+  ZITADEL_TLS_ENABLED: false
+  ZITADEL_MASTERKEY: ${ZITADEL_MASTERKEY:?Set a 32-character ZITADEL_MASTERKEY}
+  ZITADEL_DEFAULTINSTANCE_FEATURES_LOGINV2_REQUIRED: true
+  ZITADEL_DEFAULTINSTANCE_FEATURES_LOGINV2_BASEURI: http://${ZITADEL_DOMAIN:-zitadel.localhost}/ui/v2/login/
+  ZITADEL_OIDC_DEFAULTLOGINURLV2: http://${ZITADEL_DOMAIN:-zitadel.localhost}/ui/v2/login/login?authRequest=
+  ZITADEL_OIDC_DEFAULTLOGOUTURLV2: http://${ZITADEL_DOMAIN:-zitadel.localhost}/ui/v2/login/logout?post_logout_redirect=
+  ZITADEL_SAML_DEFAULTLOGINURLV2: http://${ZITADEL_DOMAIN:-zitadel.localhost}/ui/v2/login/login?samlRequest=
+  ZITADEL_DEFAULTINSTANCE_LOGINPOLICY_ALLOWREGISTER: true
+
 services:
+  zitadel-db:
+    image: postgres:17
+    environment:
+      POSTGRES_PASSWORD: ${ZITADEL_DB_ADMIN_PASSWORD}
+    networks:
+      - identity
+    volumes:
+      - zitadel_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  zitadel-init:
+    image: ghcr.io/zitadel/zitadel:${ZITADEL_VERSION:-v4.16.0}
+    command: init
+    environment: *zitadel-environment
+    networks:
+      - identity
+    depends_on:
+      zitadel-db:
+        condition: service_healthy
+
+  zitadel-setup:
+    image: ghcr.io/zitadel/zitadel:${ZITADEL_VERSION:-v4.16.0}
+    command: setup --masterkeyFromEnv
+    user: "0"
+    environment:
+      <<: *zitadel-environment
+      ZITADEL_FIRSTINSTANCE_ORG_HUMAN_USERNAME: zitadel-admin
+      ZITADEL_FIRSTINSTANCE_ORG_HUMAN_PASSWORD: ${ZITADEL_ADMIN_PASSWORD:?Set ZITADEL_ADMIN_PASSWORD}
+      ZITADEL_FIRSTINSTANCE_ORG_HUMAN_PASSWORDCHANGEREQUIRED: true
+      ZITADEL_FIRSTINSTANCE_LOGINCLIENTPATPATH: /zitadel/bootstrap/login-client.pat
+      ZITADEL_FIRSTINSTANCE_ORG_LOGINCLIENT_MACHINE_USERNAME: login-client
+      ZITADEL_FIRSTINSTANCE_ORG_LOGINCLIENT_MACHINE_NAME: Luminary Login
+      ZITADEL_FIRSTINSTANCE_ORG_LOGINCLIENT_PAT_EXPIRATIONDATE: ${ZITADEL_LOGIN_PAT_EXPIRATION:-2027-10-01T00:00:00Z}
+    volumes:
+      - zitadel_bootstrap:/zitadel/bootstrap
+    networks:
+      - identity
+    depends_on:
+      zitadel-init:
+        condition: service_completed_successfully
+
+  zitadel-api:
+    image: ghcr.io/zitadel/zitadel:${ZITADEL_VERSION:-v4.16.0}
+    command: start --masterkeyFromEnv
+    environment: *zitadel-environment
+    networks:
+      - identity
+    depends_on:
+      zitadel-setup:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "/app/zitadel", "ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
+  zitadel-login:
+    image: ghcr.io/zitadel/zitadel-login:${ZITADEL_VERSION:-v4.16.0}
+    user: "0"
+    environment:
+      ZITADEL_API_URL: http://zitadel-api:8080
+      NEXT_PUBLIC_BASE_PATH: /ui/v2/login
+      ZITADEL_SERVICE_USER_TOKEN_FILE: /zitadel/bootstrap/login-client.pat
+      ZITADEL_SESSION_COOKIE_SECRET: ${ZITADEL_LOGIN_COOKIE_SECRET:?Set ZITADEL_LOGIN_COOKIE_SECRET}
+      CUSTOM_REQUEST_HEADERS: Host:${ZITADEL_DOMAIN:-zitadel.localhost},X-Forwarded-Proto:http
+    volumes:
+      - zitadel_bootstrap:/zitadel/bootstrap:ro
+    networks:
+      - identity
+    depends_on:
+      zitadel-api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "/app/healthcheck.mjs", "http://localhost:3000/ui/v2/login/healthy"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
+  oauth2-proxy:
+    image: quay.io/oauth2-proxy/oauth2-proxy:v7.15.0
+    command: --config=/etc/oauth2-proxy.cfg
+    environment:
+      OAUTH2_PROXY_OIDC_ISSUER_URL: http://${ZITADEL_DOMAIN:-zitadel.localhost}
+      OAUTH2_PROXY_CLIENT_ID: ${OAUTH2_PROXY_CLIENT_ID:-}
+      OAUTH2_PROXY_CLIENT_SECRET: ${OAUTH2_PROXY_CLIENT_SECRET:-}
+      OAUTH2_PROXY_COOKIE_SECRET: ${OAUTH2_PROXY_COOKIE_SECRET:?Set OAUTH2_PROXY_COOKIE_SECRET}
+      OAUTH2_PROXY_COOKIE_SECURE: false
+      OAUTH2_PROXY_REDIRECT_URL: ${APP_ORIGIN:-http://localhost}/oauth2/callback
+    volumes:
+      - ./oauth2-proxy/oauth2-proxy.cfg:/etc/oauth2-proxy.cfg:ro
+    networks:
+      - identity
+    depends_on:
+      nginx:
+        condition: service_started
+      zitadel-api:
+        condition: service_healthy
+
   postgres:
     image: postgres:17
     networks:
@@ -97,8 +221,7 @@ services:
       dockerfile: docker/Dockerfile
     networks:
       - luminary
-    ports:
-      - "8000:8000"
+      - identity
     depends_on:
       migrations:
         condition: service_completed_successfully
@@ -120,25 +243,38 @@ services:
       RABBIT_HOST: rabbitmq
       S3__ENDPOINT_URL: minio:9000
       QDRANT__ENDPOINT_URL: http://qdrant:6333
+      OIDC__USERINFO_URL: http://${ZITADEL_DOMAIN:-zitadel.localhost}/oidc/v1/userinfo
+      DEPLOY__EXTERNAL_URL: ${APP_ORIGIN:-http://localhost}
 
   nginx:
-    image: nginx:alpine
+    image: nginx:1.28-alpine
     restart: always
     networks:
-      - luminary
+      luminary:
+      identity:
+        aliases:
+          - ${ZITADEL_DOMAIN:-zitadel.localhost}
     ports:
-      - "80:80"
+      - "127.0.0.1:80:80"
+    environment:
+      APP_DOMAIN: ${APP_DOMAIN:-localhost}
+      APP_ORIGIN: ${APP_ORIGIN:-http://localhost}
+      ZITADEL_DOMAIN: ${ZITADEL_DOMAIN:-zitadel.localhost}
+      NGINX_ENVSUBST_OUTPUT_DIR: /etc/nginx
+      NGINX_ENVSUBST_FILTER: ^(APP_DOMAIN|APP_ORIGIN|ZITADEL_DOMAIN)$$
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-    depends_on:
-      - app
+      - ./nginx/nginx.conf.template:/etc/nginx/templates/nginx.conf.template:ro
 
 networks:
+  identity:
+    driver: bridge
   luminary:
     driver: bridge
     external: true
 
 volumes:
+  zitadel_data:
+  zitadel_bootstrap:
   postgres_data:
   minio_data:
   rabbitmq_data:

@@ -1,11 +1,11 @@
 from typing import Annotated
 from uuid import UUID
 
+from common.application.value_objects.descriptor import IdentityDescriptor
 from common.presentation.http.dto.response import IDResponse
+from common.presentation.http.fastapi.auth import get_descriptor
 from common.presentation.http.fastapi.cbv import cbv
 from fastapi import APIRouter, Depends, Query, status
-from idp.identity.domain.value_objects.descriptor import IdentityDescriptor
-from idp.identity.presentation.http.fastapi.auth import get_descriptor
 
 from luminary.assistant.application.interfaces.usecases.command.clone_assistant_use_case import (
     CloneAssistantCommand,

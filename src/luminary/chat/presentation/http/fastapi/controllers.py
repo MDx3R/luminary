@@ -2,12 +2,12 @@ from collections.abc import AsyncGenerator
 from typing import Annotated
 from uuid import UUID
 
+from common.application.value_objects.descriptor import IdentityDescriptor
 from common.presentation.http.dto.response import IDResponse
+from common.presentation.http.fastapi.auth import get_descriptor
 from common.presentation.http.fastapi.cbv import cbv
 from fastapi import APIRouter, Depends, status
 from fastapi.responses import StreamingResponse
-from idp.identity.domain.value_objects.descriptor import IdentityDescriptor
-from idp.identity.presentation.http.fastapi.auth import get_descriptor
 
 from luminary.chat.application.interfaces.usecases.command.add_source_to_chat_use_case import (
     AddSourceToChatCommand,

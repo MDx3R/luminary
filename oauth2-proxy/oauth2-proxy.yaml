@@ -7,7 +7,7 @@ providers:
   - id: zitadel
     provider: oidc
     name: Zitadel
-    clientID: ${LUMINARY_OIDC_CLIENT_ID}
+    clientID: "${LUMINARY_OIDC_CLIENT_ID}"
     clientSecret: ${LUMINARY_OIDC_CLIENT_SECRET}
     scope: openid profile email
     code_challenge_method: S256

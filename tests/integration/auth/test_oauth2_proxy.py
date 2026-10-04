@@ -47,6 +47,7 @@ def signed_token(
     key: rsa.RSAPrivateKey,
     session_nonce: str,
     verified: bool,
+    client_id: str,
     **overrides: str | int | bool,
 ) -> str:
     header = encode(json.dumps({"alg": "RS256", "kid": "test"}).encode())
@@ -54,7 +55,7 @@ def signed_token(
         json.dumps(
             {
                 "iss": ISSUER,
-                "aud": "test-client",
+                "aud": client_id,
                 "sub": "verified-sub",
                 "exp": int(time.time()) + 3600,
                 "iat": int(time.time()),
@@ -97,8 +98,17 @@ def nginx_container(network: Network) -> DockerContainer:
     )
 
 
+@pytest.fixture(
+    scope="module",
+    params=["test-client", "123456789012345678"],
+    ids=["text-client-id", "numeric-client-id"],
+)
+def client_id(request):
+    return request.param
+
+
 @pytest.fixture(scope="module")
-def oidc_stack():
+def oidc_stack(client_id):
     key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
     with Network() as network, ExitStack() as stack:
         issuer = (
@@ -135,7 +145,7 @@ def oidc_stack():
             .with_network_aliases("oauth2-proxy")
             .with_command(service["command"])
             .with_env("LUMINARY_OIDC_ISSUER_URL", ISSUER)
-            .with_env("LUMINARY_OIDC_CLIENT_ID", "test-client")
+            .with_env("LUMINARY_OIDC_CLIENT_ID", client_id)
             .with_env("LUMINARY_OIDC_CLIENT_SECRET", secrets.token_urlsafe(32))
             .with_env("OAUTH2_PROXY_COOKIE_SECRET", secrets.token_urlsafe(32))
             .with_env("OAUTH2_PROXY_COOKIE_SECURE", "false")
@@ -163,7 +173,9 @@ def login(
     assert start.status_code == status.HTTP_302_FOUND
     parameters = parse_qs(urlsplit(start.headers["Location"]).query)
     code = secrets.token_urlsafe(16)
-    token = signed_token(key, parameters["nonce"][0], verified, **overrides)
+    token = signed_token(
+        key, parameters["nonce"][0], verified, parameters["client_id"][0], **overrides
+    )
     response = httpx.post(
         issuer_url + "/test/token",
         json={"code": code, "id_token": token},
@@ -173,6 +185,17 @@ def login(
     return client.get(
         "/oauth2/callback", params={"code": code, "state": parameters["state"][0]}
     )
+
+
+def test_authorization_request_preserves_client_id(oidc_stack, client_id):
+    base_url, _, _ = oidc_stack
+    with httpx.Client(
+        base_url=base_url, headers={"Host": "localhost"}, trust_env=False
+    ) as client:
+        response = client.get("/oauth2/start")
+        assert response.status_code == status.HTTP_302_FOUND
+        parameters = parse_qs(urlsplit(response.headers["Location"]).query)
+        assert parameters["client_id"] == [client_id]
 
 
 def test_verified_session_provides_profile_without_credentials(oidc_stack):

@@ -14,7 +14,12 @@ FORGED_HEADERS = {
     "Host": "localhost",
     "X-User-Id": "victim",
     "X-Username": "victim",
+    "X-User-Name": "Victim Name",
+    "X-Email": "victim@example.com",
     "Authorization": "Bearer forged-token",
+    "Proxy-Authorization": "Bearer forged-token",
+    "X-Forwarded-Access-Token": "forged-token",
+    "X-Auth-Request-Access-Token": "forged-token",
     "X-Auth-Request-User": "victim",
     "X-Forwarded-User": "victim",
 }
@@ -77,16 +82,36 @@ def test_proxy_overwrites_client_identity(proxy_url):
     assert response.json() == {
         "subject": "verified-sub",
         "username": "verified-name",
-        "authorization": "Bearer verified-token",
+        "name": "Verified Name",
+        "email": "verified@example.com",
+        "authorization": None,
+        "cookie": None,
+        "proxy_authorization": None,
+        "forwarded_token": None,
+        "auth_request_token": None,
     }
 
 
 def test_public_catalog_is_anonymous_and_strips_identity(proxy_url):
     response = httpx.get(
-        proxy_url + "/api/v1/assistants/public", headers=FORGED_HEADERS, trust_env=False
+        proxy_url + "/api/v1/assistants/public",
+        headers={**FORGED_HEADERS, "Cookie": "test_session=valid"},
+        trust_env=False,
     )
     assert response.status_code == status.HTTP_200_OK
-    assert response.json() == {"subject": None, "username": None, "authorization": None}
+    assert response.json() == dict.fromkeys(
+        [
+            "subject",
+            "username",
+            "name",
+            "email",
+            "authorization",
+            "cookie",
+            "proxy_authorization",
+            "forwarded_token",
+            "auth_request_token",
+        ]
+    )
 
 
 def test_public_catalog_exception_does_not_cover_other_routes(proxy_url):

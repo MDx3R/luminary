@@ -3,13 +3,11 @@ from uuid import uuid4
 
 import pytest
 from common.application.value_objects.descriptor import IdentityDescriptor
-from fastapi import FastAPI, status
+from common.presentation.http.fastapi.auth import get_proxy_identity
+from fastapi import FastAPI, HTTPException, Request, status
 from fastapi.testclient import TestClient
 
-from luminary.user.application.exceptions import (
-    IdentityProviderUnavailableError,
-    InvalidIdentityError,
-)
+from luminary.user.application.dtos.profile import ExternalProfile
 from luminary.user.application.interfaces.resolve_user_use_case import (
     IResolveUserUseCase,
 )
@@ -19,7 +17,8 @@ from luminary.user.presentation.http.fastapi.controllers import user_router
 HEADERS = {
     "X-User-Id": "external-subject",
     "X-Username": "jane",
-    "Authorization": "Bearer access-token",
+    "X-User-Name": "Jane Doe",
+    "X-Email": "jane@example.com",
 }
 
 
@@ -50,7 +49,7 @@ def test_me_returns_product_profile(client, resolver):
         "email": "jane@example.com",
     }
     resolver.execute.assert_awaited_once_with(
-        "external-subject", "jane", "access-token"
+        ExternalProfile("external-subject", "Jane Doe", "jane@example.com"), "jane"
     )
 
 
@@ -59,25 +58,23 @@ def test_missing_header_is_unauthorized(client, resolver, missing: str):
     headers = {key: value for key, value in HEADERS.items() if key != missing}
     response = client.get("/users/me", headers=headers)
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
-    assert response.headers["WWW-Authenticate"] == "Bearer"
+    assert "WWW-Authenticate" not in response.headers
     resolver.execute.assert_not_awaited()
 
 
 @pytest.mark.parametrize(
     ("name", "value"),
     [
-        ("Authorization", "Basic abc"),
-        ("Authorization", "Bearer"),
-        ("Authorization", "Bearer "),
-        ("Authorization", "Bearer  access-token"),
-        ("Authorization", "Bearer one two"),
-        ("Authorization", "Bearer one\ttwo"),
         ("X-User-Id", ""),
         ("X-User-Id", " "),
         ("X-User-Id", " padded "),
         ("X-User-Id", "x" * 256),
         ("X-Username", ""),
         ("X-Username", " "),
+        ("X-User-Name", ""),
+        ("X-User-Name", " "),
+        ("X-Email", ""),
+        ("X-Email", " "),
     ],
 )
 def test_invalid_headers_are_unauthorized(client, resolver, name: str, value: str):
@@ -86,22 +83,22 @@ def test_invalid_headers_are_unauthorized(client, resolver, name: str, value: st
     resolver.execute.assert_not_awaited()
 
 
-@pytest.mark.parametrize("scheme", ["Bearer", "bearer", "BEARER"])
-def test_bearer_scheme_is_case_insensitive(client, resolver, scheme: str):
+def test_tokens_or_cookies_alone_cannot_resolve_a_user(client, resolver):
     response = client.get(
-        "/users/me", headers={**HEADERS, "Authorization": f"{scheme} access-token"}
+        "/users/me",
+        headers={"Authorization": "Bearer token", "Cookie": "session=opaque"},
     )
-    assert response.status_code == status.HTTP_200_OK
-    resolver.execute.assert_awaited_once_with(
-        "external-subject", "jane", "access-token"
-    )
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+    resolver.execute.assert_not_awaited()
 
 
 def test_maximum_length_subject_is_accepted(client, resolver):
     subject = "x" * 255
     response = client.get("/users/me", headers={**HEADERS, "X-User-Id": subject})
     assert response.status_code == status.HTTP_200_OK
-    resolver.execute.assert_awaited_once_with(subject, "jane", "access-token")
+    resolver.execute.assert_awaited_once_with(
+        ExternalProfile(subject, "Jane Doe", "jane@example.com"), "jane"
+    )
 
 
 @pytest.mark.parametrize("name", list(HEADERS))
@@ -113,17 +110,30 @@ def test_duplicate_identity_headers_are_rejected(client, resolver, name: str):
     resolver.execute.assert_not_awaited()
 
 
-@pytest.mark.parametrize(
-    ("error", "status_code"),
-    [(InvalidIdentityError(), 401), (IdentityProviderUnavailableError(), 503)],
-)
-def test_identity_errors_are_mapped_without_leaking_tokens(
-    client, resolver, error: Exception, status_code: int
-):
-    resolver.execute.side_effect = error
-    response = client.get("/users/me", headers=HEADERS)
-    assert response.status_code == status_code
-    assert "access-token" not in response.text
+def test_utf8_profile_headers_are_decoded(client, resolver):
+    name = "Анна Иванова"
+    headers = {**HEADERS, "X-User-Name": name}
+    response = client.get(
+        "/users/me", headers=[(k.encode(), v.encode()) for k, v in headers.items()]
+    )
+    assert response.status_code == status.HTTP_200_OK
+    resolver.execute.assert_awaited_once_with(
+        ExternalProfile("external-subject", name, "jane@example.com"), "jane"
+    )
+
+
+def test_invalid_utf8_profile_header_is_rejected():
+    headers = [
+        (k.lower().encode(), v.encode())
+        for k, v in HEADERS.items()
+        if k != "X-User-Name"
+    ]
+    request = Request(
+        {"type": "http", "headers": [*headers, (b"x-user-name", b"\xff")]}
+    )
+    with pytest.raises(HTTPException) as error:
+        get_proxy_identity(request)
+    assert error.value.status_code == status.HTTP_401_UNAUTHORIZED
 
 
 @pytest.mark.parametrize(

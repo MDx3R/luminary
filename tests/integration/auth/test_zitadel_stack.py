@@ -74,8 +74,12 @@ def proxy_image(client, stack: ExitStack, image_name: str):
     """Copy the actual config without requiring Docker Desktop filesystem mounts."""
     context = io.BytesIO()
     files = {
-        "Dockerfile": f"FROM {image_name}\nCOPY proxy.cfg /etc/oauth2-proxy.cfg\n".encode(),
+        "Dockerfile": (
+            f"FROM {image_name}\nCOPY proxy.cfg /etc/oauth2-proxy.cfg\n"
+            "COPY proxy.yaml /etc/oauth2-proxy.yaml\n"
+        ).encode(),
         "proxy.cfg": (ROOT / "oauth2-proxy/oauth2-proxy.cfg").read_bytes(),
+        "proxy.yaml": (ROOT / "oauth2-proxy/oauth2-proxy.yaml").read_bytes(),
     }
     with tarfile.open(fileobj=context, mode="w") as archive:
         for name, content in files.items():
@@ -86,6 +90,14 @@ def proxy_image(client, stack: ExitStack, image_name: str):
     image, _ = client.images.build(fileobj=context, custom_context=True, rm=True)
     stack.callback(client.images.remove, image.id)
     return image.id
+
+
+def wait_for_proxy(proxy) -> None:
+    try:
+        wait_for_logs(proxy, "OAuthProxy configured", timeout=30, raise_on_exit=True)
+    except RuntimeError as exc:
+        # Only disposable test configuration is used by these fixtures.
+        raise AssertionError(b"\n".join(proxy.get_logs()).decode()) from exc
 
 
 def test_real_zitadel_discovery_login_and_proxy_boundary():
@@ -163,7 +175,7 @@ def test_real_zitadel_discovery_login_and_proxy_boundary():
             proxy_service, settings, network
         ).with_network_aliases("oauth2-proxy")
         stack.enter_context(proxy)
-        wait_for_logs(proxy, "OAuthProxy configured", timeout=30, raise_on_exit=True)
+        wait_for_proxy(proxy)
         base_url = (
             f"http://{nginx.get_container_host_ip()}:{nginx.get_exposed_port(80)}"
         )

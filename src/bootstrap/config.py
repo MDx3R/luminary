@@ -7,13 +7,9 @@ from common.infrastructure.config.llm_config import LLMConfig
 from common.infrastructure.config.logger_config import LoggerConfig
 from common.infrastructure.config.qdrant_config import QdrantConfig
 from common.infrastructure.config.rabbit_config import RabbitMQConfig
-from pydantic import Field
-
-from luminary.user.infrastructure.config.oidc_config import OIDCConfig
 
 
 class AppConfig(Settings):
-    oidc: OIDCConfig = Field(default_factory=OIDCConfig)
     db: DatabaseConfig
     llm: LLMConfig
     logger: LoggerConfig

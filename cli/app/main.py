@@ -4,7 +4,6 @@ from collections.abc import AsyncGenerator, Sequence
 from contextlib import asynccontextmanager
 from typing import Any
 
-import httpx
 import uvicorn
 from bootstrap.config import AppConfig
 from bootstrap.utils import log_config
@@ -362,11 +361,6 @@ def main() -> FastAPI:  # noqa: PLR0915
 
     logger.info("vector store initialized")
 
-    # Only the configured provider receives access tokens; redirects are not followed.
-    identity_http_client = httpx.AsyncClient(
-        timeout=config.oidc.timeout_seconds, follow_redirects=False, trust_env=False
-    )
-
     # Create FastAPI server
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncGenerator[None, Any]:
@@ -383,7 +377,6 @@ def main() -> FastAPI:  # noqa: PLR0915
         await database.shutdown()
         await storage.shutdown()
         await qdrant_store.shutdown()
-        await identity_http_client.aclose()
 
     server = FastAPI(lifespan=lifespan)
 
@@ -406,8 +399,6 @@ def main() -> FastAPI:  # noqa: PLR0915
     user_container = UserContainer(
         uuid_generator=uuid_generator,
         query_executor=query_executor,
-        http_client=identity_http_client,
-        userinfo_url=str(config.oidc.userinfo_url),
     )
 
     file_container = FileContainer(

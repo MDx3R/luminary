@@ -105,16 +105,17 @@ services:
 
   oauth2-proxy:
     image: quay.io/oauth2-proxy/oauth2-proxy:v7.15.0
-    command: --config=/etc/oauth2-proxy.cfg
+    command: --config=/etc/oauth2-proxy.cfg --alpha-config=/etc/oauth2-proxy.yaml
     environment:
-      OAUTH2_PROXY_OIDC_ISSUER_URL: http://${ZITADEL_DOMAIN:-zitadel.localhost}
-      OAUTH2_PROXY_CLIENT_ID: ${OAUTH2_PROXY_CLIENT_ID:-}
-      OAUTH2_PROXY_CLIENT_SECRET: ${OAUTH2_PROXY_CLIENT_SECRET:-}
+      LUMINARY_OIDC_ISSUER_URL: http://${ZITADEL_DOMAIN:-zitadel.localhost}
+      LUMINARY_OIDC_CLIENT_ID: ${OAUTH2_PROXY_CLIENT_ID:-}
+      LUMINARY_OIDC_CLIENT_SECRET: ${OAUTH2_PROXY_CLIENT_SECRET:-}
       OAUTH2_PROXY_COOKIE_SECRET: ${OAUTH2_PROXY_COOKIE_SECRET:?Set OAUTH2_PROXY_COOKIE_SECRET}
       OAUTH2_PROXY_COOKIE_SECURE: false
       OAUTH2_PROXY_REDIRECT_URL: ${APP_ORIGIN:-http://localhost}/oauth2/callback
     volumes:
       - ./oauth2-proxy/oauth2-proxy.cfg:/etc/oauth2-proxy.cfg:ro
+      - ./oauth2-proxy/oauth2-proxy.yaml:/etc/oauth2-proxy.yaml:ro
     networks:
       - identity
     depends_on:
@@ -221,7 +222,6 @@ services:
       dockerfile: docker/Dockerfile
     networks:
       - luminary
-      - identity
     depends_on:
       migrations:
         condition: service_completed_successfully
@@ -243,7 +243,6 @@ services:
       RABBIT_HOST: rabbitmq
       S3__ENDPOINT_URL: minio:9000
       QDRANT__ENDPOINT_URL: http://qdrant:6333
-      OIDC__USERINFO_URL: http://${ZITADEL_DOMAIN:-zitadel.localhost}/oidc/v1/userinfo
       DEPLOY__EXTERNAL_URL: ${APP_ORIGIN:-http://localhost}
 
   nginx:

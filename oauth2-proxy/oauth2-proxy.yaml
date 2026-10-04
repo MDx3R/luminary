@@ -1,0 +1,47 @@
+# Structured configuration is pinned to oauth2-proxy v7.15.0.
+# Only these verified session claims are returned to nginx, never tokens.
+server:
+  bindAddress: 0.0.0.0:4180
+
+providers:
+  - id: zitadel
+    provider: oidc
+    name: Zitadel
+    clientID: ${LUMINARY_OIDC_CLIENT_ID}
+    clientSecret: ${LUMINARY_OIDC_CLIENT_SECRET}
+    scope: openid profile email
+    code_challenge_method: S256
+    additionalClaims: [name]
+    oidcConfig:
+      issuerURL: ${LUMINARY_OIDC_ISSUER_URL}
+      # OIDC session.user is sub. The deprecated userIDClaim overrides email instead.
+      emailClaim: email
+      insecureAllowUnverifiedEmail: false
+      insecureSkipIssuerVerification: false
+      insecureSkipNonce: false
+
+upstreamConfig:
+  upstreams:
+    - id: auth-response
+      path: /
+      static: true
+      staticCode: 202
+
+injectRequestHeaders: []
+injectResponseHeaders:
+  - name: X-Auth-Request-User
+    values:
+      - claimSource:
+          claim: user
+  - name: X-Auth-Request-Preferred-Username
+    values:
+      - claimSource:
+          claim: preferred_username
+  - name: X-Auth-Request-Name
+    values:
+      - claimSource:
+          claim: name
+  - name: X-Auth-Request-Email
+    values:
+      - claimSource:
+          claim: email

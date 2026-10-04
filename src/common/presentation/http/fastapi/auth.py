@@ -3,10 +3,7 @@ from typing import Annotated
 from common.application.value_objects.descriptor import IdentityDescriptor
 from fastapi import Depends, HTTPException, Request, status
 
-from luminary.user.application.exceptions import (
-    IdentityProviderUnavailableError,
-    InvalidIdentityError,
-)
+from luminary.user.application.dtos.profile import ExternalProfile
 from luminary.user.application.interfaces.resolve_user_use_case import (
     IResolveUserUseCase,
 )
@@ -15,56 +12,42 @@ from luminary.user.application.interfaces.resolve_user_use_case import (
 MAX_SUBJECT_LENGTH = 255
 
 
-def get_proxy_identity(request: Request) -> tuple[str, str, str]:
+def get_proxy_identity(request: Request) -> tuple[ExternalProfile, str]:
     """Read headers overwritten by the only public ingress, never raw client data."""
-    names = ("x-user-id", "x-username", "authorization")
+    names = ("x-user-id", "x-username", "x-user-name", "x-email")
     if any(len(request.headers.getlist(name)) != 1 for name in names):
         raise _unauthorized()
-    subject, username, authorization = (request.headers[name] for name in names)
-    _validate_profile_headers(subject, username)
-    return subject, username, _get_bearer_token(authorization)
-
-
-def _validate_profile_headers(subject: str, username: str) -> None:
-    if (
-        not subject.strip()
-        or len(subject) > MAX_SUBJECT_LENGTH
-        or subject != subject.strip()
-        or not username.strip()
-    ):
+    subject, username, name, email = (
+        _decode_header(request.headers[name]) for name in names
+    )
+    if any(not value.strip() for value in (subject, username, name, email)):
         raise _unauthorized()
+    _validate_subject(subject)
+    return ExternalProfile(subject, name, email), username
 
 
-def _get_bearer_token(authorization: str) -> str:
-    scheme, separator, token = authorization.partition(" ")
-    if (
-        scheme.lower() != "bearer"
-        or not separator
-        or not token
-        or any(char.isspace() for char in token)
-    ):
+def _decode_header(value: str) -> str:
+    # ASGI exposes raw header bytes as Latin-1; oauth2-proxy sends UTF-8 claims.
+    try:
+        return value.encode("latin-1").decode("utf-8")
+    except UnicodeError as exc:
+        raise _unauthorized() from exc
+
+
+def _validate_subject(subject: str) -> None:
+    if len(subject) > MAX_SUBJECT_LENGTH or subject != subject.strip():
         raise _unauthorized()
-    return token
 
 
 def _unauthorized() -> HTTPException:
     return HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Authentication required",
-        headers={"WWW-Authenticate": "Bearer"},
     )
 
 
 async def get_descriptor(
-    identity: Annotated[tuple[str, str, str], Depends(get_proxy_identity)],
+    identity: Annotated[tuple[ExternalProfile, str], Depends(get_proxy_identity)],
     resolve_user: Annotated[IResolveUserUseCase, Depends()],
 ) -> IdentityDescriptor:
-    try:
-        return await resolve_user.execute(*identity)
-    except InvalidIdentityError as exc:
-        raise _unauthorized() from exc
-    except IdentityProviderUnavailableError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Identity provider unavailable",
-        ) from exc
+    return await resolve_user.execute(*identity)

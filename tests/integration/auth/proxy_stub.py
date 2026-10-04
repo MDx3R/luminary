@@ -20,6 +20,8 @@ class Handler(BaseHTTPRequestHandler):
             self.send_response(202)
             self.send_header("X-Auth-Request-User", "verified-sub")
             self.send_header("X-Auth-Request-Preferred-Username", "verified-name")
+            self.send_header("X-Auth-Request-Name", "Verified Name")
+            self.send_header("X-Auth-Request-Email", "verified@example.com")
             self.send_header("X-Auth-Request-Access-Token", "verified-token")
             self.end_headers()
             return
@@ -31,7 +33,15 @@ class Handler(BaseHTTPRequestHandler):
                 {
                     "subject": self.headers.get("X-User-Id"),
                     "username": self.headers.get("X-Username"),
+                    "name": self.headers.get("X-User-Name"),
+                    "email": self.headers.get("X-Email"),
                     "authorization": self.headers.get("Authorization"),
+                    "cookie": self.headers.get("Cookie"),
+                    "proxy_authorization": self.headers.get("Proxy-Authorization"),
+                    "forwarded_token": self.headers.get("X-Forwarded-Access-Token"),
+                    "auth_request_token": self.headers.get(
+                        "X-Auth-Request-Access-Token"
+                    ),
                 }
             ).encode()
         )

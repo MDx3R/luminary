@@ -49,4 +49,7 @@ class TestEventBus:
 
         # Assert
         events = [self.event_bus.init_event(e) for e in events]
-        assert self.handler.handle.has_calls([call(e) for e in events])
+        self.handler.handle.assert_has_calls(
+            [call(e) for e in events],
+            any_order=True,
+        )

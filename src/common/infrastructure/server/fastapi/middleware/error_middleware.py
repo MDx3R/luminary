@@ -3,6 +3,7 @@ from collections.abc import Awaitable, Callable
 from typing import ClassVar
 
 from common.application.exceptions import (
+    AccessPolicyError,
     ApplicationError,
     DuplicateEntryError,
     NotFoundError,
@@ -10,9 +11,38 @@ from common.application.exceptions import (
     RepositoryError,
 )
 from common.domain.exceptions import DomainError
-from fastapi import FastAPI, Request, Response, status
+from fastapi import Request, Response, status
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.types import ASGIApp
+
+
+def _error_code(exc: BaseException) -> str:
+    """Код из ClassVar `code` по MRO, иначе INTERNAL_ERROR."""
+    for cls in type(exc).__mro__:
+        code = cls.__dict__.get("code")
+        if isinstance(code, str):
+            return code
+    return "INTERNAL_ERROR"
+
+
+def _status_for(
+    exc: Exception, status_map: dict[type[Exception], int], default: int
+) -> int:
+    for cls in type(exc).__mro__:
+        if cls in status_map:
+            return status_map[cls]
+    return default
+
+
+def _json_error(
+    status_code: int, exc: Exception, *, safe_detail: bool = False
+) -> JSONResponse:
+    detail = "Internal server error" if safe_detail else str(exc)
+    return JSONResponse(
+        status_code=status_code,
+        content={"error": _error_code(exc), "detail": detail},
+    )
 
 
 class IHTTPErrorHandler(ABC):
@@ -28,26 +58,23 @@ class DomainErrorHandler(IHTTPErrorHandler):
         return isinstance(exc, DomainError)
 
     def handle(self, request: Request, exc: Exception) -> JSONResponse:
-        return JSONResponse(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            content={"error": type(exc).__name__, "detail": str(exc)},
-        )
+        return _json_error(status.HTTP_400_BAD_REQUEST, exc)
 
 
 class ApplicationErrorHandler(IHTTPErrorHandler):
     ERROR_STATUS_MAP: ClassVar[dict[type[Exception], int]] = {
-        NotFoundError: status.HTTP_404_NOT_FOUND
+        NotFoundError: status.HTTP_404_NOT_FOUND,
+        AccessPolicyError: status.HTTP_403_FORBIDDEN,
     }
 
     def can_handle(self, exc: Exception) -> bool:
         return isinstance(exc, ApplicationError)
 
     def handle(self, request: Request, exc: Exception) -> JSONResponse:
-        status_code = self.ERROR_STATUS_MAP.get(type(exc), status.HTTP_400_BAD_REQUEST)
-        return JSONResponse(
-            status_code=status_code,
-            content={"error": type(exc).__name__, "detail": str(exc)},
+        status_code = _status_for(
+            exc, self.ERROR_STATUS_MAP, status.HTTP_400_BAD_REQUEST
         )
+        return _json_error(status_code, exc)
 
 
 class RepositoryErrorHandler(IHTTPErrorHandler):
@@ -60,29 +87,23 @@ class RepositoryErrorHandler(IHTTPErrorHandler):
         return isinstance(exc, RepositoryError)
 
     def handle(self, request: Request, exc: Exception) -> JSONResponse:
+        status_code = _status_for(
+            exc, self.ERROR_STATUS_MAP, status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
         if isinstance(exc, OptimisticLockError):
             return JSONResponse(
-                status_code=status.HTTP_409_CONFLICT,
+                status_code=status_code,
                 content={
-                    "error": "OptimisticLockError",
-                    "detail": f"Retry later: {exc!s}",
+                    "error": _error_code(exc),
+                    "detail": "Retry later: concurrent update",
                 },
             )
-
-        status_code = self.ERROR_STATUS_MAP.get(
-            type(exc), status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
-        return JSONResponse(
-            status_code=status_code,
-            content={
-                "error": type(exc).__name__,
-                "detail": str(exc),
-            },
-        )
+        safe = status_code >= status.HTTP_500_INTERNAL_SERVER_ERROR
+        return _json_error(status_code, exc, safe_detail=safe)
 
 
 class ErrorHandlingMiddleware(BaseHTTPMiddleware):
-    def __init__(self, app: FastAPI, handlers: list[IHTTPErrorHandler]):
+    def __init__(self, app: ASGIApp, handlers: list[IHTTPErrorHandler]) -> None:
         super().__init__(app)
         self.handlers = handlers
 
@@ -92,8 +113,7 @@ class ErrorHandlingMiddleware(BaseHTTPMiddleware):
         call_next: Callable[[Request], Awaitable[Response]],
     ) -> Response:
         try:
-            response = await call_next(request)
-            return response
+            return await call_next(request)
         except Exception as exc:
             for handler in self.handlers:
                 if handler.can_handle(exc):
@@ -101,5 +121,8 @@ class ErrorHandlingMiddleware(BaseHTTPMiddleware):
 
             return JSONResponse(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                content={"error": "InternalError", "detail": str(exc)},
+                content={
+                    "error": "INTERNAL_ERROR",
+                    "detail": "Internal server error",
+                },
             )

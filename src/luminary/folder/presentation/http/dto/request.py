@@ -19,7 +19,9 @@ class SetFolderCollapsedRequest(BaseModel):
 
 
 class ReorderFoldersRequest(BaseModel):
-    folder_ids: list[UUID]
+    folder_id: UUID
+    previous_folder_id: UUID | None = None
+    next_folder_id: UUID | None = None
 
 
 class ChangeFolderAssistantRequest(BaseModel):

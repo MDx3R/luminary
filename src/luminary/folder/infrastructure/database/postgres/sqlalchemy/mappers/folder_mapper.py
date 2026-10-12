@@ -55,7 +55,7 @@ class FolderMapper:
             created_at=DateTime(base.created_at),
             is_deleted=base.is_deleted,
             collapsed=base.collapsed,
-            sort_order=base.sort_order,
+            order_key=base.position_key,
             _chats=chats,
             _sources=sources,
             editor_content=editor_content,
@@ -92,7 +92,7 @@ class FolderMapper:
             updated_at=folder.created_at.value,
             is_deleted=folder.is_deleted,
             collapsed=folder.collapsed,
-            sort_order=folder.sort_order,
+            order_key=folder.order_key,
             chat_associations=chats,
             source_associations=sources,
         )
@@ -113,7 +113,7 @@ class FolderReadMapper:
             for c in sorted(
                 base.chats,
                 key=lambda chat: (
-                    chat.sort_order,
+                    chat.position_key,
                     -chat.created_at.timestamp(),
                     str(chat.chat_id),
                 ),
@@ -131,7 +131,7 @@ class FolderReadMapper:
             sources=sources,
             created_at=base.created_at,
             collapsed=base.collapsed,
-            sort_order=base.sort_order,
+            order_key=base.position_key,
         )
 
     @classmethod
@@ -142,7 +142,7 @@ class FolderReadMapper:
             description=base.description,
             created_at=base.created_at,
             collapsed=base.collapsed,
-            sort_order=base.sort_order,
+            order_key=base.position_key,
         )
 
     @classmethod
@@ -151,7 +151,7 @@ class FolderReadMapper:
             id=base.chat_id,
             name=base.name,
             created_at=base.created_at,
-            sort_order=base.sort_order,
+            order_key=base.position_key,
         )
 
     @singledispatchmethod

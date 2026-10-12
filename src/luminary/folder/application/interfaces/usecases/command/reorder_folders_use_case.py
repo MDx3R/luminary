@@ -6,7 +6,9 @@ from uuid import UUID
 @dataclass(frozen=True)
 class ReorderFoldersCommand:
     user_id: UUID
-    folder_ids: list[UUID]
+    folder_id: UUID
+    previous_folder_id: UUID | None = None
+    next_folder_id: UUID | None = None
 
 
 class IReorderFoldersUseCase(ABC):

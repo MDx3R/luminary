@@ -47,7 +47,7 @@ class ChatResponse(BaseModel):
     assistant_name: str | None
     sources: list[ChatSourceItemResponse]
     created_at: datetime
-    sort_order: int
+    order_key: str
 
     @classmethod
     def from_read_model(cls, model: ChatReadModel) -> "ChatResponse":
@@ -59,7 +59,7 @@ class ChatResponse(BaseModel):
             assistant_name=model.assistant_name,
             sources=[ChatSourceItemResponse.from_read_model(s) for s in model.sources],
             created_at=model.created_at,
-            sort_order=model.sort_order,
+            order_key=model.order_key,
         )
 
 
@@ -67,7 +67,7 @@ class ChatSummaryResponse(BaseModel):
     id: UUID
     name: str
     created_at: datetime
-    sort_order: int
+    order_key: str
 
     @classmethod
     def from_read_model(cls, model: ChatSummaryReadModel) -> "ChatSummaryResponse":
@@ -75,7 +75,7 @@ class ChatSummaryResponse(BaseModel):
             id=model.id,
             name=model.name,
             created_at=model.created_at,
-            sort_order=model.sort_order,
+            order_key=model.order_key,
         )
 
 

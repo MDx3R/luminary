@@ -40,7 +40,7 @@ class FolderChatItemResponse(BaseModel):
     id: UUID
     name: str
     created_at: datetime
-    sort_order: int
+    order_key: str
 
     @classmethod
     def from_read_model(cls, model: FolderChatItem) -> "FolderChatItemResponse":
@@ -48,7 +48,7 @@ class FolderChatItemResponse(BaseModel):
             id=model.id,
             name=model.name,
             created_at=model.created_at,
-            sort_order=model.sort_order,
+            order_key=model.order_key,
         )
 
 
@@ -75,7 +75,7 @@ class FolderResponse(BaseModel):
     sources: list[FolderSourceItemResponse]
     created_at: datetime
     collapsed: bool
-    sort_order: int
+    order_key: str
 
     @classmethod
     def from_read_model(cls, model: FolderReadModel) -> "FolderResponse":
@@ -96,7 +96,7 @@ class FolderResponse(BaseModel):
             ],
             created_at=model.created_at,
             collapsed=model.collapsed,
-            sort_order=model.sort_order,
+            order_key=model.order_key,
         )
 
 
@@ -106,7 +106,7 @@ class FolderSummaryResponse(BaseModel):
     description: str | None
     created_at: datetime
     collapsed: bool
-    sort_order: int
+    order_key: str
 
     @classmethod
     def from_read_model(cls, model: FolderSummaryReadModel) -> "FolderSummaryResponse":
@@ -116,5 +116,5 @@ class FolderSummaryResponse(BaseModel):
             description=model.description,
             created_at=model.created_at,
             collapsed=model.collapsed,
-            sort_order=model.sort_order,
+            order_key=model.order_key,
         )

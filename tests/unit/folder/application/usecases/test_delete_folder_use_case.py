@@ -3,7 +3,6 @@ from uuid import uuid4
 
 import pytest
 from common.application.exceptions import AccessPolicyError, NotFoundError
-from common.application.interfaces.transactions.unit_of_work import IUnitOfWork
 from common.domain.value_objects.id import UserId
 from tests.unit.folder.utils import make_folder
 
@@ -35,7 +34,6 @@ class TestDeleteFolderUseCase:
         )
 
         self.access_policy: Mock = Mock(spec=IFolderAccessPolicy)
-        self.uow: AsyncMock = AsyncMock(spec=IUnitOfWork)
         self.repository: AsyncMock = AsyncMock(
             spec=IFolderRepository,
             get_by_id=AsyncMock(return_value=self.folder),
@@ -49,7 +47,6 @@ class TestDeleteFolderUseCase:
         self.use_case = DeleteFolderUseCase(
             repository=self.repository,
             access_policy=self.access_policy,
-            uow=self.uow,
         )
 
     async def test_calls_repository_get_by_id_with_folder_id(self) -> None:
@@ -69,9 +66,6 @@ class TestDeleteFolderUseCase:
 
         self.repository.save.assert_awaited_once_with(self.folder)
         assert self.folder.is_deleted
-        self.repository.clear_contents.assert_awaited_once_with(self.folder.id)
-        self.uow.__aenter__.assert_awaited_once()
-        self.uow.__aexit__.assert_awaited_once()
 
     async def test_raises_not_found_when_folder_not_exists(self) -> None:
         self.repository.get_by_id.side_effect = NotFoundError(FolderId(self.folder_id))

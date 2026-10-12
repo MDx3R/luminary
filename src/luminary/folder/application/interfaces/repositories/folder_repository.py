@@ -1,7 +1,4 @@
 from abc import ABC, abstractmethod
-from collections.abc import Sequence
-
-from common.domain.value_objects.id import UserId
 
 from luminary.assistant.domain.entity.assistant import AssistantId
 from luminary.chat.domain.value_objects.chat_id import ChatId
@@ -21,15 +18,7 @@ class IFolderRepository(ABC):
     async def save(self, entity: Folder) -> None: ...
 
     @abstractmethod
-    async def list_ids_by_owner(self, owner_id: UserId) -> Sequence[FolderId]: ...
-
-    @abstractmethod
-    async def set_order(
-        self, owner_id: UserId, folder_ids: Sequence[FolderId]
-    ) -> None: ...
-
-    @abstractmethod
-    async def clear_contents(self, folder_id: FolderId) -> None: ...
+    async def move_chat_association(self, chat_id: ChatId) -> None: ...
 
     @abstractmethod
     async def clear_assistant_reference(self, assistant_id: AssistantId) -> None: ...

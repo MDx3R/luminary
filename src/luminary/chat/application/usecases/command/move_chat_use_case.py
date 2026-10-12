@@ -45,4 +45,5 @@ class MoveChatUseCase(IMoveChatUseCase):
 
         if chat.folder_id == folder_id:
             return
-        await self.chat_repository.move_to_folder(chat.id, folder_id)
+        chat.move_to_folder(folder_id)
+        await self.chat_repository.save(chat)

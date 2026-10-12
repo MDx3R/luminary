@@ -9,8 +9,10 @@ from luminary.folder.application.handlers.assistant_deleted_handler import (
 )
 from luminary.folder.application.handlers.chat_deleted_handler import (
     FolderChatDeletedHandler,
-    FolderChatRemovedAssociationHandler,
     FolderChatRemovedHandler,
+)
+from luminary.folder.application.handlers.chat_moved_handler import (
+    FolderChatMovedHandler,
 )
 from luminary.folder.application.handlers.source_deleted_handler import (
     FolderSourceDeletedHandler,
@@ -121,7 +123,6 @@ class FolderContainer(containers.DeclarativeContainer):
         DeleteFolderUseCase,
         repository=event_bus_folder_repository,
         access_policy=folder_access_policy,
-        uow=unit_of_work,
     )
     set_folder_collapsed_use_case = providers.Singleton(
         SetFolderCollapsedUseCase,
@@ -129,7 +130,9 @@ class FolderContainer(containers.DeclarativeContainer):
         access_policy=folder_access_policy,
     )
     reorder_folders_use_case = providers.Singleton(
-        ReorderFoldersUseCase, repository=event_bus_folder_repository
+        ReorderFoldersUseCase,
+        repository=event_bus_folder_repository,
+        access_policy=folder_access_policy,
     )
     change_folder_assistant_use_case = providers.Singleton(
         ChangeFolderAssistantUseCase,
@@ -204,12 +207,14 @@ class FolderContainer(containers.DeclarativeContainer):
     chat_deleted_handler = providers.Singleton(
         FolderChatDeletedHandler, folder_repository=event_bus_folder_repository
     )
-    chat_removed_association_handler = providers.Singleton(
-        FolderChatRemovedAssociationHandler,
+    chat_moved_handler = providers.Singleton(
+        FolderChatMovedHandler,
         folder_repository=event_bus_folder_repository,
     )
     chat_removed_handler = providers.Singleton(
-        FolderChatRemovedHandler, chat_repository=chat_repository
+        FolderChatRemovedHandler,
+        chat_repository=chat_repository,
+        folder_repository=event_bus_folder_repository,
     )
 
     assistant_deleted_handler = providers.Singleton(

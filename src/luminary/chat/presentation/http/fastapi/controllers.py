@@ -129,8 +129,9 @@ class ChatCommandController:
         await self.reorder_chats_use_case.execute(
             ReorderChatsCommand(
                 user_id=descriptor.identity_id,
-                folder_id=request.folder_id,
-                chat_ids=request.chat_ids,
+                chat_id=request.chat_id,
+                previous_chat_id=request.previous_chat_id,
+                next_chat_id=request.next_chat_id,
             )
         )
 

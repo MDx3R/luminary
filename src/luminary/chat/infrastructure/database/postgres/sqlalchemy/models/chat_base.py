@@ -2,8 +2,10 @@ from __future__ import annotations
 
 from uuid import UUID
 
+from common.domain.value_objects.order_key import initial_order_key
 from common.infrastructure.database.sqlalchemy.models.base import Base
-from sqlalchemy import Boolean, ColumnElement, ForeignKey, Integer, String, and_
+from common.infrastructure.database.sqlalchemy.order_key import effective_order_key
+from sqlalchemy import Boolean, ColumnElement, ForeignKey, String, and_
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import Mapped, foreign, mapped_column, relationship
@@ -34,7 +36,18 @@ class ChatBase(Base):
     name: Mapped[str] = mapped_column(String, nullable=False)
     assistant_id: Mapped[UUID | None] = mapped_column(PGUUID, nullable=True)
     is_deleted: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
-    sort_order: Mapped[int] = mapped_column(Integer, nullable=False, default=-1)
+    order_key: Mapped[str | None] = mapped_column(String(collation="C"), nullable=True)
+
+    @hybrid_property
+    def position_key(self) -> str:
+        return self.order_key or initial_order_key(self.created_at, self.chat_id)
+
+    @position_key.inplace.expression
+    @classmethod
+    def _position_key(cls) -> ColumnElement[str]:
+        return effective_order_key(
+            cls.order_key.expression, cls.created_at.expression, cls.chat_id.expression
+        )
 
     source_associations: Mapped[list[ChatSourceAssociation]] = relationship(
         "ChatSourceAssociation", lazy="noload"

@@ -121,7 +121,11 @@ from luminary.chat.application.interfaces.usecases.query.list_chat_messages_use_
 from luminary.chat.application.interfaces.usecases.query.list_user_chats_use_case import (
     IListUserChatsUseCase,
 )
-from luminary.chat.domain.events.events import ChatDeletedEvent, ChatSourceRemovedEvent
+from luminary.chat.domain.events.events import (
+    ChatDeletedEvent,
+    ChatMovedEvent,
+    ChatSourceRemovedEvent,
+)
 from luminary.chat.infrastructure.di.container import ChatContainer
 from luminary.chat.presentation.http.fastapi.controllers import (
     command_router as chat_command_router,
@@ -178,6 +182,7 @@ from luminary.folder.application.interfaces.usecases.query.list_user_folders_use
 )
 from luminary.folder.domain.events.events import (
     FolderChatRemovedEvent,
+    FolderDeletedEvent,
     FolderSourceRemovedEvent,
 )
 from luminary.folder.infrastructure.di.container import FolderContainer
@@ -291,14 +296,7 @@ def create_folder_routes(
             event_bus.prefix, FolderChatRemovedEvent, container.chat_removed_handler()
         ),
         event_bus.build_route(
-            event_bus.prefix,
-            FolderChatRemovedEvent,
-            container.chat_removed_association_handler(),
-        ),
-        event_bus.build_route(
-            event_bus.prefix,
-            FolderChatRemovedEvent,
-            container.chat_removed_association_handler(),
+            event_bus.prefix, ChatMovedEvent, container.chat_moved_handler()
         ),
         event_bus.build_route(
             event_bus.prefix,
@@ -312,6 +310,9 @@ def create_chat_routes(
     event_bus: FastStreamRabbitMQEventBus, container: ChatContainer
 ) -> Sequence[RabbitRoute]:
     return [
+        event_bus.build_route(
+            event_bus.prefix, FolderDeletedEvent, container.folder_deleted_handler()
+        ),
         event_bus.build_route(
             event_bus.prefix,
             SourceDeletedEvent,

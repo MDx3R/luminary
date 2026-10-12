@@ -6,8 +6,9 @@ from uuid import UUID
 @dataclass(frozen=True)
 class ReorderChatsCommand:
     user_id: UUID
-    folder_id: UUID | None
-    chat_ids: list[UUID]
+    chat_id: UUID
+    previous_chat_id: UUID | None = None
+    next_chat_id: UUID | None = None
 
 
 class IReorderChatsUseCase(ABC):

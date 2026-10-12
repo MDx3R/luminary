@@ -55,7 +55,7 @@ class FolderReadRepository(IFolderReadRepository):
             .where(FolderBase.owner_id == owner_id)
             .where(FolderBase.is_active)
             .order_by(
-                FolderBase.sort_order,
+                FolderBase.position_key,
                 FolderBase.created_at.desc(),
                 FolderBase.folder_id,
             )

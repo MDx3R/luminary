@@ -110,7 +110,9 @@ class FolderCommandController:
     remove_chat_from_folder_use_case: IRemoveChatFromFolderUseCase = Depends()
     update_editor_content_use_case: IUpdateEditorContentUseCase = Depends()
     stream_folder_editor_inline_use_case: IStreamFolderEditorInlineUseCase = Depends()
-    stream_folder_editor_autocomplete_use_case: IStreamFolderEditorAutocompleteUseCase = Depends()
+    stream_editor_autocomplete_use_case: IStreamFolderEditorAutocompleteUseCase = (
+        Depends()
+    )
 
     @command_router.post("/", status_code=status.HTTP_201_CREATED)
     async def create(
@@ -136,7 +138,10 @@ class FolderCommandController:
     ) -> None:
         await self.reorder_folders_use_case.execute(
             ReorderFoldersCommand(
-                user_id=descriptor.identity_id, folder_ids=request.folder_ids
+                user_id=descriptor.identity_id,
+                folder_id=request.folder_id,
+                previous_folder_id=request.previous_folder_id,
+                next_folder_id=request.next_folder_id,
             )
         )
 
@@ -342,7 +347,7 @@ class FolderCommandController:
         request: StreamFolderEditorAutocompleteRequest,
         descriptor: Annotated[IdentityDescriptor, Depends(get_descriptor)],
     ) -> StreamingResponse:
-        stream = self.stream_folder_editor_autocomplete_use_case.execute(
+        stream = self.stream_editor_autocomplete_use_case.execute(
             StreamFolderEditorAutocompleteCommand(
                 user_id=descriptor.identity_id,
                 folder_id=folder_id,

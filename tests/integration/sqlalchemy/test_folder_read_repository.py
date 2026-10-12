@@ -6,6 +6,7 @@ from uuid import UUID, uuid4
 import pytest
 from common.application.exceptions import NotFoundError
 from common.domain.value_objects.datetime import DateTime
+from common.domain.value_objects.order_key import order_key_between
 from common.infrastructure.database.sqlalchemy.executor import QueryExecutor
 from tests.integration.sqlalchemy.utils import (
     add_assistant,
@@ -92,9 +93,9 @@ class TestFolderReadRepository:
         # Arrange
         owner_id = source.owner_id.value
         await persist_source(self.maker, source)
-        chat = make_chat(user_id=owner_id)
-        await persist_chat(self.maker, chat)
         folder = make_folder(owner_id=owner_id)
+        chat = make_chat(user_id=owner_id, folder_id=folder.id.value)
+        await persist_chat(self.maker, chat)
         folder.add_chat(ChatId(chat.id.value))
         folder.add_source(SourceId(source.id.value))
         await persist_folder(self.maker, folder)
@@ -147,9 +148,8 @@ class TestFolderReadRepository:
         folder.add_chat(first.id)
         folder.add_chat(second.id)
         await FolderRepository(query_executor).save(folder)
-        await ChatRepository(query_executor).set_order(
-            first.owner_id, folder.id, [first.id, second.id]
-        )
+        first.change_order(order_key_between(None, second.order_key))
+        await ChatRepository(query_executor).save(first)
 
         result = await self.read_repo.get_by_id(folder.id.value, owner_id)
 
@@ -216,13 +216,17 @@ class TestFolderReadRepository:
         repository = FolderRepository(query_executor)
         second.set_collapsed(True)
         await repository.save(second)
-        await repository.set_order(first.owner_id, [first.id, second.id])
+        first.change_order(order_key_between(None, second.order_key))
+        await repository.save(first)
 
         result = await self.read_repo.list_by_owner(owner_id)
 
         assert [item.id for item in result] == [first.id.value, second.id.value]
         assert result[1].collapsed is True
-        assert [item.sort_order for item in result] == [0, 1]
+        assert [item.order_key for item in result] == [
+            first.order_key,
+            second.order_key,
+        ]
 
     async def test_list_by_owner_excludes_other_owner(self) -> None:
         # Arrange

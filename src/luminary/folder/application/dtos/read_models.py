@@ -26,7 +26,7 @@ class FolderChatItem:
     id: UUID
     name: str
     created_at: datetime
-    sort_order: int = -1
+    order_key: str = ""
 
 
 @dataclass(frozen=True)
@@ -51,7 +51,7 @@ class FolderReadModel:
     sources: Sequence[FolderSourceItem]
     created_at: datetime
     collapsed: bool = False
-    sort_order: int = -1
+    order_key: str = ""
 
 
 @dataclass(frozen=True)
@@ -63,4 +63,4 @@ class FolderSummaryReadModel:
     description: str | None
     created_at: datetime
     collapsed: bool = False
-    sort_order: int = -1
+    order_key: str = ""

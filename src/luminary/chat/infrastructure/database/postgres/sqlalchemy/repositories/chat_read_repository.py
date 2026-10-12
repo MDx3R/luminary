@@ -66,7 +66,7 @@ class ChatReadRepository(IChatReadRepository):
             .where(ChatBase.folder_id.is_(None))
             .where(ChatBase.is_active)
             .order_by(
-                ChatBase.sort_order,
+                ChatBase.position_key,
                 ChatBase.created_at.desc(),
                 ChatBase.chat_id,
             )

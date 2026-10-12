@@ -4,6 +4,7 @@ from typing import Self
 from common.domain.interfaces.entity import Entity
 from common.domain.value_objects.datetime import DateTime
 from common.domain.value_objects.id import UserId
+from common.domain.value_objects.order_key import initial_order_key
 
 from luminary.assistant.domain.entity.assistant import AssistantId
 from luminary.chat.domain.value_objects.chat_id import ChatId
@@ -15,6 +16,7 @@ from luminary.folder.domain.events.events import (
     FolderDeletedEvent,
     FolderEditorContentUpdatedEvent,
     FolderInfoChangedEvent,
+    FolderOrderChangedEvent,
     FolderSourceAddedEvent,
     FolderSourceRemovedEvent,
 )
@@ -33,10 +35,20 @@ class Folder(Entity):
     created_at: DateTime
     is_deleted: bool
     collapsed: bool = False
-    sort_order: int = -1
+    order_key: str = ""
     _chats: set[ChatId] = field(default_factory=set[ChatId])
     _sources: set[SourceId] = field(default_factory=set[SourceId])
     editor_content: EditorContent | None = None
+
+    def __post_init__(self) -> None:
+        if not self.order_key:
+            self.order_key = initial_order_key(self.created_at.value, self.id.value)
+
+    def change_order(self, order_key: str) -> None:
+        if self.order_key == order_key:
+            return
+        self.order_key = order_key
+        self._record_event(FolderOrderChangedEvent(folder_id=self.id.value))
 
     @property
     def chats(self) -> frozenset[ChatId]:

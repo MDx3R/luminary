@@ -41,7 +41,7 @@ class ChatMapper:
             assistant_id=assistant_id,
             created_at=DateTime(base.created_at),
             is_deleted=base.is_deleted,
-            sort_order=base.sort_order,
+            order_key=base.position_key,
             _sources=sources,
         )
 
@@ -63,7 +63,7 @@ class ChatMapper:
             created_at=chat.created_at.value,
             updated_at=chat.created_at.value,
             is_deleted=chat.is_deleted,
-            sort_order=chat.sort_order,
+            order_key=chat.order_key,
             source_associations=sources,
         )
 
@@ -82,7 +82,7 @@ class ChatReadMapper:
             assistant_name=assistant_name,
             sources=sources,
             created_at=base.created_at,
-            sort_order=base.sort_order,
+            order_key=base.position_key,
         )
 
     @classmethod
@@ -91,7 +91,7 @@ class ChatReadMapper:
             id=base.chat_id,
             name=base.name,
             created_at=base.created_at,
-            sort_order=base.sort_order,
+            order_key=base.position_key,
         )
 
     @singledispatchmethod

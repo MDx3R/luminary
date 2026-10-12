@@ -52,6 +52,17 @@ class ChatDeletedEvent(ChatEvent):
     folder_id: UUID | None
 
 
+@dataclass(frozen=True)
+class ChatMovedEvent(ChatEvent):
+    previous_folder_id: UUID | None
+    folder_id: UUID | None
+
+
+@dataclass(frozen=True)
+class ChatOrderChangedEvent(ChatEvent):
+    pass
+
+
 # Message events (message aggregate, chat_id for context)
 @dataclass(frozen=True)
 class MessageEvent(DomainEvent):

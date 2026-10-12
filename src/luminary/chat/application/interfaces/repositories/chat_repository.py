@@ -1,7 +1,4 @@
 from abc import ABC, abstractmethod
-from collections.abc import Sequence
-
-from common.domain.value_objects.id import UserId
 
 from luminary.assistant.domain.entity.assistant import AssistantId
 from luminary.chat.domain.entity.chat import Chat
@@ -21,19 +18,7 @@ class IChatRepository(ABC):
     async def save(self, entity: Chat) -> None: ...
 
     @abstractmethod
-    async def list_ids_by_location(
-        self, owner_id: UserId, folder_id: FolderId | None
-    ) -> Sequence[ChatId]: ...
-
-    @abstractmethod
-    async def set_order(
-        self, owner_id: UserId, folder_id: FolderId | None, chat_ids: Sequence[ChatId]
-    ) -> None: ...
-
-    @abstractmethod
-    async def move_to_folder(
-        self, chat_id: ChatId, folder_id: FolderId | None
-    ) -> None: ...
+    async def delete_by_folder(self, folder_id: FolderId) -> None: ...
 
     @abstractmethod
     async def clear_assistant_reference(self, assistant_id: AssistantId) -> None: ...

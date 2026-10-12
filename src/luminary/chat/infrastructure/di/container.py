@@ -7,6 +7,9 @@ from dependency_injector import containers, providers
 from luminary.chat.application.handlers.assistant_deleted_handler import (
     ChatAssistantDeletedHandler,
 )
+from luminary.chat.application.handlers.folder_deleted_handler import (
+    ChatFolderDeletedHandler,
+)
 from luminary.chat.application.handlers.source_deleted_handler import (
     ChatSourceDeletedHandler,
     ChatSourceRemovedHandler,
@@ -191,6 +194,7 @@ class ChatContainer(containers.DeclarativeContainer):
         chat_repository=event_bus_chat_repository,
         folder_repository=folder_repository,
         folder_access_policy=folder_access_policy,
+        chat_access_policy=chat_access_policy,
     )
 
     # Query use cases
@@ -206,6 +210,9 @@ class ChatContainer(containers.DeclarativeContainer):
 
     assistant_deleted_handler = providers.Singleton(
         ChatAssistantDeletedHandler, chat_repository=event_bus_chat_repository
+    )
+    folder_deleted_handler = providers.Singleton(
+        ChatFolderDeletedHandler, chat_repository=event_bus_chat_repository
     )
 
     source_deleted_handler = providers.Singleton(

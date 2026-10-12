@@ -4,6 +4,7 @@ from uuid import UUID, uuid4
 
 import pytest
 from common.application.exceptions import NotFoundError
+from common.domain.value_objects.order_key import order_key_between
 from common.infrastructure.database.sqlalchemy.executor import QueryExecutor
 from tests.integration.sqlalchemy.utils import (
     add_assistant,
@@ -177,14 +178,16 @@ class TestChatReadRepository:
         owner_id = uuid4()
         first = await self._add_chat(owner_id=owner_id)
         second = await self._add_chat(owner_id=owner_id)
-        await ChatRepository(query_executor).set_order(
-            first.owner_id, None, [first.id, second.id]
-        )
+        first.change_order(order_key_between(None, second.order_key))
+        await ChatRepository(query_executor).save(first)
 
         result = await self.read_repo.list_standalone_by_owner(owner_id)
 
         assert [item.id for item in result] == [first.id.value, second.id.value]
-        assert [item.sort_order for item in result] == [0, 1]
+        assert [item.order_key for item in result] == [
+            first.order_key,
+            second.order_key,
+        ]
 
     async def test_list_standalone_by_owner_excludes_other_owner(self) -> None:
         # Arrange

@@ -17,8 +17,9 @@ class MoveChatRequest(BaseModel):
 
 
 class ReorderChatsRequest(BaseModel):
-    folder_id: UUID | None = None
-    chat_ids: list[UUID]
+    chat_id: UUID
+    previous_chat_id: UUID | None = None
+    next_chat_id: UUID | None = None
 
 
 class ChangeChatAssistantRequest(BaseModel):

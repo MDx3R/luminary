@@ -1,9 +1,9 @@
-from collections.abc import Sequence
+from uuid import UUID
 
 from common.application.exceptions import NotFoundError
-from common.domain.value_objects.id import UserId
 from common.infrastructure.database.sqlalchemy.executor import QueryExecutor
-from sqlalchemy import and_, delete, select, update
+from sqlalchemy import and_, delete, literal, select, update
+from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import joinedload
 
 from luminary.assistant.domain.entity.assistant import AssistantId
@@ -55,42 +55,46 @@ class FolderRepository(IFolderRepository):
         base = FolderMapper.to_persistence(entity)
         await self.executor.save(base)
 
-    async def list_ids_by_owner(self, owner_id: UserId) -> Sequence[FolderId]:
-        stmt = select(FolderBase.folder_id).where(
-            FolderBase.owner_id == owner_id.value, FolderBase.is_active
-        )
-        ids = await self.executor.execute_scalar_many(stmt)
-        return [FolderId(id) for id in ids]
-
-    async def set_order(self, owner_id: UserId, folder_ids: Sequence[FolderId]) -> None:
-        for position, folder_id in enumerate(folder_ids):
-            stmt = (
-                update(FolderBase)
-                .where(
-                    FolderBase.folder_id == folder_id.value,
-                    FolderBase.owner_id == owner_id.value,
-                    FolderBase.is_active,
-                )
-                .values(sort_order=position)
+    async def move_chat_association(self, chat_id: ChatId) -> None:
+        async with self.executor.uow:
+            # Wait for the producing transaction; replay the committed state, not
+            # the event's potentially stale destination. Serialize concurrent events.
+            chat = await self.executor.execute_scalar_one(
+                select(ChatBase)
+                .where(ChatBase.chat_id == chat_id.value)
+                .with_for_update()
             )
-            await self.executor.execute(stmt)
+            if chat is None or chat.is_deleted:
+                return
+            await self._replace_chat_association(chat_id, chat.folder_id)
 
-    async def clear_contents(self, folder_id: FolderId) -> None:
-        await self.executor.execute(
-            update(ChatBase)
-            .where(ChatBase.folder_id == folder_id.value)
-            .values(is_deleted=True)
-        )
+    async def _replace_chat_association(
+        self, chat_id: ChatId, folder_id: UUID | None
+    ) -> None:
+        if folder_id is not None:
+            is_deleted = await self.executor.execute_scalar_one(
+                select(FolderBase.is_deleted).where(FolderBase.folder_id == folder_id)
+            )
+            # A delayed move may arrive before the folder deletion has reached
+            # its chats. Keep the soft-deleted folder's associations in that case.
+            if is_deleted is not False:
+                return
         await self.executor.execute(
             delete(FolderChatAssociation).where(
-                FolderChatAssociation.folder_id == folder_id.value
+                FolderChatAssociation.chat_id == chat_id.value
             )
         )
-        await self.executor.execute(
-            delete(FolderSourceAssociation).where(
-                FolderSourceAssociation.folder_id == folder_id.value
+        if folder_id is not None:
+            await self.executor.execute(
+                insert(FolderChatAssociation)
+                .from_select(
+                    ["folder_id", "chat_id"],
+                    select(FolderBase.folder_id, literal(chat_id.value)).where(
+                        FolderBase.folder_id == folder_id, FolderBase.is_active
+                    ),
+                )
+                .on_conflict_do_nothing()
             )
-        )
 
     async def clear_assistant_reference(self, assistant_id: AssistantId) -> None:
         stmt = (
@@ -113,6 +117,9 @@ class FolderRepository(IFolderRepository):
             and_(
                 FolderChatAssociation.folder_id == folder_id.value,
                 FolderChatAssociation.chat_id == chat_id.value,
+                select(FolderBase.folder_id)
+                .where(FolderBase.folder_id == folder_id.value, FolderBase.is_active)
+                .exists(),
             )
         )
         await self.executor.execute(stmt)

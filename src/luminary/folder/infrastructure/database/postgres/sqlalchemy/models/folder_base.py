@@ -3,13 +3,14 @@ from __future__ import annotations
 from datetime import datetime
 from uuid import UUID
 
+from common.domain.value_objects.order_key import initial_order_key
 from common.infrastructure.database.sqlalchemy.models.base import Base
+from common.infrastructure.database.sqlalchemy.order_key import effective_order_key
 from sqlalchemy import (
     Boolean,
     ColumnElement,
     DateTime,
     ForeignKey,
-    Integer,
     String,
     Text,
     and_,
@@ -61,7 +62,20 @@ class FolderBase(Base):
     )
     is_deleted: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     collapsed: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
-    sort_order: Mapped[int] = mapped_column(Integer, nullable=False, default=-1)
+    order_key: Mapped[str | None] = mapped_column(String(collation="C"), nullable=True)
+
+    @hybrid_property
+    def position_key(self) -> str:
+        return self.order_key or initial_order_key(self.created_at, self.folder_id)
+
+    @position_key.inplace.expression
+    @classmethod
+    def _position_key(cls) -> ColumnElement[str]:
+        return effective_order_key(
+            cls.order_key.expression,
+            cls.created_at.expression,
+            cls.folder_id.expression,
+        )
 
     chat_associations: Mapped[list[FolderChatAssociation]] = relationship(
         "FolderChatAssociation", lazy="noload"
@@ -81,6 +95,7 @@ class FolderBase(Base):
         primaryjoin=and_(folder_id == FolderChatAssociation.folder_id),
         secondaryjoin=and_(
             ChatBase.chat_id == FolderChatAssociation.chat_id,
+            ChatBase.folder_id == FolderChatAssociation.folder_id,
             ChatBase.is_active,
         ),
         lazy="noload",

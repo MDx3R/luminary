@@ -1,3 +1,4 @@
+from common.application.exceptions import NotFoundError
 from common.application.interfaces.handlers.handler import IEventHandler
 
 from luminary.chat.application.interfaces.repositories.chat_repository import (
@@ -22,7 +23,10 @@ class FolderChatDeletedHandler(IEventHandler[ChatDeletedEvent]):
         if not event.folder_id:
             return
 
-        folder = await self.folder_repository.get_by_id(FolderId(event.folder_id))
+        try:
+            folder = await self.folder_repository.get_by_id(FolderId(event.folder_id))
+        except NotFoundError:
+            return
 
         chat_id = ChatId(event.chat_id)
         if not folder.has_chat(chat_id):
@@ -32,28 +36,28 @@ class FolderChatDeletedHandler(IEventHandler[ChatDeletedEvent]):
         await self.folder_repository.save(folder)
 
 
-class FolderChatRemovedAssociationHandler(IEventHandler[FolderChatRemovedEvent]):
-    """Remove chat association when folder chat is removed from folder."""
+class FolderChatRemovedHandler(IEventHandler[FolderChatRemovedEvent]):
+    """Delete the chat and clear its association in a single event handler."""
 
-    def __init__(self, folder_repository: IFolderRepository) -> None:
+    def __init__(
+        self, chat_repository: IChatRepository, folder_repository: IFolderRepository
+    ) -> None:
+        self.chat_repository = chat_repository
         self.folder_repository = folder_repository
 
     async def handle(self, event: FolderChatRemovedEvent) -> None:
+        await self._delete_chat(event)
         await self.folder_repository.clear_chat_association(
             FolderId(event.folder_id), ChatId(event.chat_id)
         )
 
+    async def _delete_chat(self, event: FolderChatRemovedEvent) -> None:
+        try:
+            chat = await self.chat_repository.get_by_id(ChatId(event.chat_id))
+        except NotFoundError:
+            return
 
-class FolderChatRemovedHandler(IEventHandler[FolderChatRemovedEvent]):
-    """Delete chat when an folder chat is removed from folder."""
-
-    def __init__(self, chat_repository: IChatRepository) -> None:
-        self.chat_repository = chat_repository
-
-    async def handle(self, event: FolderChatRemovedEvent) -> None:
-        chat = await self.chat_repository.get_by_id(ChatId(event.chat_id))
-
-        if chat.is_deleted:
+        if chat.is_deleted or chat.folder_id != FolderId(event.folder_id):
             return
 
         chat.delete()

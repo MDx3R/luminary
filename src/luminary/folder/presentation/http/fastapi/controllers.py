@@ -284,7 +284,7 @@ class FolderCommandController:
                 user_id=descriptor.identity_id,
                 folder_id=folder_id,
                 instruction=request.instruction,
-                document_markdown=request.document_markdown,
+                selected_text=request.selected_text,
             )
         )
 

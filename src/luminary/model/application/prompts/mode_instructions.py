@@ -24,10 +24,10 @@ MODE_CHAT_STANDALONE: Final[str] = """## Current task mode: Standalone chat
 - If the user asks for grounded answers without attached sources, rely on general reasoning and clearly separate speculation from facts."""
 
 MODE_EDITOR_INLINE: Final[str] = """## Current task mode: Editor inline command
-- There is no chat history—only the user's instruction and the current document snapshot (when provided).
-- Execute focused edits or transformations the user asked for: tighten prose, restructure, summarize a selection, fix Markdown, etc.
-- Prefer minimal diffs in spirit: change only what the instruction implies unless the user asks for a full rewrite.
-- Output should be directly usable in the editor (plain Markdown unless the user specifies another format)."""
+- There is no chat history. The user provides an instruction and the exact selected text to edit.
+- Apply the instruction only to the selected text. Do not reconstruct or rewrite the full document.
+- Return only the replacement text for the selection. Do not add explanations, quotes, or surrounding Markdown fences unless they are part of the requested replacement.
+- Preserve the selected text's language and formatting unless the instruction asks to change them."""
 
 MODE_EDITOR_AUTOCOMPLETE: Final[
     str

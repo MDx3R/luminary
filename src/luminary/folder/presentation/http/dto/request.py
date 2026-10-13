@@ -33,7 +33,7 @@ class UpdateEditorContentRequest(BaseModel):
 
 class StreamFolderEditorInlineRequest(BaseModel):
     instruction: str
-    document_markdown: str
+    selected_text: str
 
 
 class StreamFolderEditorAutocompleteRequest(BaseModel):

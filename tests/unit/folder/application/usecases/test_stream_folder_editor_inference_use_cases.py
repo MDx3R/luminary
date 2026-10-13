@@ -89,7 +89,7 @@ class TestStreamFolderEditorInlineUseCase:
             user_id=self.user_id,
             folder_id=self.folder_id,
             instruction="Shorten intro",
-            document_markdown="# Doc",
+            selected_text="# Selected heading\nLong selected paragraph.",
         )
 
         # Act
@@ -107,8 +107,8 @@ class TestStreamFolderEditorInlineUseCase:
         assert isinstance(request, InferenceRequestDTO)
         assert request.history == ()
         assert request.query == "Shorten intro"
-        assert request.editor_content == "# Doc"
-        assert request.source_ids == [source_id]
+        assert request.editor_content == "# Selected heading\nLong selected paragraph."
+        assert request.source_ids == ()
         assert request.mode == InferenceMode.EDITOR_INLINE
 
         assert chunks[0].state == StreamState.START
@@ -136,7 +136,7 @@ class TestStreamFolderEditorInlineUseCase:
                 user_id=self.user_id,
                 folder_id=self.folder_id,
                 instruction="x",
-                document_markdown="y",
+                selected_text="selected text",
             )
         ):
             pass
@@ -158,7 +158,7 @@ class TestStreamFolderEditorInlineUseCase:
                     user_id=self.user_id,
                     folder_id=self.folder_id,
                     instruction="x",
-                    document_markdown="y",
+                    selected_text="selected text",
                 )
             ):
                 pass

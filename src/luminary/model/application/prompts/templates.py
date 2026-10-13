@@ -45,7 +45,26 @@ USER_MESSAGE_CHAT_OR_INLINE = PromptTemplate(
     prompt_type=PromptType.CUSTOM,
     metadata=_meta(
         "luminary.user.chat_or_inline",
-        "Structured user message for CHAT and EDITOR_INLINE modes.",
+        "Structured user message for CHAT mode.",
+    ),
+)
+
+# --- User turn: selected text replacement for editor inline
+USER_MESSAGE_EDITOR_INLINE = PromptTemplate(
+    template=(
+        "<inline_edit_request>\n"
+        "<selected_text>\n"
+        "{selected_text}\n"
+        "</selected_text>\n"
+        "<instruction>\n"
+        "{instruction}\n"
+        "</instruction>\n"
+        "</inline_edit_request>"
+    ),
+    prompt_type=PromptType.CUSTOM,
+    metadata=_meta(
+        "luminary.user.editor_inline",
+        "Instruction and selected text for an editor inline replacement.",
     ),
 )
 

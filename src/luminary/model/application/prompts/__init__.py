@@ -18,6 +18,7 @@ from luminary.model.application.prompts.templates import (
     SYSTEM_PROMPT_WITH_INSTRUCTIONS,
     USER_MESSAGE_AUTOCOMPLETE_CURSOR,
     USER_MESSAGE_CHAT_OR_INLINE,
+    USER_MESSAGE_EDITOR_INLINE,
 )
 from luminary.model.application.prompts.user_message_format import (
     build_autocomplete_user_content,
@@ -34,6 +35,7 @@ __all__ = [
     "SYSTEM_PROMPT_WITH_INSTRUCTIONS",
     "USER_MESSAGE_AUTOCOMPLETE_CURSOR",
     "USER_MESSAGE_CHAT_OR_INLINE",
+    "USER_MESSAGE_EDITOR_INLINE",
     "build_autocomplete_user_content",
     "build_system_message",
     "build_user_request_content",

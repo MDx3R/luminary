@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   secret-scan:
-    name: Gitleaks Secret Scan
+    name: TruffleHog Secret Scan
     runs-on: ubuntu-latest
 
     steps:

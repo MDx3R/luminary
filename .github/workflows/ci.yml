@@ -27,7 +27,7 @@ jobs:
       - name: Run TruffleHog
         uses: trufflesecurity/trufflehog@main
         with:
-          extra_args: --results=verified,unknown
+          extra_args: --results=verified,unknown --exclude-paths=trufflehog-exclude.txt
 
   test:
     name: Tests and Static Analysis

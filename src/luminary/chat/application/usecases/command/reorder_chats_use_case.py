@@ -47,7 +47,7 @@ class ReorderChatsUseCase(IReorderChatsUseCase):
 
         previous = await self._neighbour_key(chat, command.previous_chat_id)
         following = await self._neighbour_key(chat, command.next_chat_id)
-        chat.change_order(order_key_between(previous, following))
+        chat.change_order(order_key_between(previous, following, chat.id.value))
         await self.chat_repository.save(chat)
 
     async def _neighbour_key(self, chat: Chat, neighbour_id: UUID | None) -> str | None:

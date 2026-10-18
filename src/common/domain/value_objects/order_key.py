@@ -21,7 +21,17 @@ def initial_order_key(created_at: datetime, entity_id: UUID) -> str:
     return f"a0{MAX_TIMESTAMP_MICROSECONDS - microseconds:018d}{entity_id.hex}V"
 
 
-def order_key_between(previous: str | None, following: str | None) -> str:
+def order_key_between(
+    previous: str | None, following: str | None, entity_id: UUID | None = None
+) -> str:
     if previous is not None and following is not None and previous >= following:
         raise InvariantViolationError("Order neighbours must be distinct and ordered")
-    return cast(str, generate_key_between(previous, following))
+    key = cast(str, generate_key_between(previous, following))
+    if entity_id is None:
+        return key
+    # A fixed-width identity suffix makes keys of different entities distinct,
+    # even when requests use the same (possibly stale) neighbour pair. First
+    # leave the upper bound's prefix so appending cannot cross that bound.
+    while following is not None and following.startswith(key):
+        key = cast(str, generate_key_between(key, following))
+    return f"{key}{entity_id.hex}V"

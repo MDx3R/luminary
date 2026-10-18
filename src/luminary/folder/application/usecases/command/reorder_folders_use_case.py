@@ -30,7 +30,7 @@ class ReorderFoldersUseCase(IReorderFoldersUseCase):
         self.access_policy.assert_is_allowed(UserId(command.user_id), folder)
         previous = await self._neighbour_key(folder, command.previous_folder_id)
         following = await self._neighbour_key(folder, command.next_folder_id)
-        folder.change_order(order_key_between(previous, following))
+        folder.change_order(order_key_between(previous, following, folder.id.value))
         await self.repository.save(folder)
 
     async def _neighbour_key(

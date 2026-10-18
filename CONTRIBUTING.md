@@ -18,7 +18,7 @@ make install
 
 ## Проверки
 
-Локально то же, что job `test` в `.github/workflows/ci.yml`, без установки зависимостей и без Gitleaks:
+Локально то же, что job `test` в `.github/workflows/ci.yml`, без установки зависимостей и без TruffleHog:
 
 ```sh
 make ci
@@ -26,7 +26,7 @@ make ci
 
 Отдельные цели: `make lint`, `make typecheck`, `make test`, `make check-lock`. Дополнительно, вне CI: `make bandit`, `make xenon`, `make detect-secrets`.
 
-В GitHub Actions перед тестами запускается Gitleaks (`.gitleaks.toml`). Секреты в репозиторий не коммитить.
+В GitHub Actions перед тестами запускается TruffleHog. Секреты в репозиторий не коммитить.
 
 Новое поведение покрывайте тестами.
 

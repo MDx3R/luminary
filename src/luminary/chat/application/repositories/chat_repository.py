@@ -7,6 +7,7 @@ from luminary.chat.application.interfaces.repositories.chat_repository import (
 )
 from luminary.chat.domain.entity.chat import Chat
 from luminary.chat.domain.value_objects.chat_id import ChatId
+from luminary.folder.domain.value_objects.folder_id import FolderId
 from luminary.source.domain.entity.source import SourceId
 
 
@@ -24,6 +25,9 @@ class EventBusChatRepository(IChatRepository):
     async def get_by_id(self, id: ChatId) -> Chat:
         return await self.repository.get_by_id(id)
 
+    async def get_by_id_for_update(self, id: ChatId) -> Chat | None:
+        return await self.repository.get_by_id_for_update(id)
+
     async def add(self, entity: Chat) -> None:
         async with self.uow:
             await self.repository.add(entity)
@@ -35,6 +39,10 @@ class EventBusChatRepository(IChatRepository):
         async with self.uow:
             await self.repository.save(entity)
             await self.event_bus.publish_all(entity.events)
+
+    async def delete_by_folder(self, folder_id: FolderId) -> None:
+        async with self.uow:
+            await self.repository.delete_by_folder(folder_id)
 
     async def clear_assistant_reference(self, assistant_id: AssistantId) -> None:
         await self.repository.clear_assistant_reference(assistant_id)

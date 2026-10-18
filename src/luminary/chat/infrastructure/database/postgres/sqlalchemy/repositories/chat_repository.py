@@ -16,6 +16,7 @@ from luminary.chat.infrastructure.database.postgres.sqlalchemy.models.chat_base 
     ChatBase,
     ChatSourceAssociation,
 )
+from luminary.folder.domain.value_objects.folder_id import FolderId
 from luminary.source.domain.entity.source import SourceId
 
 
@@ -40,9 +41,27 @@ class ChatRepository(IChatRepository):
         base = ChatMapper.to_persistence(entity)
         await self.executor.add(base)
 
+    async def get_by_id_for_update(self, id: ChatId) -> Chat | None:
+        base = await self.executor.execute_scalar_one(
+            select(ChatBase)
+            .where(ChatBase.chat_id == id.value)
+            .options(joinedload(ChatBase.source_associations))
+            .with_for_update(of=ChatBase)
+        )
+        return ChatMapper.to_domain(base) if base is not None else None
+
     async def save(self, entity: Chat) -> None:
         base = ChatMapper.to_persistence(entity)
         await self.executor.save(base)
+
+    async def delete_by_folder(self, folder_id: FolderId) -> None:
+        # FolderDeletedEvent is the lifecycle contract: intentionally no
+        # per-chat ChatDeletedEvent, which would remove the retained links.
+        await self.executor.execute(
+            update(ChatBase)
+            .where(ChatBase.folder_id == folder_id.value, ChatBase.is_active)
+            .values(is_deleted=True)
+        )
 
     async def clear_assistant_reference(self, assistant_id: AssistantId) -> None:
         stmt = (

@@ -5,13 +5,16 @@ from typing import Self
 from common.domain.interfaces.entity import Entity
 from common.domain.value_objects.datetime import DateTime
 from common.domain.value_objects.id import UserId
+from common.domain.value_objects.order_key import initial_order_key
 
 from luminary.assistant.domain.entity.assistant import AssistantId
 from luminary.chat.domain.events.events import (
     ChatAssistantChangedEvent,
     ChatCreatedEvent,
     ChatDeletedEvent,
+    ChatMovedEvent,
     ChatNameChangedEvent,
+    ChatOrderChangedEvent,
     ChatSourceAddedEvent,
     ChatSourceRemovedEvent,
 )
@@ -30,7 +33,34 @@ class Chat(Entity):
     assistant_id: AssistantId | None
     created_at: DateTime
     is_deleted: bool
+    order_key: str = ""
     _sources: set[SourceId] = field(default_factory=set[SourceId])
+
+    def __post_init__(self) -> None:
+        if not self.order_key:
+            self.order_key = initial_order_key(self.created_at.value, self.id.value)
+
+    def change_order(self, order_key: str) -> None:
+        if self.order_key == order_key:
+            return
+        self.order_key = order_key
+        self._record_event(ChatOrderChangedEvent(chat_id=self.id.value))
+
+    def move_to_folder(self, folder_id: FolderId | None) -> None:
+        if self.folder_id == folder_id:
+            return
+        previous_folder_id = self.folder_id
+        self.folder_id = folder_id
+        self.order_key = initial_order_key(self.created_at.value, self.id.value)
+        self._record_event(
+            ChatMovedEvent(
+                chat_id=self.id.value,
+                previous_folder_id=(
+                    previous_folder_id.value if previous_folder_id else None
+                ),
+                folder_id=folder_id.value if folder_id else None,
+            )
+        )
 
     @property
     def sources(self) -> Sequence[SourceId]:

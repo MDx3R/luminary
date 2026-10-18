@@ -4,6 +4,7 @@ from uuid import UUID, uuid4
 
 import pytest
 from common.application.exceptions import NotFoundError
+from common.domain.value_objects.order_key import order_key_between
 from common.infrastructure.database.sqlalchemy.executor import QueryExecutor
 from tests.integration.sqlalchemy.utils import (
     add_assistant,
@@ -22,6 +23,9 @@ from luminary.chat.infrastructure.database.postgres.sqlalchemy.models.attachment
 )
 from luminary.chat.infrastructure.database.postgres.sqlalchemy.repositories.chat_read_repository import (
     ChatReadRepository,
+)
+from luminary.chat.infrastructure.database.postgres.sqlalchemy.repositories.chat_repository import (
+    ChatRepository,
 )
 from luminary.source.domain.entity.file_source import FileSource
 from luminary.source.domain.entity.link_source import LinkSource
@@ -167,6 +171,23 @@ class TestChatReadRepository:
 
         # Assert
         assert {r.id for r in result} == {standalone.id.value}
+
+    async def test_list_standalone_by_owner_uses_saved_order(
+        self, query_executor: QueryExecutor
+    ) -> None:
+        owner_id = uuid4()
+        first = await self._add_chat(owner_id=owner_id)
+        second = await self._add_chat(owner_id=owner_id)
+        first.change_order(order_key_between(None, second.order_key))
+        await ChatRepository(query_executor).save(first)
+
+        result = await self.read_repo.list_standalone_by_owner(owner_id)
+
+        assert [item.id for item in result] == [first.id.value, second.id.value]
+        assert [item.order_key for item in result] == [
+            first.order_key,
+            second.order_key,
+        ]
 
     async def test_list_standalone_by_owner_excludes_other_owner(self) -> None:
         # Arrange

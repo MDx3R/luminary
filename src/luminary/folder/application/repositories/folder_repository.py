@@ -25,6 +25,9 @@ class EventBusFolderRepository(IFolderRepository):
     async def get_by_id(self, id: FolderId) -> Folder:
         return await self.repository.get_by_id(id)
 
+    async def is_deleted_for_update(self, id: FolderId) -> bool:
+        return await self.repository.is_deleted_for_update(id)
+
     async def add(self, entity: Folder) -> None:
         async with self.uow:
             await self.repository.add(entity)
@@ -36,6 +39,12 @@ class EventBusFolderRepository(IFolderRepository):
         async with self.uow:
             await self.repository.save(entity)
             await self.event_bus.publish_all(entity.events)
+
+    async def move_chat_association(
+        self, chat_id: ChatId, folder_id: FolderId | None
+    ) -> None:
+        async with self.uow:
+            await self.repository.move_chat_association(chat_id, folder_id)
 
     async def clear_assistant_reference(self, assistant_id: AssistantId) -> None:
         await self.repository.clear_assistant_reference(assistant_id)

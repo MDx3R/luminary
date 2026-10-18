@@ -1,5 +1,6 @@
 from functools import singledispatchmethod
 
+from common.domain.events.domain_event import DomainEvent
 from common.domain.value_objects.datetime import DateTime
 from common.domain.value_objects.id import UserId
 
@@ -16,6 +17,14 @@ from luminary.folder.application.dtos.read_models import (
     FolderSummaryReadModel,
 )
 from luminary.folder.domain.entity.folder import Folder
+from luminary.folder.domain.events.events import (
+    FolderAssistantChangedEvent,
+    FolderCollapsedChangedEvent,
+    FolderDeletedEvent,
+    FolderEditorContentUpdatedEvent,
+    FolderInfoChangedEvent,
+    FolderOrderChangedEvent,
+)
 from luminary.folder.domain.value_objects.editor_content import EditorContent
 from luminary.folder.domain.value_objects.folder_id import FolderId
 from luminary.folder.domain.value_objects.folder_info import FolderInfo
@@ -34,6 +43,23 @@ from luminary.source.infrastructure.database.postgres.sqlalchemy.models.source_b
 
 
 class FolderMapper:
+    @classmethod
+    def to_update_values(cls, folder: Folder) -> dict[str, object]:
+        fields: dict[type[DomainEvent], tuple[str, ...]] = {
+            FolderInfoChangedEvent: ("name", "description"),
+            FolderAssistantChangedEvent: ("assistant_id",),
+            FolderEditorContentUpdatedEvent: ("editor_text", "editor_updated_at"),
+            FolderDeletedEvent: ("is_deleted",),
+            FolderCollapsedChangedEvent: ("collapsed",),
+            FolderOrderChangedEvent: ("order_key",),
+        }
+        base = cls.to_persistence(folder)
+        return {
+            name: getattr(base, name)
+            for event in folder.events
+            for name in fields.get(type(event), ())
+        }
+
     @classmethod
     def to_domain(cls, base: FolderBase) -> Folder:
         assistant_id = AssistantId.optional(base.assistant_id)
@@ -54,6 +80,8 @@ class FolderMapper:
             assistant_id=assistant_id,
             created_at=DateTime(base.created_at),
             is_deleted=base.is_deleted,
+            collapsed=base.collapsed,
+            order_key=base.position_key,
             _chats=chats,
             _sources=sources,
             editor_content=editor_content,
@@ -89,6 +117,8 @@ class FolderMapper:
             created_at=folder.created_at.value,
             updated_at=folder.created_at.value,
             is_deleted=folder.is_deleted,
+            collapsed=folder.collapsed,
+            order_key=folder.order_key,
             chat_associations=chats,
             source_associations=sources,
         )
@@ -104,7 +134,17 @@ class FolderReadMapper:
                 text=base.editor_text,
                 updated_at=base.editor_updated_at,
             )
-        chats = [cls.to_chat_item(c) for c in base.chats]
+        chats = [
+            cls.to_chat_item(c)
+            for c in sorted(
+                base.chats,
+                key=lambda chat: (
+                    chat.position_key,
+                    -chat.created_at.timestamp(),
+                    str(chat.chat_id),
+                ),
+            )
+        ]
         sources = [cls.to_source_item(s) for s in base.sources]
         return FolderReadModel(
             id=base.folder_id,
@@ -116,6 +156,8 @@ class FolderReadMapper:
             chats=chats,
             sources=sources,
             created_at=base.created_at,
+            collapsed=base.collapsed,
+            order_key=base.position_key,
         )
 
     @classmethod
@@ -125,6 +167,8 @@ class FolderReadMapper:
             name=base.name,
             description=base.description,
             created_at=base.created_at,
+            collapsed=base.collapsed,
+            order_key=base.position_key,
         )
 
     @classmethod
@@ -133,6 +177,7 @@ class FolderReadMapper:
             id=base.chat_id,
             name=base.name,
             created_at=base.created_at,
+            order_key=base.position_key,
         )
 
     @singledispatchmethod

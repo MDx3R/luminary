@@ -9,8 +9,10 @@ from luminary.folder.application.handlers.assistant_deleted_handler import (
 )
 from luminary.folder.application.handlers.chat_deleted_handler import (
     FolderChatDeletedHandler,
-    FolderChatRemovedAssociationHandler,
     FolderChatRemovedHandler,
+)
+from luminary.folder.application.handlers.chat_moved_handler import (
+    FolderChatMovedHandler,
 )
 from luminary.folder.application.handlers.source_deleted_handler import (
     FolderSourceDeletedHandler,
@@ -45,6 +47,12 @@ from luminary.folder.application.usecases.command.remove_folder_assistant_use_ca
 )
 from luminary.folder.application.usecases.command.remove_source_from_folder_use_case import (
     RemoveSourceFromFolderUseCase,
+)
+from luminary.folder.application.usecases.command.reorder_folders_use_case import (
+    ReorderFoldersUseCase,
+)
+from luminary.folder.application.usecases.command.set_folder_collapsed_use_case import (
+    SetFolderCollapsedUseCase,
 )
 from luminary.folder.application.usecases.command.stream_folder_editor_autocomplete_use_case import (
     StreamFolderEditorAutocompleteUseCase,
@@ -113,6 +121,16 @@ class FolderContainer(containers.DeclarativeContainer):
     )
     delete_folder_use_case = providers.Singleton(
         DeleteFolderUseCase,
+        repository=event_bus_folder_repository,
+        access_policy=folder_access_policy,
+    )
+    set_folder_collapsed_use_case = providers.Singleton(
+        SetFolderCollapsedUseCase,
+        repository=event_bus_folder_repository,
+        access_policy=folder_access_policy,
+    )
+    reorder_folders_use_case = providers.Singleton(
+        ReorderFoldersUseCase,
         repository=event_bus_folder_repository,
         access_policy=folder_access_policy,
     )
@@ -189,12 +207,16 @@ class FolderContainer(containers.DeclarativeContainer):
     chat_deleted_handler = providers.Singleton(
         FolderChatDeletedHandler, folder_repository=event_bus_folder_repository
     )
-    chat_removed_association_handler = providers.Singleton(
-        FolderChatRemovedAssociationHandler,
+    chat_moved_handler = providers.Singleton(
+        FolderChatMovedHandler,
         folder_repository=event_bus_folder_repository,
+        chat_repository=chat_repository,
+        uow=unit_of_work,
     )
     chat_removed_handler = providers.Singleton(
-        FolderChatRemovedHandler, chat_repository=chat_repository
+        FolderChatRemovedHandler,
+        chat_repository=chat_repository,
+        folder_repository=event_bus_folder_repository,
     )
 
     assistant_deleted_handler = providers.Singleton(

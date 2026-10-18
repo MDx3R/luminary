@@ -42,6 +42,14 @@ from luminary.folder.application.interfaces.usecases.command.remove_source_from_
     IRemoveSourceFromFolderUseCase,
     RemoveSourceFromFolderCommand,
 )
+from luminary.folder.application.interfaces.usecases.command.reorder_folders_use_case import (
+    IReorderFoldersUseCase,
+    ReorderFoldersCommand,
+)
+from luminary.folder.application.interfaces.usecases.command.set_folder_collapsed_use_case import (
+    ISetFolderCollapsedUseCase,
+    SetFolderCollapsedCommand,
+)
 from luminary.folder.application.interfaces.usecases.command.stream_folder_editor_autocomplete_use_case import (
     IStreamFolderEditorAutocompleteUseCase,
     StreamFolderEditorAutocompleteCommand,
@@ -71,6 +79,8 @@ from luminary.folder.presentation.http.dto.request import (
     ChangeFolderAssistantRequest,
     CreateFolderChatRequest,
     CreateFolderRequest,
+    ReorderFoldersRequest,
+    SetFolderCollapsedRequest,
     StreamFolderEditorAutocompleteRequest,
     StreamFolderEditorInlineRequest,
     UpdateEditorContentRequest,
@@ -90,6 +100,8 @@ class FolderCommandController:
     create_folder_use_case: ICreateFolderUseCase = Depends()
     update_folder_info_use_case: IUpdateFolderInfoUseCase = Depends()
     delete_folder_use_case: IDeleteFolderUseCase = Depends()
+    set_folder_collapsed_use_case: ISetFolderCollapsedUseCase = Depends()
+    reorder_folders_use_case: IReorderFoldersUseCase = Depends()
     change_folder_assistant_use_case: IChangeFolderAssistantUseCase = Depends()
     remove_folder_assistant_use_case: IRemoveFolderAssistantUseCase = Depends()
     add_source_to_folder_use_case: IAddSourceToFolderUseCase = Depends()
@@ -98,9 +110,9 @@ class FolderCommandController:
     remove_chat_from_folder_use_case: IRemoveChatFromFolderUseCase = Depends()
     update_editor_content_use_case: IUpdateEditorContentUseCase = Depends()
     stream_folder_editor_inline_use_case: IStreamFolderEditorInlineUseCase = Depends()
-    stream_folder_editor_autocomplete_use_case: (
-        IStreamFolderEditorAutocompleteUseCase
-    ) = Depends()
+    stream_editor_autocomplete_use_case: IStreamFolderEditorAutocompleteUseCase = (
+        Depends()
+    )
 
     @command_router.post("/", status_code=status.HTTP_201_CREATED)
     async def create(
@@ -117,6 +129,38 @@ class FolderCommandController:
             )
         )
         return IDResponse(id=folder_id)
+
+    @command_router.put("/order", status_code=status.HTTP_204_NO_CONTENT)
+    async def reorder(
+        self,
+        request: ReorderFoldersRequest,
+        descriptor: Annotated[IdentityDescriptor, Depends(get_descriptor)],
+    ) -> None:
+        await self.reorder_folders_use_case.execute(
+            ReorderFoldersCommand(
+                user_id=descriptor.identity_id,
+                folder_id=request.folder_id,
+                previous_folder_id=request.previous_folder_id,
+                next_folder_id=request.next_folder_id,
+            )
+        )
+
+    @command_router.put(
+        "/{folder_id:uuid}/collapsed", status_code=status.HTTP_204_NO_CONTENT
+    )
+    async def set_collapsed(
+        self,
+        folder_id: UUID,
+        request: SetFolderCollapsedRequest,
+        descriptor: Annotated[IdentityDescriptor, Depends(get_descriptor)],
+    ) -> None:
+        await self.set_folder_collapsed_use_case.execute(
+            SetFolderCollapsedCommand(
+                user_id=descriptor.identity_id,
+                folder_id=folder_id,
+                collapsed=request.collapsed,
+            )
+        )
 
     @command_router.put(
         "/{folder_id:uuid}",
@@ -303,7 +347,7 @@ class FolderCommandController:
         request: StreamFolderEditorAutocompleteRequest,
         descriptor: Annotated[IdentityDescriptor, Depends(get_descriptor)],
     ) -> StreamingResponse:
-        stream = self.stream_folder_editor_autocomplete_use_case.execute(
+        stream = self.stream_editor_autocomplete_use_case.execute(
             StreamFolderEditorAutocompleteCommand(
                 user_id=descriptor.identity_id,
                 folder_id=folder_id,

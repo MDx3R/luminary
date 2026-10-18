@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   secret-scan:
-    name: Gitleaks Secret Scan
+    name: TruffleHog Secret Scan
     runs-on: ubuntu-latest
 
     steps:
@@ -24,13 +24,10 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Run Gitleaks
-        uses: gitleaks/gitleaks-action@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Run TruffleHog
+        uses: trufflesecurity/trufflehog@main
         with:
-          config-path: .gitleaks.toml
-          fail: true
+          extra_args: --results=verified,unknown --exclude-paths=trufflehog-exclude.txt
 
   test:
     name: Tests and Static Analysis

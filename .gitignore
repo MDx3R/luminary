@@ -216,3 +216,4 @@ configs/*.yaml
 
 # System
 .DS_Store
+work/

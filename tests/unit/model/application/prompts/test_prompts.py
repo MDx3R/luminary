@@ -7,6 +7,7 @@ from luminary.model.application.prompts import (
     SYSTEM_PROMPT_WITH_INSTRUCTIONS,
     USER_MESSAGE_AUTOCOMPLETE_CURSOR,
     USER_MESSAGE_CHAT_OR_INLINE,
+    USER_MESSAGE_EDITOR_INLINE,
 )
 from luminary.model.application.prompts.system_message import (
     build_system_message,
@@ -72,10 +73,30 @@ def test_build_user_request_content_chat_includes_sections() -> None:
     assert "Why?" in out
 
 
+def test_build_user_request_content_inline_contains_only_selected_text_and_instruction() -> None:
+    selected_text = "Selected paragraph only."
+    instruction = "Make it shorter"
+
+    out = build_user_request_content(
+        instruction,
+        selected_text,
+        "This should not be included",
+        mode=InferenceMode.EDITOR_INLINE,
+    )
+
+    assert "<selected_text>" in out
+    assert selected_text in out
+    assert "<instruction>" in out
+    assert instruction in out
+    assert "This should not be included" not in out
+    assert "<editor_draft>" not in out
+
+
 def test_prompt_templates_have_trace_ids() -> None:
     for pt in (
         SYSTEM_PROMPT_WITH_INSTRUCTIONS,
         USER_MESSAGE_CHAT_OR_INLINE,
+        USER_MESSAGE_EDITOR_INLINE,
         USER_MESSAGE_AUTOCOMPLETE_CURSOR,
         INSTRUCTION_BODY_ASSISTANT_SUFFIX,
     ):

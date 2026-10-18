@@ -26,7 +26,6 @@ from luminary.folder.application.interfaces.usecases.command.stream_folder_edito
 from luminary.folder.application.usecases.command.folder_editor_inference_common import (
     editor_stream_chunk,
     folder_inference_system_prompt,
-    folder_source_ids,
 )
 from luminary.folder.domain.value_objects.folder_id import FolderId
 from luminary.model.application.interfaces.services.engine import (
@@ -58,7 +57,6 @@ class StreamFolderEditorInlineUseCase(IStreamFolderEditorInlineUseCase):
         system_prompt = await folder_inference_system_prompt(
             folder, self._assistant_repository
         )
-        source_ids = folder_source_ids(folder)
         stream_id = uuid4()
 
         yield editor_stream_chunk(
@@ -71,9 +69,10 @@ class StreamFolderEditorInlineUseCase(IStreamFolderEditorInlineUseCase):
         request = InferenceRequestDTO(
             query=command.instruction,
             system_prompt=system_prompt,
-            source_ids=source_ids,
+            # Inline replacement needs no source retrieval, reducing latency and context.
+            source_ids=(),
             history=(),
-            editor_content=command.document_markdown,
+            editor_content=command.selected_text,
             mode=InferenceMode.EDITOR_INLINE,
             chat_source_context=None,
         )

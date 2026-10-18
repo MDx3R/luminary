@@ -2,6 +2,7 @@ from luminary.model.application.interfaces.services.engine import InferenceMode
 from luminary.model.application.prompts.templates import (
     USER_MESSAGE_AUTOCOMPLETE_CURSOR,
     USER_MESSAGE_CHAT_OR_INLINE,
+    USER_MESSAGE_EDITOR_INLINE,
 )
 
 
@@ -26,9 +27,15 @@ def build_user_request_content(
     *,
     mode: InferenceMode,
 ) -> str:
-    """Build the user message for chat and editor-inline modes."""
+    """Build a user message for chat, editor-inline, or autocomplete mode."""
     if mode == InferenceMode.EDITOR_AUTOCOMPLETE:
         return query
+
+    if mode == InferenceMode.EDITOR_INLINE:
+        return USER_MESSAGE_EDITOR_INLINE.format(
+            selected_text=editor_content or "",
+            instruction=query.strip(),
+        )
 
     return USER_MESSAGE_CHAT_OR_INLINE.format(
         editor_section=_editor_section(editor_content),

@@ -13,7 +13,7 @@ class StreamFolderEditorInlineCommand:
     user_id: UUID
     folder_id: UUID
     instruction: str
-    document_markdown: str
+    selected_text: str
 
 
 class IStreamFolderEditorInlineUseCase(ABC):

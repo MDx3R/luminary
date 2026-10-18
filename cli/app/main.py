@@ -12,6 +12,12 @@ from common.infrastructure.di.container.common import CommonContainer
 from common.infrastructure.logger.logging.logger_factory import LoggerFactory
 from common.infrastructure.queues.faststream.event_bus import FastStreamRabbitMQEventBus
 from common.infrastructure.queues.faststream.utils import create_rabbit
+from common.infrastructure.server.fastapi.middleware.error_middleware import (
+    ApplicationErrorHandler,
+    DomainErrorHandler,
+    ErrorHandlingMiddleware,
+    RepositoryErrorHandler,
+)
 from common.infrastructure.storage.minio.client import MinioStorage
 from common.infrastructure.storage.qdrant.client import QdrantStore
 from fastapi import APIRouter, FastAPI
@@ -673,6 +679,14 @@ def main() -> FastAPI:  # noqa: PLR0915
         lambda: identity_container.token_introspector()
     )
 
+    server.add_middleware(
+        ErrorHandlingMiddleware,
+        handlers=[
+            RepositoryErrorHandler(),
+            ApplicationErrorHandler(),
+            DomainErrorHandler(),
+        ],
+    )
     server.add_middleware(
         CORSMiddleware,
         allow_origins=["*"],

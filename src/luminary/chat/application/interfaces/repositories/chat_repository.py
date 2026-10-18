@@ -12,6 +12,11 @@ class IChatRepository(ABC):
     async def get_by_id(self, id: ChatId) -> Chat: ...
 
     @abstractmethod
+    async def get_by_id_for_update(self, id: ChatId) -> Chat | None:
+        """Lock current state, including deleted chats, within the caller's UoW."""
+        ...
+
+    @abstractmethod
     async def add(self, entity: Chat) -> None: ...
 
     @abstractmethod

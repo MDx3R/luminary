@@ -16,12 +16,20 @@ from sqlalchemy import Connection, inspect, select, text, update
 from sqlalchemy.ext.asyncio import AsyncEngine
 from tests.integration.sqlalchemy.utils import add_chat, add_folder
 
+from luminary.chat.application.handlers.folder_deleted_handler import (
+    ChatFolderDeletedHandler,
+)
+from luminary.chat.domain.events.events import ChatMovedEvent
 from luminary.chat.infrastructure.database.postgres.sqlalchemy.models.chat_base import (
     ChatBase,
 )
 from luminary.chat.infrastructure.database.postgres.sqlalchemy.repositories.chat_repository import (
     ChatRepository,
 )
+from luminary.folder.application.handlers.chat_moved_handler import (
+    FolderChatMovedHandler,
+)
+from luminary.folder.domain.events.events import FolderDeletedEvent
 from luminary.folder.infrastructure.database.postgres.sqlalchemy.models.folder_base import (
     FolderBase,
     FolderChatAssociation,
@@ -176,14 +184,24 @@ async def test_move_event_waits_for_committed_location(maker, commit: bool) -> N
     folder = await add_folder(maker, owner_id=owner)
     chat = await add_chat(maker, user_id=owner)
     executor = QueryExecutor(UnitOfWork(MakerSessionFactory(maker)))
-    repository = FolderRepository(executor)
+    handler = FolderChatMovedHandler(
+        FolderRepository(executor), ChatRepository(executor), executor.uow
+    )
     async with maker() as writer:
         await writer.execute(
             update(ChatBase)
             .where(ChatBase.chat_id == chat.id.value)
             .values(folder_id=folder.id.value)
         )
-        task = asyncio.create_task(repository.move_chat_association(chat.id))
+        task = asyncio.create_task(
+            handler.handle(
+                ChatMovedEvent(
+                    chat_id=chat.id.value,
+                    previous_folder_id=None,
+                    folder_id=folder.id.value,
+                )
+            )
+        )
         try:
             _, pending = await asyncio.wait({task}, timeout=0.1)
             assert task in pending
@@ -209,14 +227,18 @@ async def test_folder_delete_event_waits_for_commit(maker, commit: bool) -> None
         maker, user_id=folder.owner_id.value, folder_id=folder.id.value
     )
     executor = QueryExecutor(UnitOfWork(MakerSessionFactory(maker)))
-    repository = ChatRepository(executor)
+    handler = ChatFolderDeletedHandler(
+        ChatRepository(executor), FolderRepository(executor), executor.uow
+    )
     async with maker() as writer:
         await writer.execute(
             update(FolderBase)
             .where(FolderBase.folder_id == folder.id.value)
             .values(is_deleted=True)
         )
-        task = asyncio.create_task(repository.delete_by_folder(folder.id))
+        task = asyncio.create_task(
+            handler.handle(FolderDeletedEvent(folder_id=folder.id.value))
+        )
         try:
             _, pending = await asyncio.wait({task}, timeout=0.1)
             assert task in pending
@@ -252,7 +274,13 @@ async def test_delayed_move_and_remove_events_keep_deleted_folder_links(
     await folders.save(folder)
     if delete_chats_first:
         await ChatRepository(query_executor).delete_by_folder(folder.id)
-    await folders.move_chat_association(chat.id)
+    await FolderChatMovedHandler(
+        folders, ChatRepository(query_executor), query_executor.uow
+    ).handle(
+        ChatMovedEvent(
+            chat_id=chat.id.value, previous_folder_id=None, folder_id=folder.id.value
+        )
+    )
     await folders.clear_chat_association(folder.id, chat.id)
     async with maker() as session:
         assert (await session.scalars(select(FolderChatAssociation.chat_id))).all() == [

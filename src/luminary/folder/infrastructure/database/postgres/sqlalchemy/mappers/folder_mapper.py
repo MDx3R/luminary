@@ -1,5 +1,6 @@
 from functools import singledispatchmethod
 
+from common.domain.events.domain_event import DomainEvent
 from common.domain.value_objects.datetime import DateTime
 from common.domain.value_objects.id import UserId
 
@@ -16,6 +17,14 @@ from luminary.folder.application.dtos.read_models import (
     FolderSummaryReadModel,
 )
 from luminary.folder.domain.entity.folder import Folder
+from luminary.folder.domain.events.events import (
+    FolderAssistantChangedEvent,
+    FolderCollapsedChangedEvent,
+    FolderDeletedEvent,
+    FolderEditorContentUpdatedEvent,
+    FolderInfoChangedEvent,
+    FolderOrderChangedEvent,
+)
 from luminary.folder.domain.value_objects.editor_content import EditorContent
 from luminary.folder.domain.value_objects.folder_id import FolderId
 from luminary.folder.domain.value_objects.folder_info import FolderInfo
@@ -34,6 +43,23 @@ from luminary.source.infrastructure.database.postgres.sqlalchemy.models.source_b
 
 
 class FolderMapper:
+    @classmethod
+    def to_update_values(cls, folder: Folder) -> dict[str, object]:
+        fields: dict[type[DomainEvent], tuple[str, ...]] = {
+            FolderInfoChangedEvent: ("name", "description"),
+            FolderAssistantChangedEvent: ("assistant_id",),
+            FolderEditorContentUpdatedEvent: ("editor_text", "editor_updated_at"),
+            FolderDeletedEvent: ("is_deleted",),
+            FolderCollapsedChangedEvent: ("collapsed",),
+            FolderOrderChangedEvent: ("order_key",),
+        }
+        base = cls.to_persistence(folder)
+        return {
+            name: getattr(base, name)
+            for event in folder.events
+            for name in fields.get(type(event), ())
+        }
+
     @classmethod
     def to_domain(cls, base: FolderBase) -> Folder:
         assistant_id = AssistantId.optional(base.assistant_id)

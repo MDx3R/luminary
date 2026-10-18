@@ -108,7 +108,9 @@ class TestChatRepository:
         await persist_chat(self.maker, chat)
         folder = await add_folder(self.maker, owner_id=owner_id)
 
-        handler = FolderChatMovedHandler(FolderRepository(query_executor))
+        handler = FolderChatMovedHandler(
+            FolderRepository(query_executor), self.repository, query_executor.uow
+        )
         chat.move_to_folder(folder.id)
         await self.repository.save(chat)
         event = ChatMovedEvent(
@@ -160,7 +162,9 @@ class TestChatRepository:
         # The old projection must already hide the chat before event processing.
         reader = FolderReadRepository(query_executor)
         assert (await reader.get_by_id(old_folder.id.value, owner_id)).chats == []
-        await FolderChatMovedHandler(folders).handle(
+        await FolderChatMovedHandler(
+            folders, self.repository, query_executor.uow
+        ).handle(
             ChatMovedEvent(
                 chat_id=chat.id.value,
                 previous_folder_id=old_folder.id.value,

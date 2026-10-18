@@ -212,7 +212,10 @@ class ChatContainer(containers.DeclarativeContainer):
         ChatAssistantDeletedHandler, chat_repository=event_bus_chat_repository
     )
     folder_deleted_handler = providers.Singleton(
-        ChatFolderDeletedHandler, chat_repository=event_bus_chat_repository
+        ChatFolderDeletedHandler,
+        chat_repository=event_bus_chat_repository,
+        folder_repository=folder_repository,
+        uow=unit_of_work,
     )
 
     source_deleted_handler = providers.Singleton(

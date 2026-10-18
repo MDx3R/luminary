@@ -25,6 +25,9 @@ class EventBusChatRepository(IChatRepository):
     async def get_by_id(self, id: ChatId) -> Chat:
         return await self.repository.get_by_id(id)
 
+    async def get_by_id_for_update(self, id: ChatId) -> Chat | None:
+        return await self.repository.get_by_id_for_update(id)
+
     async def add(self, entity: Chat) -> None:
         async with self.uow:
             await self.repository.add(entity)

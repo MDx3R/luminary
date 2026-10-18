@@ -118,7 +118,9 @@ class TestFolderRepository:
         )
         folder.delete()
         await self.repository.save(folder)
-        handler = ChatFolderDeletedHandler(ChatRepository(query_executor))
+        handler = ChatFolderDeletedHandler(
+            ChatRepository(query_executor), self.repository, query_executor.uow
+        )
         event = FolderDeletedEvent(folder_id=folder.id.value)
         await handler.handle(event)
         await handler.handle(event)

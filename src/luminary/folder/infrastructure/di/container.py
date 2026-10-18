@@ -210,6 +210,8 @@ class FolderContainer(containers.DeclarativeContainer):
     chat_moved_handler = providers.Singleton(
         FolderChatMovedHandler,
         folder_repository=event_bus_folder_repository,
+        chat_repository=chat_repository,
+        uow=unit_of_work,
     )
     chat_removed_handler = providers.Singleton(
         FolderChatRemovedHandler,

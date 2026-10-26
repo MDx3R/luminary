@@ -13,7 +13,7 @@ help:
 	@echo "bandit          bandit (-ll, pyproject config)"
 	@echo "xenon           xenon (src, tests)"
 	@echo "detect-secrets  detect-secrets-hook (.secrets.baseline)"
-	@echo "ci              check-lock + steps from .github/workflows/ci.yml (no install, no gitleaks)"
+	@echo "ci              check-lock + steps from .github/workflows/ci.yml (no install, no TruffleHog)"
 
 install: check-lock
 	$(POETRY) install --no-interaction --no-ansi

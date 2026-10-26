@@ -18,6 +18,7 @@ from testcontainers.core.container import DockerContainer
 from testcontainers.core.network import Network
 from testcontainers.core.wait_strategies import HealthcheckWaitStrategy
 from testcontainers.core.waiting_utils import wait_for_logs
+from tests.integration.auth.containers import auth_container
 
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -166,6 +167,7 @@ def test_real_zitadel_discovery_login_and_proxy_boundary():
         stack.enter_context(nginx)
         wait_for_logs(nginx, "start worker processes", timeout=30)
         settings["OAUTH2_PROXY_CLIENT_ID"] = "smoke-client"
+        settings["ZITADEL_PROJECT_ID"] = "project"
         settings["OAUTH2_PROXY_CLIENT_SECRET"] = secrets.token_urlsafe(32)
         proxy_service = dict(services["oauth2-proxy"])
         proxy_service["image"] = proxy_image(
@@ -176,6 +178,15 @@ def test_real_zitadel_discovery_login_and_proxy_boundary():
         ).with_network_aliases("oauth2-proxy")
         stack.enter_context(proxy)
         wait_for_proxy(proxy)
+        checker = stack.enter_context(
+            auth_container(
+                db.get_wrapped_container().client,
+                stack,
+                network,
+                "http://zitadel.localhost",
+            )
+        )
+        wait_for_logs(checker, "Application startup complete")
         base_url = (
             f"http://{nginx.get_container_host_ip()}:{nginx.get_exposed_port(80)}"
         )

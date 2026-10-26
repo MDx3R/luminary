@@ -1,20 +1,38 @@
 # Авторизация через Zitadel
 
 Вход и регистрация выполняются в Zitadel. Единственная публичная точка входа —
-nginx; oauth2-proxy проверяет сессию, а приложение получает проверенный профиль
+nginx; oauth2-proxy проверяет сессию, отдельный `auth-check` выполняет интроспекцию
+access token в Zitadel на каждом защищённом запросе, а приложение получает проверенный профиль
 через заголовки nginx. API не получает токены или cookies, не обращается к Zitadel,
 не выпускает собственные JWT и не хранит пароли.
 
 ## Контракт прокси и бэкенда
 
-nginx выполняет `auth_request` к внутреннему `/oauth2/auth`. Cookies браузера
-передаются только oauth2-proxy, который отвечает за OIDC и проверку сессии.
-После успешной проверки nginx заменяет клиентские значения следующими:
+nginx выполняет `auth_request` к внутреннему `/oauth2/auth`, направленному в
+инфраструктурный сервис `auth-check` (`cli/auth`, отдельный контейнер).
+Он передаёт cookie в oauth2-proxy, получает проверенную сессию и её access token,
+затем вызывает `POST /oauth/v2/introspect` с учётными данными API-клиента.
+Требуются `active: true`, совпадение `sub` с пользователем сессии, ожидаемые issuer,
+audience проекта и неистёкший `exp`. Результаты не кэшируются.
+Только после обеих проверок nginx заменяет клиентские значения следующими:
+
+```mermaid
+sequenceDiagram
+    Browser->>nginx: API request + cookie
+    nginx->>auth-check: auth_request (cookie only)
+    auth-check->>oauth2-proxy: Validate cookie session
+    oauth2-proxy-->>auth-check: Session profile + access token (internal)
+    auth-check->>Zitadel: POST /oauth/v2/introspect
+    Zitadel-->>auth-check: active, sub, iss, aud, exp
+    auth-check-->>nginx: 202 + profile / 401 / 503
+    nginx->>Luminary: Unix socket, verified X-User-*; no credentials
+    Luminary->>Postgres: Resolve local UUID; sync only changed profile
+```
 
 | Заголовок бэкенду | Проверенное поле сессии oauth2-proxy |
 | --- | --- |
 | `X-User-Id` | `sub` (поле `user` сессии OIDC-провайдера) |
-| `X-Username` | `preferred_username` |
+| `X-Username` | необязательный `preferred_username` |
 | `X-User-Name` | `name` — отображаемое имя, не подмена его username |
 | `X-Email` | `email` |
 
@@ -37,15 +55,22 @@ Client ID/Secret по-прежнему задаются в `.env` как `OAUTH2
 `sub` с локальным UUID и проверяет права на данные. Заголовки профиля передаются
 как UTF-8; бэкенд декодирует их из байтов ASGI, включая имена на кириллице.
 
-**Граница доверия:** доступ к порту бэкенда должен быть только у доверенной
-инфраструктуры. Отсутствие опубликованного порта не изолирует его от других
-контейнеров в той же Docker-сети. Не подключайте недоверенные контейнеры к сети
-`luminary`, не публикуйте порт приложения и не направляйте клиентов к нему
-в обход nginx. Бэкенд не проверяет криптографическую подлинность заголовков.
+**Граница доверия:** Docker-образ API слушает только `/run/luminary/app.sock`,
+без TCP listener. Том `app_socket` подключён только к app и nginx. App остаётся
+в `luminary` для исходящих соединений к БД/очереди, но соседние контейнеры не могут
+отправить HTTP-запрос на его порт. Не подключайте этот том к другим контейнерам
+и не переопределяйте команду API на TCP listener. Администратор Docker/хоста
+остаётся доверенным. Сеть `identity` также предназначена только для доверенных
+компонентов авторизации. В бэкенде нет криптографической проверки заголовков.
 
-Проверка cookie-сессии в oauth2-proxy не означает интроспекцию токена в Zitadel
-на каждом API-запросе. Немедленный отзыв доступа в Zitadel не гарантируется
-этим контрактом; учитывайте срок жизни сессии и выбранную политику её проверки.
+Отозванный токен блокируется на следующем защищённом запросе после того, как
+Zitadel начнёт возвращать `active: false`. Cookie TTL не служит окном кэширования
+интроспекции. Отказ Zitadel/sidecar блокирует доступ (nginx возвращает 5xx),
+неактивный токен или отсутствующая сессия дают `401`. Уже начатые ответы/стримы
+не прерываются. Выход из глобальной сессии IdP не следует приравнивать к отзыву
+всех access tokens: проверяется состояние конкретного токена в introspection.
+Заголовок с access token доступен только внутри auth-слоя; nginx скрывает его
+на публичных `/oauth2/*` и не передаёт в API.
 
 ## Первый запуск
 
@@ -91,6 +116,11 @@ Traefik рассмотрен, но nginx сохранён: он уже испо�
    Разрешённый redirect URI: `http://localhost/oauth2/callback`.
    Сохраните Client ID и Client Secret в `OAUTH2_PROXY_CLIENT_ID` и
    `OAUTH2_PROXY_CLIENT_SECRET`. У пользователя должны быть имя и подтверждённый email.
+   В том же проекте создайте второе приложение типа **API**, метод **BASIC**.
+   Заполните `ZITADEL_API_CLIENT_ID`, `ZITADEL_API_CLIENT_SECRET`, а ID проекта —
+   в `ZITADEL_PROJECT_ID`. Это отдельные credentials для auth-check; не передавайте
+   их фронтенду. Proxy запрашивает scope
+   `urn:zitadel:iam:org:project:id:<PROJECT_ID>:aud`, чтобы API мог интроспектить токен.
 7. Проверьте в Login Behavior, что самостоятельная регистрация разрешена.
    Compose включает её при первоначальном setup; настройки уже существующего
    экземпляра меняются через консоль Zitadel.
@@ -112,9 +142,11 @@ Traefik рассмотрен, но nginx сохранён: он уже испо�
 до даты `ZITADEL_LOGIN_PAT_EXPIRATION` его нужно перевыпустить в Zitadel.
 
 После обновления с версии, где бэкенд обращался к UserInfo, пересоздайте
-`app`, `nginx` и `oauth2-proxy` через `docker compose up -d --build`.
+`app`, `nginx`, `auth-check` и `oauth2-proxy` через `docker compose up -d --build`.
 Выйдите через `/oauth2/sign_out` и войдите заново: старая cookie может не содержать
-дополнительный claim `name`. UUID и миграция пользователей не меняются.
+дополнительный claim `name` или audience проекта для интроспекции.
+Перед обновлением заполните три новых `ZITADEL_*` поля API-клиента выше.
+UUID и миграция пользователей не меняются. Том app_socket не содержит данных БД.
 Переменная `OIDC__USERINFO_URL` больше не используется и может быть удалена из `.env`.
 
 ## Профиль и существующие пользователи
@@ -138,7 +170,8 @@ docker compose exec app poetry run python -m cli.users.link \
 спланируйте перенос его данных: команда не перезаписывает чужую привязку.
 
 Для нового `sub` запись создаётся атомарным upsert; конкурентные запросы получают
-один UUID. Имя/email обновляются из проверенного профиля сессии, переданного
+один UUID. Неизменный профиль только читается; имя/email обновляются лишь при
+изменении (SQL также исключает пустые UPDATE при гонках) из профиля сессии, переданного
 прокси. Изменение профиля в Zitadel может потребовать повторного входа, чтобы
 обновить снимок профиля в cookie. Бэкенд не обрабатывает JWT, opaque access tokens
 или ошибки Zitadel; неполный профиль от прокси возвращает `401`.
@@ -178,7 +211,10 @@ poetry run black --check src tests cli
 `test_oauth2_proxy.py` дополнительно запускает настоящий oauth2-proxy с тестовым
 OIDC-провайдером и одноразовым RSA-ключом. Он проверяет обмен authorization code,
 создание сессии, передачу имени/email без токенов/cookies, выход, отказ при
-неверной подписи и неподтверждённом email. Этот тест не использует реальные
+неверной подписи и неподтверждённом email. Также выполняются реальный auth-check,
+интроспекция тестового issuer, отзыв токена с сохранённой cookie, защита от утечки
+токена через `/oauth2/*` и недоступность TCP-порта API для соседнего контейнера.
+Этот тест не использует реальные
 учётные записи и не подменяет пользовательскую проверку Login UI Zitadel.
 Отдельный smoke-тест запускает настоящий Zitadel, Login UI и oauth2-proxy с
 одноразовой БД, проверяет discovery, доступность Login UI, `401` и перенаправление
@@ -195,10 +231,13 @@ Authorization Code + PKCE. Он не выполняет интерактивны
 - Другой пользователь не получает доступ к чужим чатам/папкам/источникам.
 - `GET /api/v1/assistants/public` работает без входа.
 - У приложения, oauth2-proxy и Zitadel нет опубликованных портов в `docker compose ps`.
+- После отзыва access token в Zitadel существующая cookie больше не даёт доступ к `/users/me`.
+- При остановке `auth-check` защищённые запросы получают 5xx, а не доступ к API.
 - Привязанный старый пользователь видит прежние данные.
 
 ## Источники
 
+- https://zitadel.com/docs/guides/integrate/token-introspection/basic-auth
 - https://zitadel.com/docs/self-hosting/deploy/compose
 - https://zitadel.com/docs/self-hosting/manage/reverseproxy/nginx
 - https://zitadel.com/docs/examples/identity-proxy/oauth2-proxy

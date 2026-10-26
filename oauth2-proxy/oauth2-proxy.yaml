@@ -1,5 +1,5 @@
 # Structured configuration is pinned to oauth2-proxy v7.15.0.
-# Only these verified session claims are returned to nginx, never tokens.
+# Session token is exposed only to auth-check; nginx strips it on public paths.
 server:
   bindAddress: 0.0.0.0:4180
 
@@ -9,7 +9,7 @@ providers:
     name: Zitadel
     clientID: "${LUMINARY_OIDC_CLIENT_ID}"
     clientSecret: ${LUMINARY_OIDC_CLIENT_SECRET}
-    scope: openid profile email
+    scope: openid profile email urn:zitadel:iam:org:project:id:${LUMINARY_OIDC_PROJECT_ID}:aud
     code_challenge_method: S256
     additionalClaims: [name]
     oidcConfig:
@@ -29,6 +29,10 @@ upstreamConfig:
 
 injectRequestHeaders: []
 injectResponseHeaders:
+  - name: X-Auth-Request-Access-Token
+    values:
+      - claimSource:
+          claim: access_token
   - name: X-Auth-Request-User
     values:
       - claimSource:

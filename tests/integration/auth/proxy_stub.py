@@ -1,7 +1,9 @@
 """Test-only upstream: an auth responder and a backend that echoes identity headers."""
 
 import json
+import os
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from socketserver import ThreadingUnixStreamServer
 from threading import Thread
 
 
@@ -12,7 +14,7 @@ class Handler(BaseHTTPRequestHandler):
             self.send_header("Location", f"http://{self.headers['Host']}/redirect/")
             self.end_headers()
             return
-        if self.path == "/oauth2/auth":
+        if self.path in ("/oauth2/auth", "/auth"):
             if self.headers.get("Cookie") != "test_session=valid":
                 self.send_response(401)
                 self.end_headers()
@@ -46,9 +48,16 @@ class Handler(BaseHTTPRequestHandler):
             ).encode()
         )
 
+    def log_message(self, format: str, *args) -> None:
+        pass
+
 
 if __name__ == "__main__":
-    for port in (8000, 4180):
+    socket_path = "/run/luminary/app.sock"
+    socket_server = ThreadingUnixStreamServer(socket_path, Handler)
+    os.chmod(socket_path, 0o666)
+    Thread(target=socket_server.serve_forever, daemon=False).start()
+    for port in (4180, 4181):
         server = ThreadingHTTPServer(("", port), Handler)
         Thread(target=server.serve_forever, daemon=False).start()
     print("stub ready", flush=True)

@@ -17,6 +17,7 @@ from fastapi import status
 from testcontainers.core.container import DockerContainer
 from testcontainers.core.network import Network
 from testcontainers.core.waiting_utils import wait_for_logs
+from tests.integration.auth.containers import auth_container
 from tests.integration.auth.test_proxy import FORGED_HEADERS
 from tests.integration.auth.test_zitadel_stack import proxy_image, wait_for_proxy
 
@@ -123,10 +124,13 @@ def oidc_stack(client_id):
         )
         stack.enter_context(issuer)
         wait_for_logs(issuer, "issuer ready")
+        volume = issuer.get_wrapped_container().client.volumes.create()
+        stack.callback(volume.remove)
         backend = (
             DockerContainer("python:3.12-alpine")
             .with_network(network)
             .with_network_aliases("app")
+            .with_volume_mapping(volume.name, "/run/luminary", "rw")
             .with_command(
                 ["python", "-c", Path(__file__).with_name("proxy_stub.py").read_text()]
             )
@@ -146,6 +150,7 @@ def oidc_stack(client_id):
             .with_command(service["command"])
             .with_env("LUMINARY_OIDC_ISSUER_URL", ISSUER)
             .with_env("LUMINARY_OIDC_CLIENT_ID", client_id)
+            .with_env("LUMINARY_OIDC_PROJECT_ID", "project")
             .with_env("LUMINARY_OIDC_CLIENT_SECRET", secrets.token_urlsafe(32))
             .with_env("OAUTH2_PROXY_COOKIE_SECRET", secrets.token_urlsafe(32))
             .with_env("OAUTH2_PROXY_COOKIE_SECURE", "false")
@@ -153,8 +158,25 @@ def oidc_stack(client_id):
         )
         stack.enter_context(proxy)
         wait_for_proxy(proxy)
-        nginx = stack.enter_context(nginx_container(network))
+        checker = stack.enter_context(
+            auth_container(issuer.get_wrapped_container().client, stack, network)
+        )
+        wait_for_logs(checker, "Application startup complete")
+        nginx = stack.enter_context(
+            nginx_container(network).with_volume_mapping(
+                volume.name, "/run/luminary", "ro"
+            )
+        )
         wait_for_logs(nginx, "start worker processes")
+        # A sibling in the backend's network cannot reach an HTTP listener.
+        result = issuer.exec(
+            [
+                "python",
+                "-c",
+                "import socket; s=socket.socket(); s.settimeout(2); assert s.connect_ex(('app',8000)) != 0",
+            ]
+        )
+        assert result.exit_code == 0
         yield (
             f"http://{nginx.get_container_host_ip()}:{nginx.get_exposed_port(80)}",
             f"http://{issuer.get_container_host_ip()}:{issuer.get_exposed_port(8080)}",
@@ -271,3 +293,54 @@ def test_tampered_session_cookie_is_rejected(oidc_stack):
             "_oauth2_proxy", cookie[:-1] + ("a" if cookie[-1] != "a" else "b")
         )
         assert client.get("/users/me").status_code == status.HTTP_401_UNAUTHORIZED
+
+
+def test_revocation_rejects_existing_cookie_on_next_request(oidc_stack):
+    base_url, issuer_url, key = oidc_stack
+    with httpx.Client(
+        base_url=base_url, headers=FORGED_HEADERS, trust_env=False
+    ) as client:
+        assert login(client, issuer_url, key).status_code == status.HTTP_302_FOUND
+        assert client.get("/users/me").status_code == status.HTTP_200_OK
+        httpx.post(issuer_url + "/test/revoke", trust_env=False).raise_for_status()
+        assert client.get("/users/me").status_code == status.HTTP_401_UNAUTHORIZED
+        assert client.get("/api/v1/assistants/public").status_code == status.HTTP_200_OK
+
+
+def test_public_oauth_paths_do_not_expose_session_token(oidc_stack):
+    base_url, issuer_url, key = oidc_stack
+    with httpx.Client(
+        base_url=base_url, headers={"Host": "localhost"}, trust_env=False
+    ) as client:
+        assert login(client, issuer_url, key).status_code == status.HTTP_302_FOUND
+        for path in ("/oauth2/userinfo", "/oauth2/", "/oauth2/auth"):
+            response = client.get(path)
+            assert "x-auth-request-access-token" not in response.headers
+            assert "authorization" not in response.headers
+
+
+def test_blank_username_keeps_valid_session(oidc_stack):
+    base_url, issuer_url, key = oidc_stack
+    with httpx.Client(
+        base_url=base_url, headers={"Host": "localhost"}, trust_env=False
+    ) as client:
+        assert (
+            login(client, issuer_url, key, preferred_username="").status_code
+            == status.HTTP_302_FOUND
+        )
+        assert client.get("/users/me").status_code == status.HTTP_200_OK
+
+
+def test_utf8_profile_survives_real_proxy_and_sidecar(oidc_stack):
+    base_url, issuer_url, key = oidc_stack
+    with httpx.Client(
+        base_url=base_url, headers={"Host": "localhost"}, trust_env=False
+    ) as client:
+        assert (
+            login(client, issuer_url, key, name="Иван").status_code
+            == status.HTTP_302_FOUND
+        )
+        response = client.get("/users/me")
+        assert response.status_code == status.HTTP_200_OK
+        # The stdlib test backend exposes header bytes as Latin-1, like ASGI.
+        assert response.json()["name"].encode("latin-1").decode("utf-8") == "Иван"

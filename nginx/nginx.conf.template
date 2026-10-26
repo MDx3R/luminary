@@ -28,8 +28,9 @@ http {
     server {
         listen 80;
         server_name ${APP_DOMAIN};
-        set $app_upstream http://app:8000;
+        set $app_upstream http://unix:/run/luminary/app.sock;
         set $oauth_upstream http://oauth2-proxy:4180;
+        set $auth_upstream http://auth-check:4181;
 
         proxy_http_version 1.1;
         proxy_set_header Connection "";
@@ -44,7 +45,7 @@ http {
 
         location = /oauth2/auth {
             internal;
-            proxy_pass $oauth_upstream/oauth2/auth;
+            proxy_pass $auth_upstream/auth;
             proxy_pass_request_body off;
             proxy_set_header Content-Length "";
             proxy_set_header Host $host;
@@ -60,6 +61,9 @@ http {
 
         location /oauth2/ {
             proxy_pass $oauth_upstream;
+            # The session token is only for auth-check, never for the browser.
+            proxy_hide_header X-Auth-Request-Access-Token;
+            proxy_hide_header Authorization;
             proxy_set_header Host $host;
             proxy_set_header X-Forwarded-Proto $scheme;
             proxy_set_header X-Auth-Request-Redirect ${APP_ORIGIN}/users/me;

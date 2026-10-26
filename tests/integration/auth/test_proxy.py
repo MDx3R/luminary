@@ -1,3 +1,4 @@
+from contextlib import ExitStack
 from pathlib import Path
 
 import httpx
@@ -27,11 +28,11 @@ FORGED_HEADERS = {
 
 @pytest.fixture(scope="module")
 def proxy_url():
-    with Network() as network:
+    with Network() as network, ExitStack() as stack:
         stub = (
             DockerContainer("python:3.12-alpine")
             .with_network(network)
-            .with_network_aliases("app", "oauth2-proxy")
+            .with_network_aliases("app", "oauth2-proxy", "auth-check")
             .with_command(
                 ["python", "-c", Path(__file__).with_name("proxy_stub.py").read_text()]
             )
@@ -60,6 +61,10 @@ def proxy_url():
                 ]
             )
         )
+        volume = stub.get_docker_client().client.volumes.create()
+        stack.callback(volume.remove)
+        stub.with_volume_mapping(volume.name, "/run/luminary", "rw")
+        nginx.with_volume_mapping(volume.name, "/run/luminary", "ro")
         with stub, nginx:
             wait_for_logs(stub, "stub ready")
             wait_for_logs(nginx, "start worker processes")
@@ -158,9 +163,24 @@ def test_compose_does_not_publish_auth_or_application_ports():
     config = yaml.safe_load((ROOT / "docker-compose.yaml").read_text())
     for service in (
         "app",
+        "auth-check",
         "oauth2-proxy",
         "zitadel-api",
         "zitadel-login",
         "zitadel-db",
     ):
         assert not config["services"][service].get("ports")
+
+
+def test_backend_socket_is_shared_only_with_nginx():
+    config = yaml.safe_load((ROOT / "docker-compose.yaml").read_text())
+    owners = {
+        name
+        for name, service in config["services"].items()
+        if any(mount.startswith("app_socket:") for mount in service.get("volumes", []))
+    }
+    assert owners == {"app", "nginx"}
+    assert "luminary" not in config["services"]["nginx"]["networks"]
+    command = (ROOT / "docker/Dockerfile").read_text().split("CMD ")[1]
+    assert '"--uds"' in command
+    assert '"--host"' not in command

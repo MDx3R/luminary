@@ -110,6 +110,7 @@ services:
       LUMINARY_OIDC_ISSUER_URL: http://${ZITADEL_DOMAIN:-zitadel.localhost}
       LUMINARY_OIDC_CLIENT_ID: ${OAUTH2_PROXY_CLIENT_ID:-}
       LUMINARY_OIDC_CLIENT_SECRET: ${OAUTH2_PROXY_CLIENT_SECRET:-}
+      LUMINARY_OIDC_PROJECT_ID: ${ZITADEL_PROJECT_ID:-}
       OAUTH2_PROXY_COOKIE_SECRET: ${OAUTH2_PROXY_COOKIE_SECRET:?Set OAUTH2_PROXY_COOKIE_SECRET}
       OAUTH2_PROXY_COOKIE_SECURE: false
       OAUTH2_PROXY_REDIRECT_URL: ${APP_ORIGIN:-http://localhost}/oauth2/callback
@@ -123,6 +124,25 @@ services:
         condition: service_started
       zitadel-api:
         condition: service_healthy
+
+  auth-check:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.auth
+    environment:
+      ZITADEL_ISSUER: http://${ZITADEL_DOMAIN:-zitadel.localhost}
+      ZITADEL_API_CLIENT_ID: ${ZITADEL_API_CLIENT_ID:-}
+      ZITADEL_API_CLIENT_SECRET: ${ZITADEL_API_CLIENT_SECRET:-}
+      ZITADEL_PROJECT_ID: ${ZITADEL_PROJECT_ID:-}
+      APP_ORIGIN: ${APP_ORIGIN:-http://localhost}
+    networks:
+      - identity
+    depends_on:
+      oauth2-proxy:
+        condition: service_started
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
 
   postgres:
     image: postgres:17
@@ -222,6 +242,8 @@ services:
       dockerfile: docker/Dockerfile
     networks:
       - luminary
+    volumes:
+      - app_socket:/run/luminary
     depends_on:
       migrations:
         condition: service_completed_successfully
@@ -249,7 +271,6 @@ services:
     image: nginx:1.28-alpine
     restart: always
     networks:
-      luminary:
       identity:
         aliases:
           - ${ZITADEL_DOMAIN:-zitadel.localhost}
@@ -262,6 +283,7 @@ services:
       NGINX_ENVSUBST_OUTPUT_DIR: /etc/nginx
       NGINX_ENVSUBST_FILTER: ^(APP_DOMAIN|APP_ORIGIN|ZITADEL_DOMAIN)$$
     volumes:
+      - app_socket:/run/luminary:ro
       - ./nginx/nginx.conf.template:/etc/nginx/templates/nginx.conf.template:ro
 
 networks:
@@ -272,6 +294,7 @@ networks:
     external: true
 
 volumes:
+  app_socket:
   zitadel_data:
   zitadel_bootstrap:
   postgres_data:

@@ -1,11 +1,10 @@
 from typing import Annotated
 from uuid import UUID
 
+from common.application.value_objects.descriptor import IdentityDescriptor
 from common.presentation.http.dto.response import IDResponse
 from common.presentation.http.fastapi.cbv import cbv
 from fastapi import APIRouter, Depends, Form, UploadFile, status
-from idp.identity.domain.value_objects.descriptor import IdentityDescriptor
-from idp.identity.presentation.http.fastapi.auth import get_descriptor
 from luminary_files.application.interfaces.services.file_service import (
     IFileService,
     UploadFileCommand,
@@ -41,6 +40,7 @@ from luminary.source.presentation.http.dto.request import (
     UpdateSourceRequest,
 )
 from luminary.source.presentation.http.dto.response import SourceResponse
+from luminary.user.presentation.http.fastapi.auth import get_descriptor
 
 
 command_router = APIRouter()

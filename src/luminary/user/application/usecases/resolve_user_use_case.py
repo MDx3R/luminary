@@ -20,5 +20,9 @@ class ResolveUserUseCase(IResolveUserUseCase):
     async def execute(
         self, profile: ExternalProfile, username: str
     ) -> IdentityDescriptor:
-        user = await self.user_repository.upsert(self.uuid_generator.create(), profile)
+        user = await self.user_repository.get_by_subject(profile.subject)
+        if user is None or (user.name, user.email) != (profile.name, profile.email):
+            user = await self.user_repository.upsert(
+                self.uuid_generator.create(), profile
+            )
         return IdentityDescriptor(user.id, username, user.name, user.email)

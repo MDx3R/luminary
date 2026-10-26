@@ -52,6 +52,19 @@ async def test_concurrent_first_requests_create_one_user(repository, maker):
 
 
 @pytest.mark.asyncio
+async def test_identical_upsert_does_not_update_row(repository, maker):
+    profile = ExternalProfile("sub", "Jane", "jane@test.io")
+    first = await repository.upsert(uuid4(), profile)
+    async with maker() as session:
+        before = await session.scalar(select(UserBase.updated_at))
+    assert await repository.upsert(uuid4(), profile) == first
+    assert await repository.get_by_subject(profile.subject) == first
+    assert await repository.get_by_subject("missing") is None
+    async with maker() as session:
+        assert await session.scalar(select(UserBase.updated_at)) == before
+
+
+@pytest.mark.asyncio
 async def test_equal_names_and_emails_do_not_merge_users(repository):
     first = await repository.upsert(
         uuid4(), ExternalProfile("one", "Jane", "same@test.io")

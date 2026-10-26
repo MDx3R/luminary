@@ -14,14 +14,15 @@ MAX_SUBJECT_LENGTH = 255
 
 def get_proxy_identity(request: Request) -> tuple[ExternalProfile, str]:
     """Read headers overwritten by the only public ingress, never raw client data."""
-    names = ("x-user-id", "x-username", "x-user-name", "x-email")
+    names = ("x-user-id", "x-user-name", "x-email")
     if any(len(request.headers.getlist(name)) != 1 for name in names):
         raise _unauthorized()
-    subject, username, name, email = (
-        _decode_header(request.headers[name]) for name in names
-    )
-    if any(not value.strip() for value in (subject, username, name, email)):
+    subject, name, email = (_decode_header(request.headers[name]) for name in names)
+    if any(not value.strip() for value in (subject, name, email)):
         raise _unauthorized()
+    if len(request.headers.getlist("x-username")) > 1:
+        raise _unauthorized()
+    username = _decode_header(request.headers.get("x-username", "")).strip()
     _validate_subject(subject)
     return ExternalProfile(subject, name, email), username
 

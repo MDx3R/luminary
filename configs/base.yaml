@@ -4,13 +4,6 @@ logger:
   level: "INFO"
   format: "json"
 
-auth:
-  secret_key: "super-secret"
-  algorithm: "HS256"
-  issuer: "my-service"
-  access_token_ttl: 1800
-  refresh_token_ttl: 604800
-
 db:
   db_name: "luminary"
   db_user: "postgres"

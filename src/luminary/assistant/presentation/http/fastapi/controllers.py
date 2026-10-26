@@ -3,7 +3,6 @@ from uuid import UUID
 
 from common.application.value_objects.descriptor import IdentityDescriptor
 from common.presentation.http.dto.response import IDResponse
-from common.presentation.http.fastapi.auth import get_descriptor
 from common.presentation.http.fastapi.cbv import cbv
 from fastapi import APIRouter, Depends, Query, status
 
@@ -52,6 +51,7 @@ from luminary.assistant.presentation.http.dto.response import (
     AssistantResponse,
     AssistantSummaryResponse,
 )
+from luminary.user.presentation.http.fastapi.auth import get_descriptor
 
 
 command_router = APIRouter()

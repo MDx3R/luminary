@@ -1,10 +1,10 @@
 from typing import Annotated
 
 from common.application.value_objects.descriptor import IdentityDescriptor
-from common.presentation.http.fastapi.auth import get_descriptor
 from fastapi import APIRouter, Depends
 
 from luminary.user.presentation.http.dto.response import UserResponse
+from luminary.user.presentation.http.fastapi.auth import get_descriptor
 
 
 user_router = APIRouter()

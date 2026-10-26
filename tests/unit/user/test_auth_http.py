@@ -3,7 +3,6 @@ from uuid import uuid4
 
 import pytest
 from common.application.value_objects.descriptor import IdentityDescriptor
-from common.presentation.http.fastapi.auth import get_proxy_identity
 from fastapi import FastAPI, HTTPException, Request, status
 from fastapi.testclient import TestClient
 
@@ -11,6 +10,7 @@ from luminary.user.application.dtos.profile import ExternalProfile
 from luminary.user.application.interfaces.resolve_user_use_case import (
     IResolveUserUseCase,
 )
+from luminary.user.presentation.http.fastapi.auth import get_proxy_identity
 from luminary.user.presentation.http.fastapi.controllers import user_router
 
 
@@ -53,7 +53,7 @@ def test_me_returns_product_profile(client, resolver):
     )
 
 
-@pytest.mark.parametrize("missing", list(HEADERS))
+@pytest.mark.parametrize("missing", [name for name in HEADERS if name != "X-Username"])
 def test_missing_header_is_unauthorized(client, resolver, missing: str):
     headers = {key: value for key, value in HEADERS.items() if key != missing}
     response = client.get("/users/me", headers=headers)
@@ -69,8 +69,6 @@ def test_missing_header_is_unauthorized(client, resolver, missing: str):
         ("X-User-Id", " "),
         ("X-User-Id", " padded "),
         ("X-User-Id", "x" * 256),
-        ("X-Username", ""),
-        ("X-Username", " "),
         ("X-User-Name", ""),
         ("X-User-Name", " "),
         ("X-Email", ""),
@@ -81,6 +79,17 @@ def test_invalid_headers_are_unauthorized(client, resolver, name: str, value: st
     response = client.get("/users/me", headers={**HEADERS, name: value})
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
     resolver.execute.assert_not_awaited()
+
+
+@pytest.mark.parametrize("username", [None, "", " "])
+def test_username_is_optional(client, resolver, username):
+    headers = {key: value for key, value in HEADERS.items() if key != "X-Username"}
+    if username is not None:
+        headers["X-Username"] = username
+    assert client.get("/users/me", headers=headers).status_code == status.HTTP_200_OK
+    resolver.execute.assert_awaited_once_with(
+        ExternalProfile("external-subject", "Jane Doe", "jane@example.com"), ""
+    )
 
 
 def test_tokens_or_cookies_alone_cannot_resolve_a_user(client, resolver):
